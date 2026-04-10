@@ -354,8 +354,6 @@
       max-width: 720px;
     }
 
-    .favicon-card-header { padding: 16px 20px 12px; }
-
     .favicon-mode { padding: 24px 20px; }
     .favicon-mode + .favicon-mode { border-top: 1px solid var(--border); }
 
@@ -381,7 +379,60 @@
       gap: 8px;
     }
 
-    .favicon-preview img { image-rendering: pixelated; }
+    .favicon-preview img { image-rendering: pixelated; position: relative; z-index: 1; }
+
+    .favicon-preview-checker {
+      display: inline-block;
+      background-image: conic-gradient(#ccc 25%, #fff 25%, #fff 50%, #ccc 50%, #ccc 75%, #fff 75%);
+      background-size: 8px 8px;
+      border-radius: 4px;
+      line-height: 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .favicon-preview-checker {
+        background-image: conic-gradient(#333 25%, #1a1a1a 25%, #1a1a1a 50%, #333 50%, #333 75%, #1a1a1a 75%);
+      }
+    }
+
+    .ff-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .ff-toggle-track {
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      position: relative;
+      transition: all 80ms;
+    }
+
+    .ff-toggle-track.active {
+      background: var(--primary-bg);
+      border-color: var(--primary-bg);
+    }
+
+    .ff-toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 7px;
+      background: white;
+      transition: transform 80ms;
+    }
+
+    .ff-toggle-track.active .ff-toggle-thumb {
+      transform: translateX(16px);
+    }
     .favicon-size { font-size: 11px; color: var(--text-muted); }
     .favicon-mode.light .favicon-size { color: #aaa; }
 
@@ -668,9 +719,13 @@
       const previewsContainer = el('div', { className: 'favicon-previews' });
       sizes.forEach(size => {
         const displaySize = Math.min(size, 96);
+        // Images are 2x for retina — display at 1x
+        const checker = el('div', { className: 'favicon-preview-checker' });
+        const img = el('img', { src: previews[size], width: displaySize, height: displaySize });
+        checker.appendChild(img);
         previewsContainer.appendChild(
           el('div', { className: 'favicon-preview' },
-            el('img', { src: previews[size], width: displaySize, height: displaySize }),
+            checker,
             el('span', { className: 'favicon-size', textContent: `${size}px` })
           )
         );
@@ -681,16 +736,13 @@
       );
     }
 
-    function renderFaviconGrid(previews) {
+    function renderFaviconGrid(data) {
       const grid = document.getElementById('faviconGrid');
       const sizes = [16, 32, 96, 180];
       grid.innerHTML = '';
       grid.appendChild(el('div', { className: 'favicon-card' },
-        el('div', { className: 'favicon-card-header' },
-          el('div', { className: 'card-label', textContent: 'Lettermark' })
-        ),
-        buildFaviconMode('Option 1 \u2014 Light', 'light', previews, sizes),
-        buildFaviconMode('Option 1 \u2014 Dark', 'dark', previews, sizes)
+        buildFaviconMode('Light background', 'light', data.light, sizes),
+        buildFaviconMode('Dark background', 'dark', data.dark, sizes)
       ));
     }
 
@@ -701,16 +753,32 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(faviconOverrides),
         });
-        const previews = await res.json();
-        renderFaviconGrid(previews);
+        const data = await res.json();
+        renderFaviconGrid(data);
       } catch (err) {
         console.error('Favicon render failed:', err);
       }
     }
 
+    function ffToggle(label, initial, onChange) {
+      const track = el('div', { className: `ff-toggle-track${initial ? ' active' : ''}` });
+      const thumb = el('div', { className: 'ff-toggle-thumb' });
+      track.appendChild(thumb);
+      let state = initial;
+      const wrap = el('div', { className: 'ff-toggle' });
+      wrap.addEventListener('click', () => {
+        state = !state;
+        track.classList.toggle('active', state);
+        onChange(state);
+      });
+      wrap.append(track, document.createTextNode(label));
+      return wrap;
+    }
+
     function buildFaviconCustomizePanel() {
       const defaultLetter = (config.title || 'A')[0].toUpperCase();
       const colors = config.colors || {};
+      const defaultAccent = colors.accent || '#333333';
 
       const letterInput = el('input', { type: 'text', className: 'ff-input', value: defaultLetter, maxLength: '4' });
       letterInput.style.width = '80px';
@@ -725,10 +793,20 @@
       const srcOpts = [{ value: '__lettermark__', label: 'Lettermark' }];
       for (const c of logoCandidates) srcOpts.push({ value: c, label: c });
 
+      const weightOpts = [
+        { value: '400', label: 'Regular' },
+        { value: '700', label: 'Bold' },
+      ];
+
       const panel = document.getElementById('faviconCustomize');
       panel.innerHTML = '';
       panel.appendChild(ffColor('background', colors.background, (v) => { faviconOverrides.background = v; rerenderFavicons(); }));
-      panel.appendChild(ffColor('letter color', colors.accent, (v) => { faviconOverrides.accent = v; rerenderFavicons(); }));
+      panel.appendChild(ffColor('dark bg', '#000000', (v) => { faviconOverrides.darkBg = v; rerenderFavicons(); }));
+      panel.appendChild(ffColor('letter color', defaultAccent, (v) => { faviconOverrides.accent = v; rerenderFavicons(); }));
+      panel.appendChild(el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: 'transparent' }),
+        ffToggle('Transparent background', false, (v) => { faviconOverrides.transparent = v; rerenderFavicons(); })
+      ));
       panel.appendChild(el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'letter' }),
         letterInput
@@ -741,6 +819,10 @@
         el('span', { className: 'refine-label', textContent: 'corner radius' }),
         ffSlider(19, 0, 50, '%', (v) => { faviconOverrides.borderRadius = v; rerenderFavicons(); })
       ));
+      panel.appendChild(ffSelect('font weight', weightOpts, '700', (v) => {
+        faviconOverrides.fontWeight = parseInt(v);
+        rerenderFavicons();
+      }));
       panel.appendChild(ffSelect('source', srcOpts, config.faviconSrc || '__lettermark__', (v) => {
         faviconOverrides.faviconSrc = v === '__lettermark__' ? null : v;
         rerenderFavicons();
@@ -749,8 +831,8 @@
 
     async function loadFaviconPreviews() {
       const res = await fetch('/api/favicon-previews');
-      const previews = await res.json();
-      renderFaviconGrid(previews);
+      const data = await res.json();
+      renderFaviconGrid(data);
 
       const actions = document.getElementById('faviconActions');
       actions.innerHTML = '';

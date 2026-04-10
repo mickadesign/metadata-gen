@@ -38,14 +38,41 @@ function hexToRgb(hex) {
 }
 
 /**
- * Generate a lettermark SVG using Satori (first letter of title, accent on background).
+ * Load a font file by weight. Caches after first read.
+ */
+const fontCache = {};
+async function loadFont(weight) {
+  const key = weight >= 600 ? 'bold' : 'regular';
+  if (!fontCache[key]) {
+    const filename = key === 'bold' ? 'Inter-Bold.ttf' : 'Inter-Regular.ttf';
+    fontCache[key] = await readFile(join(__dirname, 'fonts', filename));
+  }
+  return fontCache[key];
+}
+
+/**
+ * Generate a lettermark PNG using Satori.
+ *
+ * Config options:
+ * - faviconLetter: custom letter(s) (default: first char of title)
+ * - faviconLetterSize: font size as % of icon size (default: 60)
+ * - faviconBorderRadius: corner radius as % (default: 19)
+ * - faviconFontWeight: 400 or 700 (default: 700)
+ * - faviconTransparent: if true, bg is transparent (default: false)
+ * - colors.background: bg hex
+ * - colors.accent: letter color hex (default fallback: #333)
  */
 async function generateLettermarkPng(config, size) {
   const letter = config.faviconLetter || (config.title || 'A')[0].toUpperCase();
   const letterSizePct = config.faviconLetterSize || 60;
   const borderRadiusPct = config.faviconBorderRadius ?? 19;
   const borderRadius = Math.round(size * (borderRadiusPct / 100));
-  const font = await readFile(join(__dirname, 'fonts', 'Inter-Bold.ttf'));
+  const fontWeight = config.faviconFontWeight || 700;
+  const transparent = config.faviconTransparent || false;
+  const letterColor = config.colors.accent || '#333333';
+  const bgColor = transparent ? 'transparent' : (config.colors.background || '#ffffff');
+
+  const font = await loadFont(fontWeight);
 
   const jsx = {
     type: 'div',
@@ -56,7 +83,7 @@ async function generateLettermarkPng(config, size) {
         justifyContent: 'center',
         width: '100%',
         height: '100%',
-        backgroundColor: config.colors.background,
+        backgroundColor: bgColor,
         borderRadius: `${borderRadius}px`,
         fontFamily: 'Inter',
       },
@@ -65,8 +92,8 @@ async function generateLettermarkPng(config, size) {
         props: {
           style: {
             fontSize: Math.round(size * (letterSizePct / 100)),
-            fontWeight: 700,
-            color: config.colors.accent,
+            fontWeight: fontWeight,
+            color: letterColor,
           },
           children: letter,
         },
@@ -81,7 +108,7 @@ async function generateLettermarkPng(config, size) {
       {
         name: 'Inter',
         data: font,
-        weight: 700,
+        weight: fontWeight,
         style: 'normal',
       },
     ],
@@ -98,7 +125,6 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
   const fullPath = join(projectRoot, logoPath);
   const buffer = await readFile(fullPath);
 
-  // Add background and padding for favicon
   const padding = Math.round(size * 0.1);
   const innerSize = size - padding * 2;
 
@@ -107,7 +133,7 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
     .png()
     .toBuffer();
 
-  // Composite on background color
+  const transparent = config.faviconTransparent || false;
   const { r, g, b } = hexToRgb(config.colors.background);
 
   return sharp({
@@ -115,7 +141,7 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
       width: size,
       height: size,
       channels: 4,
-      background: { r, g, b, alpha: 255 },
+      background: { r, g, b, alpha: transparent ? 0 : 255 },
     },
   })
     .composite([{ input: resized, gravity: 'centre' }])
@@ -127,19 +153,17 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
  * Generate the dual-mode favicon.svg with light/dark support.
  */
 function generateFaviconSvg(config) {
-  // SVG favicon always uses a lettermark for dual-mode (light/dark) support.
-  // Embedding an arbitrary logo SVG with CSS media queries is not reliably
-  // supported across browsers, so logo-based favicons rely on the PNG files.
   const letter = config.faviconLetter || (config.title || 'A')[0].toUpperCase();
+  const fontWeight = config.faviconFontWeight || 700;
+  const borderRadiusPct = config.faviconBorderRadius ?? 19;
+  const rx = Math.round(32 * (borderRadiusPct / 100));
+  const letterColor = config.colors.accent || '#333333';
 
   const bg = config.colors.background;
-  const accent = config.colors.accent;
-  // For dark mode, invert: use accent on a dark background
   const darkBg = bg;
-  const darkFg = accent;
-  // For light mode, use accent on white
+  const darkFg = letterColor;
   const lightBg = '#ffffff';
-  const lightFg = accent;
+  const lightFg = letterColor;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <style>
@@ -148,8 +172,8 @@ function generateFaviconSvg(config) {
       :root { --bg: ${darkBg}; --fg: ${darkFg}; }
     }
   </style>
-  <rect width="32" height="32" rx="6" fill="var(--bg)"/>
-  <text x="16" y="22" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="var(--fg)">${letter}</text>
+  <rect width="32" height="32" rx="${rx}" fill="var(--bg)"/>
+  <text x="16" y="22" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="${fontWeight}" fill="var(--fg)">${letter}</text>
 </svg>`;
 }
 
@@ -184,11 +208,6 @@ function generateWebManifest(config) {
 
 /**
  * Generate the full favicon set and write to outputDir.
- *
- * @param {object} config - metadata.config.json contents
- * @param {string} projectRoot - project root directory
- * @param {string} [outputDirOverride] - override output directory (absolute path)
- * @returns {Promise<string[]>} list of written file paths
  */
 export async function generateFaviconSet(config, projectRoot = process.cwd(), outputDirOverride) {
   const outputDir = outputDirOverride || join(projectRoot, config.outputDir || 'public/metadata');
@@ -197,7 +216,6 @@ export async function generateFaviconSet(config, projectRoot = process.cwd(), ou
   const hasLogo = !!config.faviconSrc;
   const writtenFiles = [];
 
-  // Generate PNGs at all sizes
   const pngBuffers = {};
   for (const size of FAVICON_SIZES) {
     if (hasLogo) {
@@ -207,7 +225,6 @@ export async function generateFaviconSet(config, projectRoot = process.cwd(), ou
     }
   }
 
-  // Write individual PNG files
   const pngFileMap = {
     16: 'favicon-16x16.png',
     32: 'favicon-32x32.png',
@@ -223,19 +240,16 @@ export async function generateFaviconSet(config, projectRoot = process.cwd(), ou
     writtenFiles.push(filePath);
   }
 
-  // Generate favicon.ico (16, 32, 48)
   const icoBuffer = await pngToIco([pngBuffers[16], pngBuffers[32], pngBuffers[48]]);
   const icoPath = join(outputDir, 'favicon.ico');
   await writeFile(icoPath, icoBuffer);
   writtenFiles.push(icoPath);
 
-  // Generate favicon.svg
   const svgContent = generateFaviconSvg(config);
   const svgPath = join(outputDir, 'favicon.svg');
   await writeFile(svgPath, svgContent);
   writtenFiles.push(svgPath);
 
-  // Generate site.webmanifest
   const manifestContent = generateWebManifest(config);
   const manifestPath = join(outputDir, 'site.webmanifest');
   await writeFile(manifestPath, manifestContent);
@@ -246,22 +260,40 @@ export async function generateFaviconSet(config, projectRoot = process.cwd(), ou
 
 /**
  * Generate favicon preview images for the browser UI.
- * Returns base64 PNGs at representative sizes for both light and dark contexts.
+ * Returns separate light and dark variants at 2x resolution for retina.
+ *
+ * Shape: { light: { 16: base64, 32: ..., 96: ..., 180: ... }, dark: { ... } }
  */
 export async function generateFaviconPreviews(config, projectRoot = process.cwd()) {
   const hasLogo = !!config.faviconSrc;
   const previewSizes = [16, 32, 96, 180];
-  const previews = {};
+
+  // Build light config (white/light bg)
+  const lightConfig = {
+    ...config,
+    colors: { ...config.colors, background: config.colors.background || '#ffffff' },
+  };
+
+  // Build dark config (dark bg)
+  const darkConfig = {
+    ...config,
+    colors: { ...config.colors, background: config.faviconDarkBg || '#000000' },
+  };
+
+  const light = {};
+  const dark = {};
 
   for (const size of previewSizes) {
-    let pngBuffer;
+    const renderSize = size * 2; // 2x for retina
+
     if (hasLogo) {
-      pngBuffer = await renderLogoToPng(config.faviconSrc, projectRoot, size, config);
+      light[size] = `data:image/png;base64,${(await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, lightConfig)).toString('base64')}`;
+      dark[size] = `data:image/png;base64,${(await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, darkConfig)).toString('base64')}`;
     } else {
-      pngBuffer = await generateLettermarkPng(config, size);
+      light[size] = `data:image/png;base64,${(await generateLettermarkPng(lightConfig, renderSize)).toString('base64')}`;
+      dark[size] = `data:image/png;base64,${(await generateLettermarkPng(darkConfig, renderSize)).toString('base64')}`;
     }
-    previews[size] = `data:image/png;base64,${pngBuffer.toString('base64')}`;
   }
 
-  return previews;
+  return { light, dark };
 }

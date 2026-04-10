@@ -209,7 +209,7 @@ export async function startServer(options = {}) {
   // API: re-render favicon previews with overrides
   app.post('/api/render-favicon', async (req, res) => {
     try {
-      const { letter, faviconSrc, background, accent, letterSize, borderRadius } = req.body;
+      const { letter, faviconSrc, background, accent, letterSize, borderRadius, transparent, fontWeight, darkBg } = req.body;
       const overrideConfig = {
         ...config,
         colors: { ...config.colors },
@@ -222,6 +222,15 @@ export async function startServer(options = {}) {
       }
       if (typeof borderRadius === 'number' && borderRadius >= 0 && borderRadius <= 50) {
         overrideConfig.faviconBorderRadius = borderRadius;
+      }
+      if (typeof fontWeight === 'number' && [400, 700].includes(fontWeight)) {
+        overrideConfig.faviconFontWeight = fontWeight;
+      }
+      if (typeof transparent === 'boolean') {
+        overrideConfig.faviconTransparent = transparent;
+      }
+      if (typeof darkBg === 'string') {
+        overrideConfig.faviconDarkBg = darkBg;
       }
       if (faviconSrc === null) {
         overrideConfig.faviconSrc = null;
