@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 import { renderOgImage, renderAllVariants } from './renderer.js';
 import { generateFaviconSet, generateFaviconPreviews } from './favicon.js';
+import { scanAllLogos } from './scanner.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -92,7 +93,10 @@ export async function startServer(options = {}) {
   console.log('\u2713 Rendering favicon set...');
 
   // Pre-render favicon previews
-  const faviconPreviews = await generateFaviconPreviews(config, root);
+  let faviconPreviews = await generateFaviconPreviews(config, root);
+
+  // Scan for all logo candidates
+  const logoCandidates = await scanAllLogos(root);
 
   // Set up Express
   const app = express();
@@ -107,6 +111,11 @@ export async function startServer(options = {}) {
   // API: get config
   app.get('/api/config', (req, res) => {
     res.json(config);
+  });
+
+  // API: get all logo candidates
+  app.get('/api/logo-candidates', (req, res) => {
+    res.json(logoCandidates);
   });
 
   // API: get all OG previews as base64
@@ -134,6 +143,9 @@ export async function startServer(options = {}) {
           if (typeof overrides[key] === 'string') safe[key] = overrides[key].slice(0, 500);
         }
         if (typeof overrides.showLogo === 'boolean') safe.showLogo = overrides.showLogo;
+        if (typeof overrides.logoPath === 'string' && logoCandidates.includes(overrides.logoPath)) {
+          safe.logoPath = overrides.logoPath;
+        }
       }
       const png = await renderOgImage(config, layout, safe, root);
       // Update cached buffer
@@ -187,6 +199,27 @@ export async function startServer(options = {}) {
   // API: get favicon previews
   app.get('/api/favicon-previews', (req, res) => {
     res.json(faviconPreviews);
+  });
+
+  // API: re-render favicon previews with overrides
+  app.post('/api/render-favicon', async (req, res) => {
+    try {
+      const { letter, faviconSrc } = req.body;
+      const overrideConfig = { ...config };
+      if (typeof letter === 'string' && letter.length > 0) {
+        overrideConfig.faviconLetter = letter.slice(0, 1);
+      }
+      if (faviconSrc === null) {
+        overrideConfig.faviconSrc = null;
+      } else if (typeof faviconSrc === 'string' && logoCandidates.includes(faviconSrc)) {
+        overrideConfig.faviconSrc = faviconSrc;
+      }
+      faviconPreviews = await generateFaviconPreviews(overrideConfig, root);
+      res.json(faviconPreviews);
+    } catch (err) {
+      console.error('Favicon render error:', err.message);
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // API: download full favicon set

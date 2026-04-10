@@ -68,9 +68,10 @@ export async function renderOgImage(config, layout, overrides = {}, projectRoot 
   const variantIndex = { A: 0, B: 1, C: 2 }[layout];
   const copy = variants[variantIndex];
 
-  // Load logo if needed
+  // Load logo if needed — logoPath override takes precedence
   const showLogo = overrides.showLogo !== false;
-  const logoBase64 = showLogo ? await loadLogo(config.logo, projectRoot) : null;
+  const logoSrc = overrides.logoPath || config.logo;
+  const logoBase64 = showLogo ? await loadLogo(logoSrc, projectRoot) : null;
 
   // Build template config with overrides
   const templateConfig = {

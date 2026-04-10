@@ -7,10 +7,52 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #f5f5f5;
+      --bg-card: #ffffff;
+      --bg-input: #ffffff;
+      --border: #e0e0e0;
+      --border-subtle: #eee;
+      --text: #111;
+      --text-secondary: #666;
+      --text-tertiary: #999;
+      --btn-bg: #f0f0f0;
+      --btn-border: #ddd;
+      --btn-text: #333;
+      --btn-hover-bg: #e5e5e5;
+      --primary-bg: #111;
+      --primary-text: #fff;
+      --primary-hover: #333;
+      --success: #16a34a;
+      --input-border: #ccc;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a0a0a;
+        --bg-card: #111;
+        --bg-input: #0a0a0a;
+        --border: #1a1a1a;
+        --border-subtle: #1a1a1a;
+        --text: #e5e5e5;
+        --text-secondary: #666;
+        --text-tertiary: #555;
+        --btn-bg: #1a1a1a;
+        --btn-border: #333;
+        --btn-text: #ccc;
+        --btn-hover-bg: #222;
+        --primary-bg: #fff;
+        --primary-text: #000;
+        --primary-hover: #e5e5e5;
+        --success: #4ade80;
+        --input-border: #333;
+      }
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: #0a0a0a;
-      color: #e5e5e5;
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.5;
       padding: 40px 32px 80px;
       max-width: 1440px;
@@ -18,14 +60,12 @@
     }
 
     h1 {
-      font-size: 14px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #666;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
       margin-bottom: 32px;
       padding-bottom: 12px;
-      border-bottom: 1px solid #1a1a1a;
+      border-bottom: 1px solid var(--border);
     }
 
     .cards {
@@ -36,16 +76,30 @@
     }
 
     .card {
-      background: #111;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
+    }
+
+    .card-header { padding: 16px 20px 12px; }
+
+    .card-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .card-layout {
+      font-size: 12px;
+      color: var(--text-tertiary);
     }
 
     .card-preview {
       aspect-ratio: 1200 / 630;
       overflow: hidden;
-      border-bottom: 1px solid #1a1a1a;
+      padding: 0 12px;
     }
 
     .card-preview img {
@@ -53,21 +107,11 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      border-radius: 8px;
     }
 
-    .card-info { padding: 16px 20px; }
-
-    .card-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #999;
-      margin-bottom: 4px;
-    }
-
-    .card-layout {
-      font-size: 12px;
-      color: #555;
-      margin-bottom: 16px;
+    .card-footer {
+      padding: 12px 20px 16px;
     }
 
     .card-actions { display: flex; gap: 12px; }
@@ -78,25 +122,25 @@
       font-weight: 500;
       padding: 8px 16px;
       border-radius: 8px;
-      border: 1px solid #333;
-      background: #1a1a1a;
-      color: #ccc;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
       cursor: pointer;
       transition: all 0.15s;
     }
 
-    button:hover { background: #222; border-color: #444; color: #fff; }
+    button:hover { background: var(--btn-hover-bg); color: var(--text); }
     button:disabled { opacity: 0.4; cursor: default; }
 
-    button.primary { background: #fff; color: #000; border-color: #fff; }
-    button.primary:hover { background: #e5e5e5; border-color: #e5e5e5; }
+    button.primary { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
+    button.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
 
-    .success { font-size: 13px; color: #4ade80; padding: 8px 0; }
+    .success { font-size: 13px; color: var(--success); padding: 8px 0; }
 
     .refine-panel {
       display: none;
       padding: 16px 20px 20px;
-      border-top: 1px solid #1a1a1a;
+      border-top: 1px solid var(--border);
     }
 
     .refine-panel.open { display: block; }
@@ -112,28 +156,28 @@
 
     .refine-label {
       font-size: 12px;
-      color: #666;
+      color: var(--text-secondary);
       width: 90px;
       flex-shrink: 0;
     }
 
     .refine-row input[type="text"] {
       flex: 1;
-      background: #0a0a0a;
-      border: 1px solid #333;
+      background: var(--bg-input);
+      border: 1px solid var(--input-border);
       border-radius: 6px;
       padding: 6px 10px;
       font-size: 13px;
-      color: #e5e5e5;
+      color: var(--text);
       font-family: inherit;
     }
 
-    .refine-row input[type="text"]:focus { outline: none; border-color: #555; }
+    .refine-row input[type="text"]:focus { outline: none; border-color: var(--text-secondary); }
 
     .refine-row input[type="color"] {
       width: 32px;
       height: 32px;
-      border: 1px solid #333;
+      border: 1px solid var(--input-border);
       border-radius: 6px;
       background: none;
       cursor: pointer;
@@ -141,18 +185,15 @@
     }
 
     .refine-row select {
-      background: #0a0a0a;
-      border: 1px solid #333;
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--input-border);
       border-radius: 6px;
       padding: 6px 10px;
       font-size: 13px;
-      color: #e5e5e5;
+      color: var(--text);
       font-family: inherit;
     }
-
-    .refine-row .toggle { display: flex; gap: 4px; }
-    .refine-row .toggle button { padding: 4px 12px; font-size: 12px; }
-    .refine-row .toggle button.active { background: #333; color: #fff; }
 
     .favicon-section { margin-top: 24px; }
 
@@ -164,18 +205,16 @@
     }
 
     .favicon-mode {
-      background: #111;
-      border: 1px solid #1a1a1a;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 24px;
     }
 
     .favicon-mode-label {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
-      color: #666;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      color: var(--text-secondary);
       margin-bottom: 16px;
     }
 
@@ -192,8 +231,21 @@
     }
 
     .favicon-preview img { image-rendering: pixelated; }
-    .favicon-size { font-size: 11px; color: #666; }
+    .favicon-size { font-size: 11px; color: var(--text-secondary); }
     .favicon-mode.light .favicon-size { color: #aaa; }
+
+    .favicon-actions { display: flex; gap: 12px; align-items: center; }
+
+    .favicon-customize-panel {
+      display: none;
+      margin-top: 16px;
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .favicon-customize-panel.open { display: block; }
 
     @media (max-width: 1024px) {
       .cards { grid-template-columns: 1fr; max-width: 640px; }
@@ -207,13 +259,15 @@
   <h1>Favicon set</h1>
   <div class="favicon-section">
     <div class="favicon-grid" id="faviconGrid"></div>
-    <div id="faviconActions"></div>
+    <div class="favicon-actions" id="faviconActions"></div>
+    <div class="favicon-customize-panel" id="faviconCustomize"></div>
   </div>
 
   <script>
     const layouts = ['A', 'B', 'C'];
     const cardOverrides = { A: {}, B: {}, C: {} };
     let config = {};
+    let logoCandidates = [];
 
     function el(tag, attrs, ...children) {
       const node = document.createElement(tag);
@@ -250,16 +304,35 @@
         );
       }
 
-      const showBtn = el('button', { className: 'active', textContent: 'show' });
-      const hideBtn = el('button', { textContent: 'hide' });
-      showBtn.addEventListener('click', () => {
-        showBtn.classList.add('active'); hideBtn.classList.remove('active');
-        cardOverrides[layout].showLogo = true; rerender(layout);
-      });
-      hideBtn.addEventListener('click', () => {
-        hideBtn.classList.add('active'); showBtn.classList.remove('active');
-        cardOverrides[layout].showLogo = false; rerender(layout);
-      });
+      // Logo select dropdown
+      const logoSelect = el('select', { onChange: (e) => {
+        const val = e.target.value;
+        if (val === '__hide__') {
+          cardOverrides[layout].showLogo = false;
+          cardOverrides[layout].logoPath = undefined;
+        } else if (val === '__none__') {
+          cardOverrides[layout].showLogo = true;
+          cardOverrides[layout].logoPath = undefined;
+        } else {
+          cardOverrides[layout].showLogo = true;
+          cardOverrides[layout].logoPath = val;
+        }
+        rerender(layout);
+      }});
+
+      // Build options
+      const currentLogo = config.logo || null;
+      if (currentLogo) {
+        logoSelect.appendChild(el('option', { value: '__none__', textContent: currentLogo }));
+      } else {
+        logoSelect.appendChild(el('option', { value: '__none__', textContent: 'None (text only)' }));
+      }
+      for (const candidate of logoCandidates) {
+        if (candidate !== currentLogo) {
+          logoSelect.appendChild(el('option', { value: candidate, textContent: candidate }));
+        }
+      }
+      logoSelect.appendChild(el('option', { value: '__hide__', textContent: 'Hide logo' }));
 
       const panel = el('div', { className: 'refine-panel', id: `refine-${layout}` },
         colorRow('background', 'background', colors.background),
@@ -269,7 +342,7 @@
         textRow('tagline', 'tagline', config.tagline),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'logo' }),
-          el('div', { className: 'toggle' }, showBtn, hideBtn)
+          logoSelect
         )
       );
       return panel;
@@ -278,18 +351,20 @@
     function buildCard(layout, index, imageSrc) {
       const previewImg = el('img', { id: `preview-${layout}`, src: imageSrc, alt: `Option ${index + 1}` });
 
-      const refineBtn = el('button', { textContent: 'Refine config' });
-      refineBtn.addEventListener('click', () => toggleRefine(layout));
+      const customizeBtn = el('button', { textContent: 'Customize' });
+      customizeBtn.addEventListener('click', () => toggleRefine(layout));
 
       const dlBtn = el('button', { className: 'primary', id: `dl-${layout}`, textContent: 'Download PNG' });
       dlBtn.addEventListener('click', () => downloadOg(layout));
 
       const card = el('div', { className: 'card' },
-        el('div', { className: 'card-preview' }, previewImg),
-        el('div', { className: 'card-info' },
+        el('div', { className: 'card-header' },
           el('div', { className: 'card-label', textContent: `Option ${index + 1}` }),
-          el('div', { className: 'card-layout', textContent: `Layout ${layout}` }),
-          el('div', { className: 'card-actions' }, refineBtn, dlBtn)
+          el('div', { className: 'card-layout', textContent: `Layout ${layout}` })
+        ),
+        el('div', { className: 'card-preview' }, previewImg),
+        el('div', { className: 'card-footer' },
+          el('div', { className: 'card-actions' }, customizeBtn, dlBtn)
         ),
         buildRefinePanel(layout)
       );
@@ -297,12 +372,14 @@
     }
 
     async function loadPreviews() {
-      const [previewsRes, configRes] = await Promise.all([
+      const [previewsRes, configRes, logosRes] = await Promise.all([
         fetch('/api/previews'),
         fetch('/api/config'),
+        fetch('/api/logo-candidates'),
       ]);
       const previews = await previewsRes.json();
       config = await configRes.json();
+      logoCandidates = await logosRes.json();
 
       const container = document.getElementById('cards');
       container.innerHTML = '';
@@ -358,6 +435,8 @@
       }
     }
 
+    // --- Favicon section ---
+
     function buildFaviconMode(label, cssClass, previews, sizes) {
       const previewsContainer = el('div', { className: 'favicon-previews' });
       sizes.forEach(size => {
@@ -375,6 +454,72 @@
       );
     }
 
+    function buildFaviconCustomizePanel() {
+      const defaultLetter = (config.title || 'A')[0].toUpperCase();
+
+      const letterInput = el('input', { type: 'text', value: defaultLetter, maxLength: '1' });
+      letterInput.style.width = '48px';
+      letterInput.style.textAlign = 'center';
+
+      const srcSelect = el('select', {});
+      srcSelect.appendChild(el('option', { value: '__lettermark__', textContent: 'Lettermark' }));
+      for (const candidate of logoCandidates) {
+        srcSelect.appendChild(el('option', { value: candidate, textContent: candidate }));
+      }
+      // Set current value
+      if (config.faviconSrc) {
+        srcSelect.value = config.faviconSrc;
+      }
+
+      const applyBtn = el('button', { textContent: 'Apply' });
+      applyBtn.addEventListener('click', async () => {
+        applyBtn.disabled = true;
+        applyBtn.textContent = 'Rendering...';
+        try {
+          const overrides = {};
+          const letter = letterInput.value.trim();
+          if (letter && letter !== defaultLetter) overrides.letter = letter;
+          const src = srcSelect.value;
+          if (src !== '__lettermark__') overrides.faviconSrc = src;
+          else overrides.faviconSrc = null;
+
+          const res = await fetch('/api/render-favicon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(overrides),
+          });
+          const previews = await res.json();
+
+          // Update favicon grid
+          const grid = document.getElementById('faviconGrid');
+          const sizes = [16, 32, 96, 180];
+          grid.innerHTML = '';
+          grid.appendChild(buildFaviconMode('Light mode', 'light', previews, sizes));
+          grid.appendChild(buildFaviconMode('Dark mode', '', previews, sizes));
+        } catch (err) {
+          console.error('Favicon render failed:', err);
+        } finally {
+          applyBtn.disabled = false;
+          applyBtn.textContent = 'Apply';
+        }
+      });
+
+      const panel = document.getElementById('faviconCustomize');
+      panel.innerHTML = '';
+      panel.appendChild(el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: 'letter' }),
+        letterInput
+      ));
+      panel.appendChild(el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: 'source' }),
+        srcSelect
+      ));
+      panel.appendChild(el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label' }),
+        applyBtn
+      ));
+    }
+
     async function loadFaviconPreviews() {
       const res = await fetch('/api/favicon-previews');
       const previews = await res.json();
@@ -385,10 +530,19 @@
       grid.appendChild(buildFaviconMode('Dark mode', '', previews, sizes));
 
       const actions = document.getElementById('faviconActions');
-      const btn = el('button', { className: 'primary', textContent: 'Download full set' });
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.textContent = 'Saving...';
+      actions.innerHTML = '';
+
+      const customizeBtn = el('button', { textContent: 'Customize' });
+      customizeBtn.addEventListener('click', () => {
+        const panel = document.getElementById('faviconCustomize');
+        if (!panel.hasChildNodes()) buildFaviconCustomizePanel();
+        panel.classList.toggle('open');
+      });
+
+      const dlBtn = el('button', { className: 'primary', textContent: 'Download full set' });
+      dlBtn.addEventListener('click', async () => {
+        dlBtn.disabled = true;
+        dlBtn.textContent = 'Saving...';
         try {
           const res = await fetch('/api/download/favicons', {
             method: 'POST',
@@ -397,14 +551,15 @@
           const data = await res.json();
           const span = el('span', { className: 'success',
             textContent: `\u2713 Saved to ${config.outputDir || 'public/metadata'}/ (${data.count} files)` });
-          btn.replaceWith(span);
+          dlBtn.replaceWith(span);
         } catch (err) {
-          btn.textContent = 'Error';
+          dlBtn.textContent = 'Error';
           console.error('Favicon download failed:', err);
         }
       });
-      actions.innerHTML = '';
-      actions.appendChild(btn);
+
+      actions.appendChild(customizeBtn);
+      actions.appendChild(dlBtn);
     }
 
     loadPreviews();

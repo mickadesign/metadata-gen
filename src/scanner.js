@@ -337,7 +337,7 @@ async function scanTitleAndTagline(root) {
 }
 
 /**
- * Scan for logo file.
+ * Scan for logo file (returns first match).
  */
 async function scanLogo(root) {
   // SVG first
@@ -357,6 +357,19 @@ async function scanLogo(root) {
   }
 
   return null;
+}
+
+/**
+ * Scan for ALL logo candidates (SVG then PNG). Returns array of relative paths.
+ */
+export async function scanAllLogos(root) {
+  const found = [];
+  for (const logoPath of [...LOGO_PATHS_SVG, ...LOGO_PATHS_PNG]) {
+    if (await fileExists(join(root, logoPath))) {
+      found.push(`./${logoPath}`);
+    }
+  }
+  return found;
 }
 
 /**

@@ -41,7 +41,7 @@ function hexToRgb(hex) {
  * Generate a lettermark SVG using Satori (first letter of title, accent on background).
  */
 async function generateLettermarkPng(config, size) {
-  const letter = (config.title || 'A')[0].toUpperCase();
+  const letter = config.faviconLetter || (config.title || 'A')[0].toUpperCase();
   const font = await readFile(join(__dirname, 'fonts', 'Inter-Bold.ttf'));
 
   const jsx = {
@@ -126,7 +126,7 @@ function generateFaviconSvg(config) {
   // SVG favicon always uses a lettermark for dual-mode (light/dark) support.
   // Embedding an arbitrary logo SVG with CSS media queries is not reliably
   // supported across browsers, so logo-based favicons rely on the PNG files.
-  const letter = (config.title || 'A')[0].toUpperCase();
+  const letter = config.faviconLetter || (config.title || 'A')[0].toUpperCase();
 
   const bg = config.colors.background;
   const accent = config.colors.accent;
