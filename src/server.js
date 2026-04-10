@@ -192,7 +192,7 @@ export async function startServer(options = {}) {
   // API: download full favicon set
   app.post('/api/download/favicons', async (req, res) => {
     try {
-      const files = await generateFaviconSet(config, root);
+      const files = await generateFaviconSet(config, root, outputDir);
       const relativePaths = files.map((f) => f.replace(root, '').replace(/^\//, ''));
       console.log(`\u2713 Saved favicon set (${files.length} files)`);
       res.json({ files: relativePaths, count: files.length });

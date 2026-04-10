@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { scan } from './scanner.js';
@@ -89,6 +89,25 @@ export async function init(options = {}) {
 
   const config = buildConfig(results);
   const configPath = join(root, 'metadata.config.json');
+
+  // Check for existing config to prevent accidental overwrite
+  let exists = false;
+  try {
+    await access(configPath);
+    exists = true;
+  } catch {}
+
+  if (exists && !options.yes) {
+    const overwrite = await confirm('metadata.config.json already exists. Overwrite? [y/N]\n> ');
+    if (!overwrite) {
+      console.log('\nKept existing config.');
+      return;
+    }
+  } else if (exists && options.yes) {
+    // --yes skips all prompts but we still warn
+    console.log('\u26a0 Overwriting existing metadata.config.json');
+  }
+
   await writeFile(configPath, JSON.stringify(config, null, 2) + '\n');
   console.log(`\n\u2713 Written to ${configPath}`);
 }

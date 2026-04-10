@@ -11,6 +11,33 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const FAVICON_SIZES = [16, 32, 48, 96, 180, 192, 512];
 
 /**
+ * Normalize a hex color to 6-digit format (#rgb -> #rrggbb).
+ */
+function normalizeHex(hex) {
+  if (!hex || typeof hex !== 'string') return '#000000';
+  hex = hex.trim();
+  if (/^#[0-9a-fA-F]{3}$/.test(hex)) {
+    return `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+  }
+  if (/^#[0-9a-fA-F]{6,}$/.test(hex)) {
+    return hex.slice(0, 7);
+  }
+  return hex;
+}
+
+/**
+ * Parse a normalized 6-digit hex string into { r, g, b }.
+ */
+function hexToRgb(hex) {
+  hex = normalizeHex(hex);
+  return {
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  };
+}
+
+/**
  * Generate a lettermark SVG using Satori (first letter of title, accent on background).
  */
 async function generateLettermarkPng(config, size) {
@@ -77,10 +104,7 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
     .toBuffer();
 
   // Composite on background color
-  const bgHex = config.colors.background;
-  const r = parseInt(bgHex.slice(1, 3), 16);
-  const g = parseInt(bgHex.slice(3, 5), 16);
-  const b = parseInt(bgHex.slice(5, 7), 16);
+  const { r, g, b } = hexToRgb(config.colors.background);
 
   return sharp({
     create: {
@@ -159,13 +183,14 @@ function generateWebManifest(config) {
  *
  * @param {object} config - metadata.config.json contents
  * @param {string} projectRoot - project root directory
+ * @param {string} [outputDirOverride] - override output directory (absolute path)
  * @returns {Promise<string[]>} list of written file paths
  */
-export async function generateFaviconSet(config, projectRoot = process.cwd()) {
-  const outputDir = join(projectRoot, config.outputDir || 'public/metadata');
+export async function generateFaviconSet(config, projectRoot = process.cwd(), outputDirOverride) {
+  const outputDir = outputDirOverride || join(projectRoot, config.outputDir || 'public/metadata');
   await mkdir(outputDir, { recursive: true });
 
-  const hasLogo = config.faviconSrc && config.logo;
+  const hasLogo = !!config.faviconSrc;
   const writtenFiles = [];
 
   // Generate PNGs at all sizes
@@ -220,7 +245,7 @@ export async function generateFaviconSet(config, projectRoot = process.cwd()) {
  * Returns base64 PNGs at representative sizes for both light and dark contexts.
  */
 export async function generateFaviconPreviews(config, projectRoot = process.cwd()) {
-  const hasLogo = config.faviconSrc && config.logo;
+  const hasLogo = !!config.faviconSrc;
   const previewSizes = [16, 32, 96, 180];
   const previews = {};
 
