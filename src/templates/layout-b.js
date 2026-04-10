@@ -20,19 +20,6 @@ export function layoutB(config) {
         position: 'relative',
       },
       children: [
-        {
-          type: 'div',
-          props: {
-            style: {
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '8px',
-              backgroundColor: colors.accent,
-            },
-          },
-        },
         logoBase64
           ? {
               type: 'img',

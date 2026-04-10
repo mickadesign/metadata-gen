@@ -42,6 +42,9 @@ function hexToRgb(hex) {
  */
 async function generateLettermarkPng(config, size) {
   const letter = config.faviconLetter || (config.title || 'A')[0].toUpperCase();
+  const letterSizePct = config.faviconLetterSize || 60;
+  const borderRadiusPct = config.faviconBorderRadius ?? 19;
+  const borderRadius = Math.round(size * (borderRadiusPct / 100));
   const font = await readFile(join(__dirname, 'fonts', 'Inter-Bold.ttf'));
 
   const jsx = {
@@ -54,13 +57,14 @@ async function generateLettermarkPng(config, size) {
         width: '100%',
         height: '100%',
         backgroundColor: config.colors.background,
+        borderRadius: `${borderRadius}px`,
         fontFamily: 'Inter',
       },
       children: {
         type: 'div',
         props: {
           style: {
-            fontSize: Math.round(size * 0.6),
+            fontSize: Math.round(size * (letterSizePct / 100)),
             fontWeight: 700,
             color: config.colors.accent,
           },

@@ -73,19 +73,6 @@ export function layoutA(config) {
             ].filter(Boolean),
           },
         },
-        {
-          type: 'div',
-          props: {
-            style: {
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              width: '100%',
-              height: '6px',
-              backgroundColor: colors.accent,
-            },
-          },
-        },
       ].filter(Boolean),
     },
   };

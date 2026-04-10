@@ -224,9 +224,9 @@
     .ff-slider {
       flex: 1;
       position: relative;
-      height: 32px;
+      height: 36px;
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 8px;
       overflow: hidden;
       cursor: ew-resize;
       user-select: none;
@@ -260,20 +260,6 @@
 
     .ff-slider:hover .ff-slider-handle { background: var(--fg-50); }
     .ff-slider:active .ff-slider-handle { background: var(--text); top: 7px; bottom: 7px; }
-
-    .ff-slider-label {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 13px;
-      color: var(--text-muted);
-      pointer-events: none;
-      z-index: 4;
-      transition: color 80ms;
-    }
-
-    .ff-slider:hover .ff-slider-label { color: var(--text); }
 
     .ff-slider-value {
       position: absolute;
@@ -365,6 +351,7 @@
       border-radius: 12px;
       overflow: hidden;
       margin-bottom: 24px;
+      max-width: 720px;
     }
 
     .favicon-card-header { padding: 16px 20px 12px; }
@@ -407,6 +394,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
+      max-width: 720px;
     }
 
     .favicon-customize-panel.open { display: flex; flex-direction: column; gap: 8px; }
@@ -456,11 +444,10 @@
 
     // --- FF-inspired component builders ---
 
-    function ffSlider(label, value, min, max, unit, onChange) {
+    function ffSlider(value, min, max, unit, onChange) {
       const container = el('div', { className: 'ff-slider' });
       const fill = el('div', { className: 'ff-slider-fill' });
       const handle = el('div', { className: 'ff-slider-handle' });
-      const labelEl = el('div', { className: 'ff-slider-label', textContent: label });
       const valueEl = el('div', { className: 'ff-slider-value', textContent: `${value}${unit}` });
       const input = el('input', { type: 'range', min: String(min), max: String(max), value: String(value) });
 
@@ -475,7 +462,7 @@
       input.addEventListener('input', () => update(input.value));
       input.addEventListener('change', () => onChange(parseInt(input.value)));
 
-      container.append(fill, handle, labelEl, valueEl, input);
+      container.append(fill, handle, valueEl, input);
       return container;
     }
 
@@ -568,11 +555,11 @@
         ffInput('tagline text', config.tagline, (v) => updateOverride(layout, 'tagline', v)),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'heading size' }),
-          ffSlider('heading', DEFAULT_HEADING_SIZES[layout], 24, 96, 'px', (v) => updateOverride(layout, 'headingSize', v))
+          ffSlider(DEFAULT_HEADING_SIZES[layout], 24, 96, 'px', (v) => updateOverride(layout, 'headingSize', v))
         ),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'tagline size' }),
-          ffSlider('tagline', DEFAULT_TAGLINE_SIZES[layout], 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
+          ffSlider(DEFAULT_TAGLINE_SIZES[layout], 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
         ),
         ffSelect('logo', logoOpts, '__none__', (val) => {
           if (val === '__hide__') {
@@ -725,8 +712,8 @@
       const defaultLetter = (config.title || 'A')[0].toUpperCase();
       const colors = config.colors || {};
 
-      const letterInput = el('input', { type: 'text', className: 'ff-input', value: defaultLetter, maxLength: '1' });
-      letterInput.style.width = '64px';
+      const letterInput = el('input', { type: 'text', className: 'ff-input', value: defaultLetter, maxLength: '4' });
+      letterInput.style.width = '80px';
       letterInput.style.textAlign = 'center';
       letterInput.addEventListener('change', () => {
         const v = letterInput.value.trim();
@@ -745,6 +732,14 @@
       panel.appendChild(el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'letter' }),
         letterInput
+      ));
+      panel.appendChild(el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: 'letter size' }),
+        ffSlider(60, 20, 80, '%', (v) => { faviconOverrides.letterSize = v; rerenderFavicons(); })
+      ));
+      panel.appendChild(el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: 'corner radius' }),
+        ffSlider(19, 0, 50, '%', (v) => { faviconOverrides.borderRadius = v; rerenderFavicons(); })
       ));
       panel.appendChild(ffSelect('source', srcOpts, config.faviconSrc || '__lettermark__', (v) => {
         faviconOverrides.faviconSrc = v === '__lettermark__' ? null : v;

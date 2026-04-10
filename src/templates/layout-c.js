@@ -50,19 +50,6 @@ export function layoutC(config) {
               },
             }
           : null,
-        {
-          type: 'div',
-          props: {
-            style: {
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '6px',
-              height: '100%',
-              backgroundColor: colors.accent,
-            },
-          },
-        },
       ].filter(Boolean),
     },
   };
