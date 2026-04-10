@@ -1,12 +1,9 @@
 /**
  * Layout A — Logo left, title + tagline right, accent bottom border.
  * Placeholder template. Pure function: (config) => Satori JSX.
- *
- * @param {{ headline: string, tagline: string, colors: { background: string, foreground: string, accent: string }, logoBase64?: string }} config
- * @returns {object} Satori-compatible JSX (React.createElement style)
  */
 export function layoutA(config) {
-  const { headline, tagline, colors, logoBase64 } = config;
+  const { headline, tagline, colors, logoBase64, headingSize = 64, taglineSize = 28 } = config;
 
   return {
     type: 'div',
@@ -22,7 +19,6 @@ export function layoutA(config) {
         fontFamily: 'Inter',
       },
       children: [
-        // Logo (left)
         logoBase64
           ? {
               type: 'img',
@@ -37,7 +33,6 @@ export function layoutA(config) {
               },
             }
           : null,
-        // Text block (right)
         {
           type: 'div',
           props: {
@@ -52,7 +47,7 @@ export function layoutA(config) {
                 type: 'div',
                 props: {
                   style: {
-                    fontSize: 64,
+                    fontSize: headingSize,
                     fontWeight: 700,
                     color: colors.foreground,
                     lineHeight: 1.1,
@@ -65,9 +60,9 @@ export function layoutA(config) {
                     type: 'div',
                     props: {
                       style: {
-                        fontSize: 28,
-                        color: colors.foreground,
-                        opacity: 0.7,
+                        fontSize: taglineSize,
+                        color: colors.tagline || colors.foreground,
+                        opacity: colors.tagline ? 1 : 0.7,
                         marginTop: '20px',
                         lineHeight: 1.4,
                       },
@@ -78,7 +73,6 @@ export function layoutA(config) {
             ].filter(Boolean),
           },
         },
-        // Accent bottom border
         {
           type: 'div',
           props: {

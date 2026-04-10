@@ -3,7 +3,7 @@
  * Placeholder template.
  */
 export function layoutC(config) {
-  const { headline, tagline, colors } = config;
+  const { headline, tagline, colors, headingSize = 72, taglineSize = 22 } = config;
 
   return {
     type: 'div',
@@ -20,12 +20,11 @@ export function layoutC(config) {
         position: 'relative',
       },
       children: [
-        // Large headline (tagline promoted)
         {
           type: 'div',
           props: {
             style: {
-              fontSize: 72,
+              fontSize: headingSize,
               fontWeight: 700,
               color: colors.foreground,
               lineHeight: 1.1,
@@ -34,7 +33,6 @@ export function layoutC(config) {
             children: headline,
           },
         },
-        // Small label bottom-right (title as sub-label)
         tagline
           ? {
               type: 'div',
@@ -43,16 +41,15 @@ export function layoutC(config) {
                   position: 'absolute',
                   bottom: '40px',
                   right: '80px',
-                  fontSize: 22,
+                  fontSize: taglineSize,
                   fontWeight: 600,
-                  color: colors.accent,
+                  color: colors.tagline || colors.accent,
                   letterSpacing: '0.05em',
                 },
                 children: tagline,
               },
             }
           : null,
-        // Accent left border
         {
           type: 'div',
           props: {

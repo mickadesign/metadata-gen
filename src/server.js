@@ -136,11 +136,16 @@ export async function startServer(options = {}) {
       if (!VALID_LAYOUTS.includes(layout)) {
         return res.status(400).json({ error: `Invalid layout. Must be one of: ${VALID_LAYOUTS.join(', ')}` });
       }
-      // Sanitize overrides — only allow known string keys
+      // Sanitize overrides — only allow known keys
       const safe = {};
       if (overrides && typeof overrides === 'object') {
-        for (const key of ['headline', 'tagline', 'background', 'foreground', 'accent']) {
+        for (const key of ['headline', 'tagline', 'background', 'foreground', 'accent', 'taglineColor']) {
           if (typeof overrides[key] === 'string') safe[key] = overrides[key].slice(0, 500);
+        }
+        for (const key of ['headingSize', 'taglineSize']) {
+          if (typeof overrides[key] === 'number' && overrides[key] >= 12 && overrides[key] <= 120) {
+            safe[key] = overrides[key];
+          }
         }
         if (typeof overrides.showLogo === 'boolean') safe.showLogo = overrides.showLogo;
         if (typeof overrides.logoPath === 'string' && logoCandidates.includes(overrides.logoPath)) {
@@ -204,8 +209,11 @@ export async function startServer(options = {}) {
   // API: re-render favicon previews with overrides
   app.post('/api/render-favicon', async (req, res) => {
     try {
-      const { letter, faviconSrc } = req.body;
-      const overrideConfig = { ...config };
+      const { letter, faviconSrc, background, accent } = req.body;
+      const overrideConfig = {
+        ...config,
+        colors: { ...config.colors },
+      };
       if (typeof letter === 'string' && letter.length > 0) {
         overrideConfig.faviconLetter = letter.slice(0, 1);
       }
@@ -214,6 +222,8 @@ export async function startServer(options = {}) {
       } else if (typeof faviconSrc === 'string' && logoCandidates.includes(faviconSrc)) {
         overrideConfig.faviconSrc = faviconSrc;
       }
+      if (typeof background === 'string') overrideConfig.colors.background = background;
+      if (typeof accent === 'string') overrideConfig.colors.accent = accent;
       faviconPreviews = await generateFaviconPreviews(overrideConfig, root);
       res.json(faviconPreviews);
     } catch (err) {

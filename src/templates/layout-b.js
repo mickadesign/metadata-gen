@@ -3,7 +3,7 @@
  * Placeholder template.
  */
 export function layoutB(config) {
-  const { headline, tagline, colors, logoBase64 } = config;
+  const { headline, tagline, colors, logoBase64, headingSize = 56, taglineSize = 26 } = config;
 
   return {
     type: 'div',
@@ -20,7 +20,6 @@ export function layoutB(config) {
         position: 'relative',
       },
       children: [
-        // Accent strip at top
         {
           type: 'div',
           props: {
@@ -34,7 +33,6 @@ export function layoutB(config) {
             },
           },
         },
-        // Logo
         logoBase64
           ? {
               type: 'img',
@@ -48,12 +46,11 @@ export function layoutB(config) {
               },
             }
           : null,
-        // Headline
         {
           type: 'div',
           props: {
             style: {
-              fontSize: 56,
+              fontSize: headingSize,
               fontWeight: 700,
               color: colors.foreground,
               textAlign: 'center',
@@ -63,15 +60,14 @@ export function layoutB(config) {
             children: headline,
           },
         },
-        // Tagline
         tagline
           ? {
               type: 'div',
               props: {
                 style: {
-                  fontSize: 26,
-                  color: colors.foreground,
-                  opacity: 0.6,
+                  fontSize: taglineSize,
+                  color: colors.tagline || colors.foreground,
+                  opacity: colors.tagline ? 1 : 0.6,
                   textAlign: 'center',
                   marginTop: '20px',
                   maxWidth: '700px',

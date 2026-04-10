@@ -81,8 +81,11 @@ export async function renderOgImage(config, layout, overrides = {}, projectRoot 
       background: overrides.background ?? config.colors.background,
       foreground: overrides.foreground ?? config.colors.foreground,
       accent: overrides.accent ?? config.colors.accent,
+      tagline: overrides.taglineColor ?? null,
     },
     logoBase64,
+    headingSize: overrides.headingSize ?? undefined,
+    taglineSize: overrides.taglineSize ?? undefined,
   };
 
   // Render via Satori
