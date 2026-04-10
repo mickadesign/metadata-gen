@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>metadata-gen preview</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #e5e5e5;
+      line-height: 1.5;
+      padding: 40px 32px 80px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      margin-bottom: 32px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 64px;
+    }
+
+    .card {
+      background: #111;
+      border: 1px solid #1a1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-preview {
+      aspect-ratio: 1200 / 630;
+      overflow: hidden;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .card-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-info { padding: 16px 20px; }
+
+    .card-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #999;
+      margin-bottom: 4px;
+    }
+
+    .card-layout {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 16px;
+    }
+
+    .card-actions { display: flex; gap: 12px; }
+
+    button {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #ccc;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    button:hover { background: #222; border-color: #444; color: #fff; }
+    button:disabled { opacity: 0.4; cursor: default; }
+
+    button.primary { background: #fff; color: #000; border-color: #fff; }
+    button.primary:hover { background: #e5e5e5; border-color: #e5e5e5; }
+
+    .success { font-size: 13px; color: #4ade80; padding: 8px 0; }
+
+    .refine-panel {
+      display: none;
+      padding: 16px 20px 20px;
+      border-top: 1px solid #1a1a1a;
+    }
+
+    .refine-panel.open { display: block; }
+
+    .refine-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .refine-row:last-child { margin-bottom: 0; }
+
+    .refine-label {
+      font-size: 12px;
+      color: #666;
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    .refine-row input[type="text"] {
+      flex: 1;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      color: #e5e5e5;
+      font-family: inherit;
+    }
+
+    .refine-row input[type="text"]:focus { outline: none; border-color: #555; }
+
+    .refine-row input[type="color"] {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: none;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    .refine-row select {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      color: #e5e5e5;
+      font-family: inherit;
+    }
+
+    .refine-row .toggle { display: flex; gap: 4px; }
+    .refine-row .toggle button { padding: 4px 12px; font-size: 12px; }
+    .refine-row .toggle button.active { background: #333; color: #fff; }
+
+    .favicon-section { margin-top: 24px; }
+
+    .favicon-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .favicon-mode {
+      background: #111;
+      border: 1px solid #1a1a1a;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .favicon-mode-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    .favicon-mode.light { background: #fafafa; }
+    .favicon-mode.light .favicon-mode-label { color: #999; }
+
+    .favicon-previews { display: flex; align-items: flex-end; gap: 24px; }
+
+    .favicon-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .favicon-preview img { image-rendering: pixelated; }
+    .favicon-size { font-size: 11px; color: #666; }
+    .favicon-mode.light .favicon-size { color: #aaa; }
+
+    @media (max-width: 1024px) {
+      .cards { grid-template-columns: 1fr; max-width: 640px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Metadata images</h1>
+  <div class="cards" id="cards"></div>
+
+  <h1>Favicon set</h1>
+  <div class="favicon-section">
+    <div class="favicon-grid" id="faviconGrid"></div>
+    <div id="faviconActions"></div>
+  </div>
+
+  <script>
+    const layouts = ['A', 'B', 'C'];
+    const cardOverrides = { A: {}, B: {}, C: {} };
+    let config = {};
+
+    function el(tag, attrs, ...children) {
+      const node = document.createElement(tag);
+      if (attrs) {
+        for (const [k, v] of Object.entries(attrs)) {
+          if (k === 'className') node.className = v;
+          else if (k === 'textContent') node.textContent = v;
+          else if (k.startsWith('on')) node.addEventListener(k.slice(2).toLowerCase(), v);
+          else node.setAttribute(k, v);
+        }
+      }
+      for (const child of children) {
+        if (child == null) continue;
+        if (typeof child === 'string') node.appendChild(document.createTextNode(child));
+        else node.appendChild(child);
+      }
+      return node;
+    }
+
+    function buildRefinePanel(layout) {
+      const colors = config.colors || {};
+
+      function colorRow(label, key, value) {
+        return el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: label }),
+          el('input', { type: 'color', value: value || '#000000', onChange: (e) => updateOverride(layout, key, e.target.value) })
+        );
+      }
+
+      function textRow(label, key, value) {
+        return el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: label }),
+          el('input', { type: 'text', value: value || '', onChange: (e) => updateOverride(layout, key, e.target.value) })
+        );
+      }
+
+      const showBtn = el('button', { className: 'active', textContent: 'show' });
+      const hideBtn = el('button', { textContent: 'hide' });
+      showBtn.addEventListener('click', () => {
+        showBtn.classList.add('active'); hideBtn.classList.remove('active');
+        cardOverrides[layout].showLogo = true; rerender(layout);
+      });
+      hideBtn.addEventListener('click', () => {
+        hideBtn.classList.add('active'); showBtn.classList.remove('active');
+        cardOverrides[layout].showLogo = false; rerender(layout);
+      });
+
+      const panel = el('div', { className: 'refine-panel', id: `refine-${layout}` },
+        colorRow('background', 'background', colors.background),
+        colorRow('foreground', 'foreground', colors.foreground),
+        colorRow('accent', 'accent', colors.accent),
+        textRow('headline', 'headline', config.title),
+        textRow('tagline', 'tagline', config.tagline),
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'logo' }),
+          el('div', { className: 'toggle' }, showBtn, hideBtn)
+        )
+      );
+      return panel;
+    }
+
+    function buildCard(layout, index, imageSrc) {
+      const previewImg = el('img', { id: `preview-${layout}`, src: imageSrc, alt: `Option ${index + 1}` });
+
+      const refineBtn = el('button', { textContent: 'Refine config' });
+      refineBtn.addEventListener('click', () => toggleRefine(layout));
+
+      const dlBtn = el('button', { className: 'primary', id: `dl-${layout}`, textContent: 'Download PNG' });
+      dlBtn.addEventListener('click', () => downloadOg(layout));
+
+      const card = el('div', { className: 'card' },
+        el('div', { className: 'card-preview' }, previewImg),
+        el('div', { className: 'card-info' },
+          el('div', { className: 'card-label', textContent: `Option ${index + 1}` }),
+          el('div', { className: 'card-layout', textContent: `Layout ${layout}` }),
+          el('div', { className: 'card-actions' }, refineBtn, dlBtn)
+        ),
+        buildRefinePanel(layout)
+      );
+      return card;
+    }
+
+    async function loadPreviews() {
+      const [previewsRes, configRes] = await Promise.all([
+        fetch('/api/previews'),
+        fetch('/api/config'),
+      ]);
+      const previews = await previewsRes.json();
+      config = await configRes.json();
+
+      const container = document.getElementById('cards');
+      container.innerHTML = '';
+
+      layouts.forEach((layout, i) => {
+        container.appendChild(buildCard(layout, i, previews[layout]));
+      });
+    }
+
+    function toggleRefine(layout) {
+      document.getElementById(`refine-${layout}`).classList.toggle('open');
+    }
+
+    async function updateOverride(layout, key, value) {
+      cardOverrides[layout][key] = value;
+      await rerender(layout);
+    }
+
+    async function rerender(layout) {
+      const img = document.getElementById(`preview-${layout}`);
+      img.style.opacity = '0.5';
+      try {
+        const res = await fetch('/api/render', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ layout, overrides: cardOverrides[layout] }),
+        });
+        const data = await res.json();
+        img.src = data.image;
+      } catch (err) {
+        console.error('Render failed:', err);
+      } finally {
+        img.style.opacity = '1';
+      }
+    }
+
+    async function downloadOg(layout) {
+      const btn = document.getElementById(`dl-${layout}`);
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        const res = await fetch('/api/download/og', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ layout }),
+        });
+        const data = await res.json();
+        const span = el('span', { className: 'success', textContent: `\u2713 Saved to ${data.path}` });
+        btn.replaceWith(span);
+      } catch (err) {
+        btn.textContent = 'Error';
+        console.error('Download failed:', err);
+      }
+    }
+
+    function buildFaviconMode(label, cssClass, previews, sizes) {
+      const previewsContainer = el('div', { className: 'favicon-previews' });
+      sizes.forEach(size => {
+        const displaySize = Math.min(size, 96);
+        previewsContainer.appendChild(
+          el('div', { className: 'favicon-preview' },
+            el('img', { src: previews[size], width: displaySize, height: displaySize }),
+            el('span', { className: 'favicon-size', textContent: `${size}px` })
+          )
+        );
+      });
+      return el('div', { className: `favicon-mode ${cssClass}` },
+        el('div', { className: 'favicon-mode-label', textContent: label }),
+        previewsContainer
+      );
+    }
+
+    async function loadFaviconPreviews() {
+      const res = await fetch('/api/favicon-previews');
+      const previews = await res.json();
+      const grid = document.getElementById('faviconGrid');
+      const sizes = [16, 32, 96, 180];
+      grid.innerHTML = '';
+      grid.appendChild(buildFaviconMode('Light mode', 'light', previews, sizes));
+      grid.appendChild(buildFaviconMode('Dark mode', '', previews, sizes));
+
+      const actions = document.getElementById('faviconActions');
+      const btn = el('button', { className: 'primary', textContent: 'Download full set' });
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+        try {
+          const res = await fetch('/api/download/favicons', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const data = await res.json();
+          const span = el('span', { className: 'success',
+            textContent: `\u2713 Saved to ${config.outputDir || 'public/metadata'}/ (${data.count} files)` });
+          btn.replaceWith(span);
+        } catch (err) {
+          btn.textContent = 'Error';
+          console.error('Favicon download failed:', err);
+        }
+      });
+      actions.innerHTML = '';
+      actions.appendChild(btn);
+    }
+
+    loadPreviews();
+    loadFaviconPreviews();
+  </script>
+</body>
+</html>
