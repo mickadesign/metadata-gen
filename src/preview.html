@@ -10,12 +10,12 @@
     :root {
       --bg: #f5f5f5;
       --bg-card: #ffffff;
-      --bg-input: #ffffff;
+      --bg-muted: rgba(0,0,0,0.04);
       --border: #e0e0e0;
-      --border-subtle: #eee;
+      --border-60: rgba(0,0,0,0.08);
       --text: #111;
-      --text-secondary: #666;
-      --text-tertiary: #999;
+      --text-muted: #888;
+      --text-tertiary: #aaa;
       --btn-bg: #f0f0f0;
       --btn-border: #ddd;
       --btn-text: #333;
@@ -24,18 +24,25 @@
       --primary-text: #fff;
       --primary-hover: #333;
       --success: #16a34a;
-      --input-border: #ccc;
+      --focus-ring: #6B97FF;
+      --surface: rgba(0,0,0,0.04);
+      --surface-active: rgba(0,0,0,0.08);
+      --fg-8: rgba(0,0,0,0.08);
+      --fg-25: rgba(0,0,0,0.25);
+      --fg-50: rgba(0,0,0,0.5);
+      --accent-40: rgba(99,102,241,0.4);
+      --dropdown-shadow: 0 4px 12px rgba(0,0,0,0.02);
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #0a0a0a;
         --bg-card: #111;
-        --bg-input: #0a0a0a;
+        --bg-muted: rgba(255,255,255,0.06);
         --border: #1a1a1a;
-        --border-subtle: #1a1a1a;
+        --border-60: rgba(255,255,255,0.08);
         --text: #e5e5e5;
-        --text-secondary: #666;
+        --text-muted: #666;
         --text-tertiary: #555;
         --btn-bg: #1a1a1a;
         --btn-border: #333;
@@ -45,7 +52,13 @@
         --primary-text: #000;
         --primary-hover: #e5e5e5;
         --success: #4ade80;
-        --input-border: #333;
+        --surface: rgba(255,255,255,0.06);
+        --surface-active: rgba(255,255,255,0.1);
+        --fg-8: rgba(255,255,255,0.08);
+        --fg-25: rgba(255,255,255,0.25);
+        --fg-50: rgba(255,255,255,0.5);
+        --accent-40: rgba(99,102,241,0.25);
+        --dropdown-shadow: 0 8px 32px rgba(0,0,0,0.5);
       }
     }
 
@@ -83,37 +96,12 @@
     }
 
     .card-header { padding: 16px 20px 12px; }
+    .card-label { font-size: 14px; font-weight: 600; color: var(--text); }
 
-    .card-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 2px;
-    }
+    .card-preview { aspect-ratio: 1200 / 630; overflow: hidden; padding: 0 12px; }
+    .card-preview img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px; }
 
-    .card-layout {
-      font-size: 12px;
-      color: var(--text-tertiary);
-    }
-
-    .card-preview {
-      aspect-ratio: 1200 / 630;
-      overflow: hidden;
-      padding: 0 12px;
-    }
-
-    .card-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      border-radius: 8px;
-    }
-
-    .card-footer {
-      padding: 12px 20px 16px;
-    }
-
+    .card-footer { padding: 12px 20px 16px; }
     .card-actions { display: flex; gap: 12px; }
 
     button {
@@ -126,7 +114,7 @@
       background: var(--btn-bg);
       color: var(--btn-text);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 80ms;
     }
 
     button:hover { background: var(--btn-hover-bg); color: var(--text); }
@@ -135,7 +123,9 @@
     button.primary { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
     button.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
 
-    .success { font-size: 13px; color: var(--success); padding: 8px 0; }
+    .success { font-size: 13px; color: var(--success); padding: 8px 0; display: inline-block; }
+
+    /* --- Refine panel --- */
 
     .refine-panel {
       display: none;
@@ -143,57 +133,229 @@
       border-top: 1px solid var(--border);
     }
 
-    .refine-panel.open { display: block; }
+    .refine-panel.open { display: flex; flex-direction: column; gap: 8px; }
 
     .refine-row {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 12px;
     }
-
-    .refine-row:last-child { margin-bottom: 0; }
 
     .refine-label {
       font-size: 12px;
-      color: var(--text-secondary);
+      color: var(--text-muted);
       width: 90px;
       flex-shrink: 0;
     }
 
-    .refine-row input[type="text"] {
+    /* --- FF-inspired Text Input --- */
+
+    .ff-input {
       flex: 1;
-      background: var(--bg-input);
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
-      padding: 6px 10px;
+      height: 36px;
+      padding: 0 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
       font-size: 13px;
       color: var(--text);
       font-family: inherit;
+      outline: none;
+      transition: all 80ms;
     }
 
-    .refine-row input[type="text"]:focus { outline: none; border-color: var(--text-secondary); }
+    .ff-input:hover {
+      background: var(--bg-muted);
+      border-color: var(--border);
+    }
 
-    .refine-row input[type="color"] {
-      width: 32px;
-      height: 32px;
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
-      background: none;
+    .ff-input:focus {
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 0 0 1px var(--focus-ring);
+    }
+
+    .ff-input::placeholder { color: var(--text-muted); }
+
+    /* --- FF-inspired Color Picker --- */
+
+    .ff-color-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 4px 0 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      transition: all 80ms;
       cursor: pointer;
-      padding: 2px;
     }
 
-    .refine-row select {
-      flex: 1;
-      background: var(--bg-input);
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 13px;
-      color: var(--text);
-      font-family: inherit;
+    .ff-color-wrap:hover {
+      background: var(--bg-muted);
+      border-color: var(--border);
     }
+
+    .ff-color-hex {
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+      min-width: 60px;
+    }
+
+    .ff-color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border-60);
+      cursor: pointer;
+      padding: 0;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .ff-color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+    .ff-color-swatch::-webkit-color-swatch { border: none; border-radius: 5px; }
+    .ff-color-swatch::-moz-color-swatch { border: none; border-radius: 5px; }
+
+    /* --- FF-inspired Slider (Scrubber variant) --- */
+
+    .ff-slider {
+      flex: 1;
+      position: relative;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: ew-resize;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: border-color 80ms;
+    }
+
+    .ff-slider:hover { border-color: var(--fg-25); }
+    .ff-slider:focus-within { border-color: var(--focus-ring); outline: none; }
+
+    .ff-slider-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      background: var(--fg-8);
+      pointer-events: none;
+    }
+
+    .ff-slider-handle {
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      border-radius: 999px;
+      background: var(--fg-25);
+      pointer-events: none;
+      transition: background 80ms;
+      z-index: 3;
+    }
+
+    .ff-slider:hover .ff-slider-handle { background: var(--fg-50); }
+    .ff-slider:active .ff-slider-handle { background: var(--text); top: 7px; bottom: 7px; }
+
+    .ff-slider-label {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--text-muted);
+      pointer-events: none;
+      z-index: 4;
+      transition: color 80ms;
+    }
+
+    .ff-slider:hover .ff-slider-label { color: var(--text); }
+
+    .ff-slider-value {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+      pointer-events: none;
+      z-index: 4;
+      transition: color 80ms;
+    }
+
+    .ff-slider:hover .ff-slider-value { color: var(--text); }
+
+    .ff-slider input[type="range"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: ew-resize;
+      margin: 0;
+      z-index: 5;
+    }
+
+    /* --- FF-inspired Select --- */
+
+    .ff-select {
+      flex: 1;
+      position: relative;
+    }
+
+    .ff-select-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      outline: none;
+      transition: all 80ms;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .ff-select-trigger:hover { background: var(--bg-muted); }
+    .ff-select-trigger:focus { box-shadow: 0 0 0 1px var(--focus-ring); }
+
+    .ff-select-chevron {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      transition: color 80ms;
+    }
+
+    .ff-select-trigger:hover .ff-select-chevron { color: var(--text); }
+
+    /* Native select overlay (invisible, handles interaction) */
+    .ff-select select {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    /* --- Favicon section --- */
 
     .favicon-section { margin-top: 24px; }
 
@@ -207,18 +369,13 @@
 
     .favicon-card-header { padding: 16px 20px 12px; }
 
-    .favicon-mode {
-      padding: 24px 20px;
-    }
-
-    .favicon-mode + .favicon-mode {
-      border-top: 1px solid var(--border);
-    }
+    .favicon-mode { padding: 24px 20px; }
+    .favicon-mode + .favicon-mode { border-top: 1px solid var(--border); }
 
     .favicon-mode-label {
       font-size: 13px;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--text-muted);
       margin-bottom: 16px;
     }
 
@@ -238,21 +395,8 @@
     }
 
     .favicon-preview img { image-rendering: pixelated; }
-    .favicon-size { font-size: 11px; color: var(--text-secondary); }
+    .favicon-size { font-size: 11px; color: var(--text-muted); }
     .favicon-mode.light .favicon-size { color: #aaa; }
-
-    .refine-row input[type="range"] {
-      flex: 1;
-      accent-color: var(--text-secondary);
-    }
-
-    .range-value {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      width: 36px;
-      text-align: right;
-      flex-shrink: 0;
-    }
 
     .favicon-actions { display: flex; gap: 12px; align-items: center; }
 
@@ -265,7 +409,7 @@
       border-radius: 12px;
     }
 
-    .favicon-customize-panel.open { display: block; }
+    .favicon-customize-panel.open { display: flex; flex-direction: column; gap: 8px; }
 
     @media (max-width: 1024px) {
       .cards { grid-template-columns: 1fr; max-width: 640px; }
@@ -310,83 +454,139 @@
       return node;
     }
 
+    // --- FF-inspired component builders ---
+
+    function ffSlider(label, value, min, max, unit, onChange) {
+      const container = el('div', { className: 'ff-slider' });
+      const fill = el('div', { className: 'ff-slider-fill' });
+      const handle = el('div', { className: 'ff-slider-handle' });
+      const labelEl = el('div', { className: 'ff-slider-label', textContent: label });
+      const valueEl = el('div', { className: 'ff-slider-value', textContent: `${value}${unit}` });
+      const input = el('input', { type: 'range', min: String(min), max: String(max), value: String(value) });
+
+      function update(v) {
+        const pct = ((v - min) / (max - min)) * 100;
+        fill.style.width = `${pct}%`;
+        handle.style.left = `calc(${pct}% - 1px)`;
+        valueEl.textContent = `${v}${unit}`;
+      }
+
+      update(value);
+      input.addEventListener('input', () => update(input.value));
+      input.addEventListener('change', () => onChange(parseInt(input.value)));
+
+      container.append(fill, handle, labelEl, valueEl, input);
+      return container;
+    }
+
+    function ffColor(label, value, onChange) {
+      const hexLabel = el('span', { className: 'ff-color-hex', textContent: value });
+      const swatch = el('input', { type: 'color', className: 'ff-color-swatch', value: value });
+      swatch.addEventListener('input', () => {
+        hexLabel.textContent = swatch.value;
+        onChange(swatch.value);
+      });
+      const wrap = el('div', { className: 'ff-color-wrap' });
+      wrap.addEventListener('click', () => swatch.click());
+      wrap.append(hexLabel, swatch);
+      return el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: label }),
+        wrap
+      );
+    }
+
+    function ffInput(label, value, onChange) {
+      const input = el('input', { type: 'text', className: 'ff-input', value: value || '' });
+      input.placeholder = label;
+      input.addEventListener('change', () => onChange(input.value));
+      return el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: label }),
+        input
+      );
+    }
+
+    function ffSelect(label, options, selectedValue, onChange) {
+      // options: [{ value, label }]
+      const container = el('div', { className: 'ff-select' });
+
+      const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      chevron.setAttribute('viewBox', '0 0 16 16');
+      chevron.setAttribute('fill', 'none');
+      chevron.classList.add('ff-select-chevron');
+      chevron.innerHTML = '<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+
+      const selectedLabel = options.find(o => o.value === selectedValue)?.label || options[0]?.label || '';
+      const triggerText = el('span', { textContent: selectedLabel });
+      const trigger = el('div', { className: 'ff-select-trigger' });
+      trigger.append(triggerText, chevron);
+
+      const nativeSelect = document.createElement('select');
+      options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.value;
+        o.textContent = opt.label;
+        if (opt.value === selectedValue) o.selected = true;
+        nativeSelect.appendChild(o);
+      });
+      nativeSelect.addEventListener('change', () => {
+        const opt = options.find(o => o.value === nativeSelect.value);
+        triggerText.textContent = opt?.label || nativeSelect.value;
+        onChange(nativeSelect.value);
+      });
+
+      container.append(trigger, nativeSelect);
+      return el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: label }),
+        container
+      );
+    }
+
     // --- OG Image cards ---
 
     function buildRefinePanel(layout) {
       const colors = config.colors || {};
 
-      function colorRow(label, key, value) {
-        return el('div', { className: 'refine-row' },
-          el('span', { className: 'refine-label', textContent: label }),
-          el('input', { type: 'color', value: value || '#000000', onChange: (e) => updateOverride(layout, key, e.target.value) })
-        );
-      }
-
-      function textRow(label, key, value) {
-        return el('div', { className: 'refine-row' },
-          el('span', { className: 'refine-label', textContent: label }),
-          el('input', { type: 'text', value: value || '', onChange: (e) => updateOverride(layout, key, e.target.value) })
-        );
-      }
-
-      function sliderRow(label, key, value, min, max) {
-        const valueLabel = el('span', { className: 'range-value', textContent: `${value}px` });
-        const slider = el('input', { type: 'range', min: String(min), max: String(max), value: String(value) });
-        slider.addEventListener('input', () => {
-          valueLabel.textContent = `${slider.value}px`;
-        });
-        slider.addEventListener('change', () => {
-          updateOverride(layout, key, parseInt(slider.value));
-        });
-        return el('div', { className: 'refine-row' },
-          el('span', { className: 'refine-label', textContent: label }),
-          slider,
-          valueLabel
-        );
-      }
-
-      // Logo select dropdown
-      const logoSelect = el('select', { onChange: (e) => {
-        const val = e.target.value;
-        if (val === '__hide__') {
-          cardOverrides[layout].showLogo = false;
-          cardOverrides[layout].logoPath = undefined;
-        } else if (val === '__none__') {
-          cardOverrides[layout].showLogo = true;
-          cardOverrides[layout].logoPath = undefined;
-        } else {
-          cardOverrides[layout].showLogo = true;
-          cardOverrides[layout].logoPath = val;
-        }
-        rerender(layout);
-      }});
-
+      // Logo options
       const currentLogo = config.logo || null;
+      const logoOpts = [];
       if (currentLogo) {
-        logoSelect.appendChild(el('option', { value: '__none__', textContent: currentLogo }));
+        logoOpts.push({ value: '__none__', label: currentLogo });
       } else {
-        logoSelect.appendChild(el('option', { value: '__none__', textContent: 'None (text only)' }));
+        logoOpts.push({ value: '__none__', label: 'None (text only)' });
       }
-      for (const candidate of logoCandidates) {
-        if (candidate !== currentLogo) {
-          logoSelect.appendChild(el('option', { value: candidate, textContent: candidate }));
-        }
+      for (const c of logoCandidates) {
+        if (c !== currentLogo) logoOpts.push({ value: c, label: c });
       }
-      logoSelect.appendChild(el('option', { value: '__hide__', textContent: 'Hide logo' }));
+      logoOpts.push({ value: '__hide__', label: 'Hide logo' });
 
       const panel = el('div', { className: 'refine-panel', id: `refine-${layout}` },
-        colorRow('background', 'background', colors.background),
-        colorRow('heading', 'foreground', colors.foreground),
-        colorRow('tagline', 'taglineColor', colors.foreground),
-        colorRow('accent', 'accent', colors.accent),
-        textRow('headline', 'headline', config.title),
-        textRow('tagline text', 'tagline', config.tagline),
-        sliderRow('heading size', 'headingSize', DEFAULT_HEADING_SIZES[layout], 24, 96),
-        sliderRow('tagline size', 'taglineSize', DEFAULT_TAGLINE_SIZES[layout], 14, 48),
+        ffColor('background', colors.background, (v) => updateOverride(layout, 'background', v)),
+        ffColor('heading', colors.foreground, (v) => updateOverride(layout, 'foreground', v)),
+        ffColor('tagline', colors.foreground, (v) => updateOverride(layout, 'taglineColor', v)),
+        ffColor('accent', colors.accent, (v) => updateOverride(layout, 'accent', v)),
+        ffInput('headline', config.title, (v) => updateOverride(layout, 'headline', v)),
+        ffInput('tagline text', config.tagline, (v) => updateOverride(layout, 'tagline', v)),
         el('div', { className: 'refine-row' },
-          el('span', { className: 'refine-label', textContent: 'logo' }),
-          logoSelect
-        )
+          el('span', { className: 'refine-label', textContent: 'heading size' }),
+          ffSlider('heading', DEFAULT_HEADING_SIZES[layout], 24, 96, 'px', (v) => updateOverride(layout, 'headingSize', v))
+        ),
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'tagline size' }),
+          ffSlider('tagline', DEFAULT_TAGLINE_SIZES[layout], 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
+        ),
+        ffSelect('logo', logoOpts, '__none__', (val) => {
+          if (val === '__hide__') {
+            cardOverrides[layout].showLogo = false;
+            cardOverrides[layout].logoPath = undefined;
+          } else if (val === '__none__') {
+            cardOverrides[layout].showLogo = true;
+            cardOverrides[layout].logoPath = undefined;
+          } else {
+            cardOverrides[layout].showLogo = true;
+            cardOverrides[layout].logoPath = val;
+          }
+          rerender(layout);
+        })
       );
       return panel;
     }
@@ -400,7 +600,7 @@
       const dlBtn = el('button', { className: 'primary', id: `dl-${layout}`, textContent: 'Download PNG' });
       dlBtn.addEventListener('click', () => downloadOg(layout));
 
-      const card = el('div', { className: 'card' },
+      return el('div', { className: 'card' },
         el('div', { className: 'card-header' },
           el('div', { className: 'card-label', textContent: `Option ${index + 1}` })
         ),
@@ -410,7 +610,6 @@
         ),
         buildRefinePanel(layout)
       );
-      return card;
     }
 
     async function loadPreviews() {
@@ -499,15 +698,13 @@
       const grid = document.getElementById('faviconGrid');
       const sizes = [16, 32, 96, 180];
       grid.innerHTML = '';
-
-      const card = el('div', { className: 'favicon-card' },
+      grid.appendChild(el('div', { className: 'favicon-card' },
         el('div', { className: 'favicon-card-header' },
           el('div', { className: 'card-label', textContent: 'Lettermark' })
         ),
         buildFaviconMode('Option 1 \u2014 Light', 'light', previews, sizes),
         buildFaviconMode('Option 1 \u2014 Dark', 'dark', previews, sizes)
-      );
-      grid.appendChild(card);
+      ));
     }
 
     async function rerenderFavicons() {
@@ -528,8 +725,8 @@
       const defaultLetter = (config.title || 'A')[0].toUpperCase();
       const colors = config.colors || {};
 
-      const letterInput = el('input', { type: 'text', value: defaultLetter, maxLength: '1' });
-      letterInput.style.width = '48px';
+      const letterInput = el('input', { type: 'text', className: 'ff-input', value: defaultLetter, maxLength: '1' });
+      letterInput.style.width = '64px';
       letterInput.style.textAlign = 'center';
       letterInput.addEventListener('change', () => {
         const v = letterInput.value.trim();
@@ -538,40 +735,21 @@
         rerenderFavicons();
       });
 
-      const srcSelect = el('select', {});
-      srcSelect.appendChild(el('option', { value: '__lettermark__', textContent: 'Lettermark' }));
-      for (const candidate of logoCandidates) {
-        srcSelect.appendChild(el('option', { value: candidate, textContent: candidate }));
-      }
-      if (config.faviconSrc) srcSelect.value = config.faviconSrc;
-      srcSelect.addEventListener('change', () => {
-        const v = srcSelect.value;
-        faviconOverrides.faviconSrc = v === '__lettermark__' ? null : v;
-        rerenderFavicons();
-      });
-
-      function faviconColorRow(label, key, value) {
-        return el('div', { className: 'refine-row' },
-          el('span', { className: 'refine-label', textContent: label }),
-          el('input', { type: 'color', value: value || '#000000', onChange: (e) => {
-            faviconOverrides[key] = e.target.value;
-            rerenderFavicons();
-          }})
-        );
-      }
+      const srcOpts = [{ value: '__lettermark__', label: 'Lettermark' }];
+      for (const c of logoCandidates) srcOpts.push({ value: c, label: c });
 
       const panel = document.getElementById('faviconCustomize');
       panel.innerHTML = '';
-      panel.appendChild(faviconColorRow('background', 'background', colors.background));
-      panel.appendChild(faviconColorRow('letter color', 'accent', colors.accent));
+      panel.appendChild(ffColor('background', colors.background, (v) => { faviconOverrides.background = v; rerenderFavicons(); }));
+      panel.appendChild(ffColor('letter color', colors.accent, (v) => { faviconOverrides.accent = v; rerenderFavicons(); }));
       panel.appendChild(el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'letter' }),
         letterInput
       ));
-      panel.appendChild(el('div', { className: 'refine-row' },
-        el('span', { className: 'refine-label', textContent: 'source' }),
-        srcSelect
-      ));
+      panel.appendChild(ffSelect('source', srcOpts, config.faviconSrc || '__lettermark__', (v) => {
+        faviconOverrides.faviconSrc = v === '__lettermark__' ? null : v;
+        rerenderFavicons();
+      }));
     }
 
     async function loadFaviconPreviews() {
