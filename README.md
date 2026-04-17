@@ -33,11 +33,11 @@ metadata-gen init
 
 Scanning project...
 
-✓ Title:       "Vybe"                         (package.json .name)
-✓ Tagline:     "Your AI team, ready to work"  (package.json .description)
+✓ Title:       "Fluid Functionalism"                         (package.json .name)
+✓ Tagline:     "Refined UI components with satisfying hover."  (package.json .description)
 ✓ Background:  #0f0f0f                        (globals.css --background)
 ✓ Foreground:  #ffffff                        (globals.css --foreground)
-✓ Accent:      #7C3AED                        (tailwind.config.js)
+✓ Accent:rgb(0, 0, 0)                        (tailwind.config.js)
 ✓ Logo:        ./assets/logo.svg
 
 Confirm? Press Enter to accept, or "n" to cancel.
@@ -61,7 +61,7 @@ Renders all variants, starts a local server, and opens your browser:
 ✓ Read metadata.config.json
 ✓ Rendering metadata image variants...
 ✓ Rendering favicon set...
-✓ Server running at http://localhost:3131
+✓ Server running at http://localhost:3000
 ✓ Opening browser...
 ```
 
@@ -116,17 +116,17 @@ public/metadata/
 
 ```json
 {
-  "title": "Vybe",
-  "tagline": "Your AI team, ready to work",
+  "title": "Fluid Functionalism",
+  "tagline": "Refined UI components with satisfying hover.",
   "colors": {
     "background": "#0f0f0f",
     "foreground": "#ffffff",
-    "accent": "#7C3AED"
+    "accent": "#000000"
   },
   "logo": "./assets/logo.svg",
   "faviconSrc": "./assets/logo.svg",
   "outputDir": "public/metadata",
-  "font": "Inter"
+  "font": "InterVariable"
 }
 ```
 

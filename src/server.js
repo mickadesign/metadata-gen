@@ -1,11 +1,11 @@
 import express from 'express';
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
-import { renderOgImage, renderAllVariants } from './renderer.js';
+import { renderOgImage, renderAllVariants, getLayoutLetters, PROJECT_TEMPLATES_SUBDIR } from './renderer.js';
 import { generateFaviconSet, generateFaviconPreviews } from './favicon.js';
-import { scanAllLogos } from './scanner.js';
+import { scanAllLogos, scanFonts } from './scanner.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -98,9 +98,19 @@ export async function startServer(options = {}) {
   // Scan for all logo candidates
   const logoCandidates = await scanAllLogos(root);
 
+  // Scan for TTF/OTF fonts in the project
+  const projectFonts = await scanFonts(root);
+  const fontPaths = new Set(projectFonts.map((f) => f.path));
+
   // Set up Express
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
+
+  // Serve static preview assets (browser tab mockups, etc.)
+  app.use('/preview-assets', express.static(join(__dirname, 'preview-assets')));
+
+  // Serve uploaded logos so the browser can preview them directly
+  app.use('/uploaded', express.static(outputDir));
 
   // Serve preview HTML
   app.get('/', async (req, res) => {
@@ -118,6 +128,11 @@ export async function startServer(options = {}) {
     res.json(logoCandidates);
   });
 
+  // API: get all scanned project fonts
+  app.get('/api/fonts', (req, res) => {
+    res.json(projectFonts);
+  });
+
   // API: get all OG previews as base64
   app.get('/api/previews', (req, res) => {
     const previews = {};
@@ -127,7 +142,26 @@ export async function startServer(options = {}) {
     res.json(previews);
   });
 
-  const VALID_LAYOUTS = ['A', 'B', 'C'];
+  const VALID_LAYOUTS = await getLayoutLetters(root);
+
+  // API: list available layouts (auto-discovered from packaged + project templates)
+  app.get('/api/layouts', (req, res) => {
+    res.json(VALID_LAYOUTS);
+  });
+
+  // API: absolute paths used by Option 4 so the copied prompt points at the
+  // user's own project directory — any agent can read/write there regardless
+  // of where metadata-gen is installed.
+  const projectTemplatesDir = join(root, PROJECT_TEMPLATES_SUBDIR);
+  const toolInfo = {
+    projectRoot: root,
+    templatesDir: projectTemplatesDir,
+    agentsMdPath: join(projectTemplatesDir, 'AGENTS.md'),
+    existingLetters: VALID_LAYOUTS,
+  };
+  app.get('/api/tool-info', (req, res) => {
+    res.json(toolInfo);
+  });
 
   // API: re-render a single variant with overrides
   app.post('/api/render', async (req, res) => {
@@ -146,6 +180,23 @@ export async function startServer(options = {}) {
           if (typeof overrides[key] === 'number' && overrides[key] >= 12 && overrides[key] <= 120) {
             safe[key] = overrides[key];
           }
+        }
+        if (typeof overrides.logoSize === 'number' && overrides.logoSize >= 24 && overrides.logoSize <= 300) {
+          safe.logoSize = overrides.logoSize;
+        }
+        if (typeof overrides.logoGap === 'number' && overrides.logoGap >= 0 && overrides.logoGap <= 160) {
+          safe.logoGap = overrides.logoGap;
+        }
+        if (['left', 'center', 'right'].includes(overrides.align)) {
+          safe.align = overrides.align;
+        }
+        if (['left', 'top'].includes(overrides.logoPosition)) {
+          safe.logoPosition = overrides.logoPosition;
+        }
+        for (const key of ['headingFont', 'taglineFont']) {
+          const v = overrides[key];
+          if (v === '__inter__') safe[key] = '__inter__';
+          else if (typeof v === 'string' && fontPaths.has(v)) safe[key] = v;
         }
         if (typeof overrides.showLogo === 'boolean') safe.showLogo = overrides.showLogo;
         if (typeof overrides.logoPath === 'string' && logoCandidates.includes(overrides.logoPath)) {
@@ -209,7 +260,7 @@ export async function startServer(options = {}) {
   // API: re-render favicon previews with overrides
   app.post('/api/render-favicon', async (req, res) => {
     try {
-      const { letter, faviconSrc, background, accent, letterSize, borderRadius, transparent, fontWeight, darkBg } = req.body;
+      const { letter, faviconSrc, background, accent, letterSize, borderRadius, transparent, fontWeight, darkBg, customBg } = req.body;
       const overrideConfig = {
         ...config,
         colors: { ...config.colors },
@@ -232,6 +283,9 @@ export async function startServer(options = {}) {
       if (typeof darkBg === 'string') {
         overrideConfig.faviconDarkBg = darkBg;
       }
+      if (typeof customBg === 'string') {
+        overrideConfig.faviconCustomBg = customBg;
+      }
       if (faviconSrc === null) {
         overrideConfig.faviconSrc = null;
       } else if (typeof faviconSrc === 'string' && logoCandidates.includes(faviconSrc)) {
@@ -243,6 +297,37 @@ export async function startServer(options = {}) {
       res.json(faviconPreviews);
     } catch (err) {
       console.error('Favicon render error:', err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // API: upload a logo file (base64-encoded JSON)
+  app.post('/api/upload-logo', async (req, res) => {
+    try {
+      const { filename, dataBase64 } = req.body;
+      if (typeof filename !== 'string' || typeof dataBase64 !== 'string') {
+        return res.status(400).json({ error: 'filename and dataBase64 are required' });
+      }
+      const safeName = basename(filename).replace(/[^a-zA-Z0-9._-]/g, '_');
+      const ext = extname(safeName).toLowerCase();
+      if (!['.svg', '.png', '.jpg', '.jpeg'].includes(ext)) {
+        return res.status(400).json({ error: 'Only .svg, .png, .jpg, .jpeg are allowed' });
+      }
+      const buf = Buffer.from(dataBase64, 'base64');
+      if (buf.length > 5 * 1024 * 1024) {
+        return res.status(400).json({ error: 'File too large (max 5MB)' });
+      }
+      await mkdir(outputDir, { recursive: true });
+      const destPath = join(outputDir, safeName);
+      await writeFile(destPath, buf);
+      // Relative path from project root for use by the renderer/favicon pipeline
+      const relFromRoot = destPath.replace(root, '').replace(/^\//, '');
+      const relPath = `./${relFromRoot}`;
+      if (!logoCandidates.includes(relPath)) logoCandidates.push(relPath);
+      console.log(`\u2713 Uploaded logo: ${relPath}`);
+      res.json({ path: relPath, candidates: logoCandidates });
+    } catch (err) {
+      console.error('Upload error:', err.message);
       res.status(500).json({ error: err.message });
     }
   });

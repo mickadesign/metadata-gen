@@ -83,22 +83,22 @@
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 24px;
       margin-bottom: 64px;
+      align-items: start;
     }
 
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      overflow: hidden;
     }
 
     .card-header { padding: 16px 20px 12px; }
     .card-label { font-size: 14px; font-weight: 600; color: var(--text); }
 
-    .card-preview { aspect-ratio: 1200 / 630; overflow: hidden; padding: 0 12px; }
+    .card-preview { aspect-ratio: 1200 / 630; padding: 0 12px; }
     .card-preview img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px; }
 
     .card-footer { padding: 12px 20px 16px; }
@@ -147,6 +147,8 @@
       width: 90px;
       flex-shrink: 0;
     }
+
+    .refine-label::first-letter { text-transform: uppercase; }
 
     /* --- FF-inspired Text Input --- */
 
@@ -343,7 +345,49 @@
 
     /* --- Favicon section --- */
 
-    .favicon-section { margin-top: 24px; }
+    .favicon-section {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 720px;
+    }
+
+    .favicon-tab-previews {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
+    }
+
+    .tab-preview {
+      position: relative;
+      width: 240px;
+      height: 137px;
+      border-radius: 8px;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .tab-preview-favicon {
+      position: absolute;
+      left: 55%;
+      top: 47%;
+      transform: translate(-50%, -50%);
+      width: 32px;
+      height: 32px;
+      display: block;
+      image-rendering: auto;
+    }
+
+    .tab-preview-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: center;
+    }
 
     .favicon-card {
       background: var(--bg-card);
@@ -364,11 +408,21 @@
       margin-bottom: 16px;
     }
 
+    .favicon-mode-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
     .favicon-mode.light { background: #fafafa; }
     .favicon-mode.light .favicon-mode-label { color: #999; }
     .favicon-mode.dark { background: #000; }
     .favicon-mode.dark .favicon-mode-label { color: #666; }
-    .favicon-mode.dark .favicon-size { color: #555; }
+    .favicon-mode.dark .favicon-size { color: #bbb; }
+    .favicon-mode.custom .favicon-mode-label { color: rgba(255,255,255,0.75); mix-blend-mode: difference; }
+    .favicon-mode.custom .favicon-size { color: rgba(255,255,255,0.6); mix-blend-mode: difference; }
 
     .favicon-previews { display: flex; align-items: flex-end; gap: 24px; }
 
@@ -379,21 +433,7 @@
       gap: 8px;
     }
 
-    .favicon-preview img { image-rendering: pixelated; position: relative; z-index: 1; }
-
-    .favicon-preview-checker {
-      display: inline-block;
-      background-image: conic-gradient(#ccc 25%, #fff 25%, #fff 50%, #ccc 50%, #ccc 75%, #fff 75%);
-      background-size: 8px 8px;
-      border-radius: 4px;
-      line-height: 0;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .favicon-preview-checker {
-        background-image: conic-gradient(#333 25%, #1a1a1a 25%, #1a1a1a 50%, #333 50%, #333 75%, #1a1a1a 75%);
-      }
-    }
+    .favicon-preview img { image-rendering: pixelated; display: block; }
 
     .ff-toggle {
       display: flex;
@@ -438,6 +478,208 @@
 
     .favicon-actions { display: flex; gap: 12px; align-items: center; }
 
+    /* --- FF-inspired Search Select (searchable combobox with upload) --- */
+
+    .ff-search-select {
+      flex: 1;
+      position: relative;
+      min-width: 0;
+    }
+
+    .ff-search-input {
+      width: 100%;
+      height: 36px;
+      padding: 0 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: all 80ms;
+    }
+
+    .ff-search-input:hover { background: var(--bg-muted); }
+    .ff-search-input:focus { box-shadow: 0 0 0 1px var(--focus-ring); }
+    .ff-search-input::placeholder { color: var(--text-muted); }
+
+    .ff-search-option.upload {
+      color: var(--text);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+    .ff-search-option.upload .icon {
+      display: inline-flex;
+      width: 18px;
+      height: 18px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      background: var(--bg-muted);
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .ff-search-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      max-height: 220px;
+      overflow-y: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--dropdown-shadow);
+      z-index: 10;
+      display: none;
+    }
+    .ff-search-dropdown.open { display: block; }
+
+    .ff-search-option {
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ff-search-option:hover,
+    .ff-search-option.highlighted { background: var(--bg-muted); }
+    .ff-search-option.selected { color: var(--text); font-weight: 500; }
+    .ff-search-option .hint { color: var(--text-muted); font-size: 11px; margin-left: auto; }
+    .ff-search-option.empty { color: var(--text-muted); font-style: italic; cursor: default; }
+    .ff-search-option.empty:hover { background: transparent; }
+
+    /* --- Option 4 card (AI prompts) --- */
+
+    .card.option-4 .card-preview {
+      aspect-ratio: 1200 / 630;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-muted);
+      margin: 0 12px;
+      border-radius: 8px;
+    }
+    .card.option-4 .card-preview-inner {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 24px;
+    }
+    .card.option-4 .card-preview-inner .title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .card.option-4 .card-preview-inner .sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .prompt-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .prompt-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .prompt-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .prompt-item-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .prompt-item-text {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .prompt-copy-btn {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .prompt-composer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+    .prompt-chip-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .prompt-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .prompt-chip {
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .prompt-chip:hover { background: var(--bg-card); }
+    .prompt-textarea {
+      width: 100%;
+      min-height: 96px;
+      resize: vertical;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .prompt-textarea:focus {
+      outline: none;
+      border-color: var(--text);
+    }
+    .prompt-composer-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .prompt-copy-full {
+      font-size: 12px;
+      padding: 6px 14px;
+    }
+
     .favicon-customize-panel {
       display: none;
       margin-top: 16px;
@@ -450,29 +692,57 @@
 
     .favicon-customize-panel.open { display: flex; flex-direction: column; gap: 8px; }
 
+    .favicon-sizes-panel { display: none; }
+    .favicon-sizes-panel.open { display: block; }
+    .favicon-sizes-panel .favicon-card { margin-bottom: 0; }
+
     @media (max-width: 1024px) {
       .cards { grid-template-columns: 1fr; max-width: 640px; }
     }
   </style>
 </head>
 <body>
-  <h1>Metadata images</h1>
-  <div class="cards" id="cards"></div>
-
   <h1>Favicon set</h1>
   <div class="favicon-section">
-    <div id="faviconGrid"></div>
+    <div class="favicon-tab-previews">
+      <div>
+        <div class="tab-preview" id="tabPreviewLight" style="background-image:url('/preview-assets/tab-light.png')">
+          <img class="tab-preview-favicon" id="tabFaviconLight" alt="" />
+        </div>
+        <div class="tab-preview-label">Browser tab · light</div>
+      </div>
+      <div>
+        <div class="tab-preview" id="tabPreviewDark" style="background-image:url('/preview-assets/tab-dark.png')">
+          <img class="tab-preview-favicon" id="tabFaviconDark" alt="" />
+        </div>
+        <div class="tab-preview-label">Browser tab · dark</div>
+      </div>
+    </div>
     <div class="favicon-actions" id="faviconActions"></div>
+    <div class="favicon-sizes-panel" id="faviconGrid"></div>
     <div class="favicon-customize-panel" id="faviconCustomize"></div>
   </div>
 
+  <h1>Metadata images</h1>
+  <div class="cards" id="cards"></div>
+
   <script>
-    const layouts = ['A', 'B', 'C'];
+    // Layouts are auto-discovered server-side; the client reads them from /api/previews.
+    let layouts = [];
     const DEFAULT_HEADING_SIZES = { A: 64, B: 56, C: 72 };
     const DEFAULT_TAGLINE_SIZES = { A: 28, B: 26, C: 22 };
-    const cardOverrides = { A: {}, B: {}, C: {} };
+    const FALLBACK_HEADING_SIZE = 64;
+    const FALLBACK_TAGLINE_SIZE = 26;
+    const DEFAULT_LAYOUT_SETTINGS = {
+      A: { align: 'left', logoSize: 120, logoGap: 60, logoPosition: 'left' },
+      B: { align: 'center', logoSize: 80, logoGap: 32, logoPosition: 'top' },
+      C: { align: 'left', logoSize: 80, logoGap: 32, logoPosition: 'top' },
+    };
+    const FALLBACK_LAYOUT_SETTINGS = { align: 'center', logoSize: 96, logoGap: 32, logoPosition: 'top' };
+    const cardOverrides = {};
     let config = {};
     let logoCandidates = [];
+    let projectFonts = [];
     let faviconOverrides = {};
 
     function el(tag, attrs, ...children) {
@@ -579,6 +849,141 @@
       );
     }
 
+    // --- FF-inspired Search Select (searchable combobox + upload) ---
+
+    function ffSearchSelect(label, options, selectedValue, onChange, opts = {}) {
+      // options: [{ value, label, hint? }]
+      const container = el('div', { className: 'ff-search-select' });
+      const input = el('input', {
+        type: 'text',
+        className: 'ff-search-input',
+        placeholder: opts.placeholder || 'Type to search or upload…',
+      });
+      const fileInput = el('input', { type: 'file', accept: '.svg,.png,.jpg,.jpeg' });
+      fileInput.style.display = 'none';
+      const dropdown = el('div', { className: 'ff-search-dropdown' });
+
+      let currentOptions = options.slice();
+      let currentValue = selectedValue;
+
+      function labelFor(value) {
+        const opt = currentOptions.find(o => o.value === value);
+        return opt?.label ?? value ?? '';
+      }
+
+      function setValue(value, fire = true) {
+        currentValue = value;
+        input.value = labelFor(value);
+        closeDropdown();
+        if (fire) onChange(value);
+      }
+
+      async function handleUpload(file) {
+        try {
+          const buf = await file.arrayBuffer();
+          let binary = '';
+          const bytes = new Uint8Array(buf);
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+          const dataBase64 = btoa(binary);
+          const res = await fetch('/api/upload-logo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: file.name, dataBase64 }),
+          });
+          if (!res.ok) throw new Error('Upload failed');
+          const data = await res.json();
+          logoCandidates = data.candidates;
+          if (!currentOptions.some(o => o.value === data.path)) {
+            currentOptions.push({ value: data.path, label: data.path, hint: 'uploaded' });
+          }
+          setValue(data.path);
+        } catch (err) {
+          console.error('Upload error:', err);
+        }
+      }
+
+      function renderOptions(filter) {
+        dropdown.innerHTML = '';
+
+        // Upload pinned at the top
+        const uploadRow = el('div', { className: 'ff-search-option upload' },
+          el('span', { className: 'icon', textContent: '+' }),
+          el('span', { textContent: 'Upload file…' })
+        );
+        uploadRow.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          fileInput.click();
+        });
+        dropdown.appendChild(uploadRow);
+
+        const q = (filter || '').toLowerCase().trim();
+        const filtered = currentOptions.filter(o =>
+          !q || o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q)
+        );
+
+        if (filtered.length === 0) {
+          dropdown.appendChild(el('div', { className: 'ff-search-option empty', textContent: 'No matches' }));
+          return;
+        }
+        filtered.forEach((opt) => {
+          const row = el('div', { className: 'ff-search-option' + (opt.value === currentValue ? ' selected' : '') });
+          row.appendChild(el('span', { textContent: opt.label }));
+          if (opt.hint) row.appendChild(el('span', { className: 'hint', textContent: opt.hint }));
+          row.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            setValue(opt.value);
+          });
+          dropdown.appendChild(row);
+        });
+      }
+
+      function openDropdown() {
+        renderOptions(input.value);
+        dropdown.classList.add('open');
+      }
+      function closeDropdown() {
+        dropdown.classList.remove('open');
+      }
+
+      input.addEventListener('focus', () => {
+        // Show all options on focus (don't filter by the currently-selected label)
+        input.select();
+        renderOptions('');
+        dropdown.classList.add('open');
+      });
+      input.addEventListener('input', () => renderOptions(input.value));
+      input.addEventListener('blur', () => {
+        setTimeout(() => {
+          closeDropdown();
+          input.value = labelFor(currentValue);
+        }, 120);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeDropdown(); input.blur(); }
+      });
+
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        await handleUpload(file);
+        fileInput.value = '';
+      });
+
+      container.append(input, fileInput, dropdown);
+
+      container._setOptions = (newOptions) => {
+        currentOptions = newOptions.slice();
+        input.value = labelFor(currentValue);
+      };
+
+      input.value = labelFor(selectedValue);
+
+      return el('div', { className: 'refine-row' },
+        el('span', { className: 'refine-label', textContent: label }),
+        container
+      );
+    }
+
     // --- OG Image cards ---
 
     function buildRefinePanel(layout) {
@@ -597,6 +1002,21 @@
       }
       logoOpts.push({ value: '__hide__', label: 'Hide logo' });
 
+      const defaults = DEFAULT_LAYOUT_SETTINGS[layout] || FALLBACK_LAYOUT_SETTINGS;
+      const alignOpts = [
+        { value: 'left', label: 'Left' },
+        { value: 'center', label: 'Center' },
+        { value: 'right', label: 'Right' },
+      ];
+      const logoPosOpts = [
+        { value: 'left', label: 'Left of text' },
+        { value: 'top', label: 'Above text' },
+      ];
+      const fontOpts = [
+        { value: '__inter__', label: 'Inter (bundled)' },
+        ...projectFonts.map(f => ({ value: f.path, label: f.label, hint: 'project' })),
+      ];
+
       const panel = el('div', { className: 'refine-panel', id: `refine-${layout}` },
         ffColor('background', colors.background, (v) => updateOverride(layout, 'background', v)),
         ffColor('heading', colors.foreground, (v) => updateOverride(layout, 'foreground', v)),
@@ -606,13 +1026,16 @@
         ffInput('tagline text', config.tagline, (v) => updateOverride(layout, 'tagline', v)),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'heading size' }),
-          ffSlider(DEFAULT_HEADING_SIZES[layout], 24, 96, 'px', (v) => updateOverride(layout, 'headingSize', v))
+          ffSlider(DEFAULT_HEADING_SIZES[layout] ?? FALLBACK_HEADING_SIZE, 24, 96, 'px', (v) => updateOverride(layout, 'headingSize', v))
         ),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'tagline size' }),
-          ffSlider(DEFAULT_TAGLINE_SIZES[layout], 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
+          ffSlider(DEFAULT_TAGLINE_SIZES[layout] ?? FALLBACK_TAGLINE_SIZE, 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
         ),
-        ffSelect('logo', logoOpts, '__none__', (val) => {
+        ffSelect('heading font', fontOpts, '__inter__', (v) => updateOverride(layout, 'headingFont', v)),
+        ffSelect('tagline font', fontOpts, '__inter__', (v) => updateOverride(layout, 'taglineFont', v)),
+        ffSelect('alignment', alignOpts, defaults.align, (v) => updateOverride(layout, 'align', v)),
+        ffSearchSelect('logo', logoOpts, '__none__', (val) => {
           if (val === '__hide__') {
             cardOverrides[layout].showLogo = false;
             cardOverrides[layout].logoPath = undefined;
@@ -624,7 +1047,16 @@
             cardOverrides[layout].logoPath = val;
           }
           rerender(layout);
-        })
+        }, { placeholder: 'Search logos or type a path…' }),
+        ffSelect('logo position', logoPosOpts, defaults.logoPosition, (v) => updateOverride(layout, 'logoPosition', v)),
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'logo size' }),
+          ffSlider(defaults.logoSize, 24, 260, 'px', (v) => updateOverride(layout, 'logoSize', v))
+        ),
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'logo gap' }),
+          ffSlider(defaults.logoGap, 0, 120, 'px', (v) => updateOverride(layout, 'logoGap', v))
+        )
       );
       return panel;
     }
@@ -650,21 +1082,132 @@
       );
     }
 
+    // --- Option 4: free-text composer that wraps the user's style in a prompt ---
+
+    const LAYOUT_STYLE_PRESETS = [
+      { title: 'Gradient hero', text: 'Diagonal gradient from colors.background to colors.accent, 72px centered headline, tagline at 60% opacity, no logo.' },
+      { title: 'Split with logo', text: 'Horizontal split — left 40% is colors.accent with centered 180px logo; right 60% is colors.background with top-aligned 56px headline and 24px tagline below.' },
+      { title: 'Minimalist mono', text: 'Solid colors.background, 32px accent border inset at 15% opacity, centered 64px headline, small uppercase tagline (18px, letter-spacing 0.12em) beneath, 48px logo top-left.' },
+    ];
+
+    let toolInfo = null;
+
+    function nextLetter(existing) {
+      const used = new Set(existing || []);
+      for (let c = 65; c <= 90; c++) {
+        const L = String.fromCharCode(c);
+        if (!used.has(L)) return L;
+      }
+      return null;
+    }
+
+    function buildPrompt(style) {
+      const letter = nextLetter(toolInfo.existingLetters);
+      if (!letter) return null;
+      return [
+        'Add a new metadata image layout to this project.',
+        '',
+        `Project root: ${toolInfo.projectRoot}`,
+        `Read this file first: ${toolInfo.agentsMdPath}`,
+        `Create the new layout at: ${toolInfo.templatesDir}/layout-${letter.toLowerCase()}.js`,
+        '',
+        'Quick reference (full details in AGENTS.md):',
+        '- Export one function: (config) => Satori JSX object. Canvas is 1200x630.',
+        '- config: { headline, tagline, colors: { background, foreground, accent, tagline }, logoBase64, headingSize, taglineSize, align, logoSize, logoGap, logoPosition }',
+        "- Satori CSS subset: flex only (no grid/transform/filter/pseudo-elements/box-shadow-spread). linear-gradient, borderRadius, opacity, position:absolute all OK. fontFamily 'Inter' at weight 400 or 700.",
+        '- No registration — the file is auto-discovered on next server restart.',
+        '',
+        'Style:',
+        style,
+      ].join('\n');
+    }
+
+    function buildOption4Card() {
+      const preview = el('div', { className: 'card-preview' },
+        el('div', { className: 'card-preview-inner' },
+          el('div', { className: 'title', textContent: 'Generate a new layout' }),
+          el('div', { className: 'sub', textContent: 'Describe a style, then copy the prompt into your AI coding assistant' })
+        )
+      );
+
+      const textarea = el('textarea', {
+        className: 'prompt-textarea',
+        placeholder: 'Describe your layout style… e.g. "Diagonal gradient, 72px centered headline, no logo"',
+        rows: 4,
+      });
+
+      const chipRow = el('div', { className: 'prompt-chip-row' });
+      LAYOUT_STYLE_PRESETS.forEach((p) => {
+        const chip = el('button', { type: 'button', className: 'prompt-chip', textContent: p.title });
+        chip.addEventListener('click', () => {
+          textarea.value = p.text;
+          textarea.focus();
+        });
+        chipRow.appendChild(chip);
+      });
+
+      const copyBtn = el('button', { type: 'button', className: 'primary prompt-copy-full', textContent: 'Copy prompt' });
+      copyBtn.addEventListener('click', async () => {
+        const style = (textarea.value || '').trim();
+        if (!style) {
+          textarea.focus();
+          return;
+        }
+        const prompt = buildPrompt(style);
+        if (!prompt) {
+          copyBtn.textContent = 'All 26 letters used';
+          setTimeout(() => { copyBtn.textContent = 'Copy prompt'; }, 1800);
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(prompt);
+          const prev = copyBtn.textContent;
+          copyBtn.textContent = 'Copied';
+          setTimeout(() => { copyBtn.textContent = prev; }, 1400);
+        } catch (err) {
+          console.error('Copy failed:', err);
+        }
+      });
+
+      const composer = el('div', { className: 'prompt-composer' },
+        el('div', { className: 'prompt-chip-label', textContent: 'Start from a preset' }),
+        chipRow,
+        textarea,
+        el('div', { className: 'prompt-composer-actions' }, copyBtn)
+      );
+
+      return el('div', { className: 'card option-4' },
+        el('div', { className: 'card-header' },
+          el('div', { className: 'card-label', textContent: 'Option 4' })
+        ),
+        preview,
+        composer
+      );
+    }
+
     async function loadPreviews() {
-      const [previewsRes, configRes, logosRes] = await Promise.all([
+      const [previewsRes, configRes, logosRes, fontsRes, toolInfoRes] = await Promise.all([
         fetch('/api/previews'),
         fetch('/api/config'),
         fetch('/api/logo-candidates'),
+        fetch('/api/fonts'),
+        fetch('/api/tool-info'),
       ]);
       const previews = await previewsRes.json();
       config = await configRes.json();
       logoCandidates = await logosRes.json();
+      projectFonts = await fontsRes.json();
+      toolInfo = await toolInfoRes.json();
+
+      layouts = Object.keys(previews).sort();
+      layouts.forEach((l) => { cardOverrides[l] ??= {}; });
 
       const container = document.getElementById('cards');
       container.innerHTML = '';
       layouts.forEach((layout, i) => {
         container.appendChild(buildCard(layout, i, previews[layout]));
       });
+      container.appendChild(buildOption4Card());
     }
 
     function toggleRefine(layout) {
@@ -715,35 +1258,77 @@
 
     // --- Favicon section ---
 
-    function buildFaviconMode(label, cssClass, previews, sizes) {
+    const FAVICON_DISPLAY_SIZES = { 16: 16, 32: 32, 96: 64, 180: 96 };
+
+    function buildFaviconMode(label, cssClass, previews, sizes, headerExtra) {
       const previewsContainer = el('div', { className: 'favicon-previews' });
       sizes.forEach(size => {
-        const displaySize = Math.min(size, 96);
+        const displaySize = FAVICON_DISPLAY_SIZES[size] || Math.min(size, 96);
         // Images are 2x for retina — display at 1x
-        const checker = el('div', { className: 'favicon-preview-checker' });
         const img = el('img', { src: previews[size], width: displaySize, height: displaySize });
-        checker.appendChild(img);
         previewsContainer.appendChild(
           el('div', { className: 'favicon-preview' },
-            checker,
+            img,
             el('span', { className: 'favicon-size', textContent: `${size}px` })
           )
         );
       });
-      return el('div', { className: `favicon-mode ${cssClass}` },
-        el('div', { className: 'favicon-mode-label', textContent: label }),
-        previewsContainer
+      const header = el('div', { className: 'favicon-mode-header' },
+        el('div', { className: 'favicon-mode-label', textContent: label })
       );
+      if (headerExtra) header.appendChild(headerExtra);
+      return el('div', { className: `favicon-mode ${cssClass}` }, header, previewsContainer);
+    }
+
+    function buildCustomBgPicker() {
+      const value = faviconOverrides.customBg || '#6B97FF';
+      const hexLabel = el('span', { className: 'ff-color-hex', textContent: value });
+      const swatch = el('input', { type: 'color', className: 'ff-color-swatch', value: value });
+      swatch.addEventListener('input', () => {
+        hexLabel.textContent = swatch.value;
+        faviconOverrides.customBg = swatch.value;
+        // Apply bg color immediately for instant feedback
+        const mode = document.querySelector('.favicon-mode.custom');
+        if (mode) mode.style.background = swatch.value;
+      });
+      swatch.addEventListener('change', () => rerenderFavicons());
+      const wrap = el('div', { className: 'ff-color-wrap' });
+      wrap.style.background = 'rgba(255,255,255,0.08)';
+      wrap.addEventListener('click', () => swatch.click());
+      wrap.append(hexLabel, swatch);
+      return wrap;
     }
 
     function renderFaviconGrid(data) {
       const grid = document.getElementById('faviconGrid');
       const sizes = [16, 32, 96, 180];
       grid.innerHTML = '';
+      const customBg = faviconOverrides.customBg || '#6B97FF';
+      const customPreviews = data.custom || (() => {
+        // When no custom previews yet (first load), fall back to light previews visually
+        const fallback = {};
+        for (const s of sizes) fallback[s] = data.light[s];
+        return fallback;
+      })();
+      const customMode = buildFaviconMode(
+        'Custom background',
+        'custom',
+        customPreviews,
+        sizes,
+        buildCustomBgPicker()
+      );
+      customMode.style.background = customBg;
       grid.appendChild(el('div', { className: 'favicon-card' },
         buildFaviconMode('Light background', 'light', data.light, sizes),
-        buildFaviconMode('Dark background', 'dark', data.dark, sizes)
+        buildFaviconMode('Dark background', 'dark', data.dark, sizes),
+        customMode
       ));
+
+      // Update browser tab previews with the 32px favicon from each mode
+      const tabLight = document.getElementById('tabFaviconLight');
+      const tabDark = document.getElementById('tabFaviconDark');
+      if (tabLight && data.light?.[32]) tabLight.src = data.light[32];
+      if (tabDark && data.dark?.[32]) tabDark.src = data.dark[32];
     }
 
     async function rerenderFavicons() {
@@ -800,37 +1385,78 @@
 
       const panel = document.getElementById('faviconCustomize');
       panel.innerHTML = '';
-      panel.appendChild(ffColor('background', colors.background, (v) => { faviconOverrides.background = v; rerenderFavicons(); }));
-      panel.appendChild(ffColor('dark bg', '#000000', (v) => { faviconOverrides.darkBg = v; rerenderFavicons(); }));
-      panel.appendChild(ffColor('letter color', defaultAccent, (v) => { faviconOverrides.accent = v; rerenderFavicons(); }));
+
+      // Source first — Lettermark or a logo file
+      const initialSrc = config.faviconSrc || '__lettermark__';
+      panel.appendChild(ffSearchSelect('source', srcOpts, initialSrc, (v) => {
+        faviconOverrides.faviconSrc = v === '__lettermark__' ? null : v;
+        updateLettermarkVisibility(v === '__lettermark__');
+        rerenderFavicons();
+      }, { placeholder: 'Search logos or upload…' }));
+
+      // Transparent toggle sits directly below source
       panel.appendChild(el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'transparent' }),
-        ffToggle('Transparent background', false, (v) => { faviconOverrides.transparent = v; rerenderFavicons(); })
+        ffToggle('Transparent background', false, (v) => {
+          faviconOverrides.transparent = v;
+          updateTransparentVisibility(v);
+          rerenderFavicons();
+        })
       ));
-      panel.appendChild(el('div', { className: 'refine-row' },
-        el('span', { className: 'refine-label', textContent: 'letter' }),
-        letterInput
-      ));
-      panel.appendChild(el('div', { className: 'refine-row' },
-        el('span', { className: 'refine-label', textContent: 'letter size' }),
-        ffSlider(60, 20, 80, '%', (v) => { faviconOverrides.letterSize = v; rerenderFavicons(); })
-      ));
-      panel.appendChild(el('div', { className: 'refine-row' },
+
+      // Opaque-only rows (apply to both lettermark & logo sources)
+      const bgRow = ffColor('background', colors.background, (v) => { faviconOverrides.background = v; rerenderFavicons(); });
+      const darkBgRow = ffColor('dark bg', '#000000', (v) => { faviconOverrides.darkBg = v; rerenderFavicons(); });
+      const cornerRow = el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'corner radius' }),
         ffSlider(19, 0, 50, '%', (v) => { faviconOverrides.borderRadius = v; rerenderFavicons(); })
-      ));
-      panel.appendChild(ffSelect('font weight', weightOpts, '700', (v) => {
-        faviconOverrides.fontWeight = parseInt(v);
-        rerenderFavicons();
-      }));
-      panel.appendChild(ffSelect('source', srcOpts, config.faviconSrc || '__lettermark__', (v) => {
-        faviconOverrides.faviconSrc = v === '__lettermark__' ? null : v;
-        rerenderFavicons();
-      }));
+      );
+      [bgRow, darkBgRow, cornerRow].forEach(r => { r.dataset.opaqueOnly = '1'; });
+
+      panel.appendChild(bgRow);
+      panel.appendChild(darkBgRow);
+      panel.appendChild(cornerRow);
+
+      function updateTransparentVisibility(isTransparent) {
+        panel.querySelectorAll('[data-opaque-only]').forEach(r => {
+          r.style.display = isTransparent ? 'none' : '';
+        });
+      }
+
+      // Lettermark-only controls — hidden when a logo source is selected
+      const lettermarkRows = [
+        ffColor('letter color', defaultAccent, (v) => { faviconOverrides.accent = v; rerenderFavicons(); }),
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'letter' }),
+          letterInput
+        ),
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'letter size' }),
+          ffSlider(60, 20, 80, '%', (v) => { faviconOverrides.letterSize = v; rerenderFavicons(); })
+        ),
+        ffSelect('font weight', weightOpts, '700', (v) => {
+          faviconOverrides.fontWeight = parseInt(v);
+          rerenderFavicons();
+        }),
+      ];
+      lettermarkRows.forEach(r => { r.dataset.lettermarkOnly = '1'; panel.appendChild(r); });
+
+      function updateLettermarkVisibility(isLettermark) {
+        panel.querySelectorAll('[data-lettermark-only]').forEach(r => {
+          r.style.display = isLettermark ? '' : 'none';
+        });
+      }
+      updateLettermarkVisibility(initialSrc === '__lettermark__');
     }
 
     async function loadFaviconPreviews() {
-      const res = await fetch('/api/favicon-previews');
+      // Seed default customBg so the custom mode renders on first paint
+      faviconOverrides.customBg = faviconOverrides.customBg || '#6B97FF';
+      const res = await fetch('/api/render-favicon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(faviconOverrides),
+      });
       const data = await res.json();
       renderFaviconGrid(data);
 
@@ -863,6 +1489,14 @@
         }
       });
 
+      const sizesBtn = el('button', { textContent: 'Show all sizes' });
+      sizesBtn.addEventListener('click', () => {
+        const panel = document.getElementById('faviconGrid');
+        const isOpen = panel.classList.toggle('open');
+        sizesBtn.textContent = isOpen ? 'Hide all sizes' : 'Show all sizes';
+      });
+
+      actions.appendChild(sizesBtn);
       actions.appendChild(customizeBtn);
       actions.appendChild(dlBtn);
     }

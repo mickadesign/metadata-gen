@@ -1,5 +1,5 @@
-import { readFile, access } from 'node:fs/promises';
-import { join, basename } from 'node:path';
+import { readFile, access, readdir } from 'node:fs/promises';
+import { join, basename, extname } from 'node:path';
 
 const DEFAULTS = {
   colors: {
@@ -357,6 +357,50 @@ async function scanLogo(root) {
   }
 
   return null;
+}
+
+const FONT_DIRS = [
+  'public/fonts',
+  'src/fonts',
+  'assets/fonts',
+  'fonts',
+  'public/assets/fonts',
+  'src/assets/fonts',
+  'app/fonts',
+];
+
+const FONT_EXTS = new Set(['.ttf', '.otf']);
+
+/**
+ * Scan the project for TTF/OTF font files in common directories.
+ * Returns an array of { path, label, weightHint }.
+ */
+export async function scanFonts(root) {
+  const found = [];
+  for (const dir of FONT_DIRS) {
+    const fullDir = join(root, dir);
+    let entries;
+    try {
+      entries = await readdir(fullDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      const ext = extname(entry.name).toLowerCase();
+      if (!FONT_EXTS.has(ext)) continue;
+      const relPath = `./${dir}/${entry.name}`;
+      const name = entry.name.replace(/\.(ttf|otf)$/i, '');
+      // Simple weight hint from filename
+      const lower = name.toLowerCase();
+      let weightHint = 400;
+      if (/(bold|700|800|900)/.test(lower)) weightHint = 700;
+      else if (/(medium|500|600)/.test(lower)) weightHint = 500;
+      else if (/(light|300|200|thin|100)/.test(lower)) weightHint = 300;
+      found.push({ path: relPath, label: name, weightHint });
+    }
+  }
+  return found;
 }
 
 /**

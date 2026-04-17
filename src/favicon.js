@@ -280,8 +280,15 @@ export async function generateFaviconPreviews(config, projectRoot = process.cwd(
     colors: { ...config.colors, background: config.faviconDarkBg || '#000000' },
   };
 
+  // Optional custom-bg config
+  const customBg = config.faviconCustomBg;
+  const customConfig = customBg
+    ? { ...config, colors: { ...config.colors, background: customBg } }
+    : null;
+
   const light = {};
   const dark = {};
+  const custom = customConfig ? {} : null;
 
   for (const size of previewSizes) {
     const renderSize = size * 2; // 2x for retina
@@ -289,11 +296,13 @@ export async function generateFaviconPreviews(config, projectRoot = process.cwd(
     if (hasLogo) {
       light[size] = `data:image/png;base64,${(await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, lightConfig)).toString('base64')}`;
       dark[size] = `data:image/png;base64,${(await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, darkConfig)).toString('base64')}`;
+      if (custom) custom[size] = `data:image/png;base64,${(await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, customConfig)).toString('base64')}`;
     } else {
       light[size] = `data:image/png;base64,${(await generateLettermarkPng(lightConfig, renderSize)).toString('base64')}`;
       dark[size] = `data:image/png;base64,${(await generateLettermarkPng(darkConfig, renderSize)).toString('base64')}`;
+      if (custom) custom[size] = `data:image/png;base64,${(await generateLettermarkPng(customConfig, renderSize)).toString('base64')}`;
     }
   }
 
-  return { light, dark };
+  return custom ? { light, dark, custom } : { light, dark };
 }

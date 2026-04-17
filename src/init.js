@@ -1,7 +1,12 @@
-import { writeFile, access } from 'node:fs/promises';
-import { join } from 'node:path';
+import { writeFile, access, mkdir, copyFile } from 'node:fs/promises';
+import { constants as fsConstants } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 import { scan } from './scanner.js';
+import { PROJECT_TEMPLATES_SUBDIR } from './renderer.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Format a scan result line for terminal display.
@@ -110,4 +115,26 @@ export async function init(options = {}) {
 
   await writeFile(configPath, JSON.stringify(config, null, 2) + '\n');
   console.log(`\n\u2713 Written to ${configPath}`);
+
+  await scaffoldTemplatesDir(root);
+}
+
+/**
+ * Create <project>/metadata-templates/ with a seeded AGENTS.md so agents have
+ * a project-local contract to follow when adding new layouts. Existing files
+ * are never overwritten.
+ */
+async function scaffoldTemplatesDir(root) {
+  const dir = join(root, PROJECT_TEMPLATES_SUBDIR);
+  await mkdir(dir, { recursive: true });
+
+  const agentsSrc = join(__dirname, 'templates', 'AGENTS.md');
+  const agentsDst = join(dir, 'AGENTS.md');
+
+  try {
+    await copyFile(agentsSrc, agentsDst, fsConstants.COPYFILE_EXCL);
+    console.log(`\u2713 Seeded ${agentsDst}`);
+  } catch (err) {
+    if (err.code !== 'EEXIST') throw err;
+  }
 }
