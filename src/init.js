@@ -1,4 +1,4 @@
-import { writeFile, access, mkdir, copyFile } from 'node:fs/promises';
+import { writeFile, access, mkdir, copyFile, readFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -56,11 +56,20 @@ async function confirm(message) {
   });
 }
 
+async function readExistingConfig(configPath) {
+  try {
+    const raw = await readFile(configPath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Build the config object from scan results.
  */
-function buildConfig(results) {
-  return {
+function buildConfig(results, existing = {}) {
+  const config = {
     title: results.title?.value || '',
     tagline: results.tagline?.value || '',
     colors: {
@@ -73,6 +82,9 @@ function buildConfig(results) {
     outputDir: 'public/metadata',
     font: 'Inter',
   };
+  // Preserve a user-set url across re-inits.
+  if (existing.url) config.url = existing.url;
+  return config;
 }
 
 /**
@@ -81,6 +93,15 @@ function buildConfig(results) {
 export async function init(options = {}) {
   const root = process.cwd();
   const results = await scan(root);
+
+  // If metadata.config.json already exists, its user-edited title/tagline/url
+  // take precedence over scanner defaults — re-running init shouldn't clobber
+  // a value the user explicitly set.
+  const existing = await readExistingConfig(join(root, 'metadata.config.json'));
+  if (existing) {
+    if (existing.title) results.title = { value: existing.title, source: 'metadata.config.json' };
+    if (existing.tagline) results.tagline = { value: existing.tagline, source: 'metadata.config.json' };
+  }
 
   displayResults(results);
 
@@ -92,15 +113,9 @@ export async function init(options = {}) {
     }
   }
 
-  const config = buildConfig(results);
   const configPath = join(root, 'metadata.config.json');
-
-  // Check for existing config to prevent accidental overwrite
-  let exists = false;
-  try {
-    await access(configPath);
-    exists = true;
-  } catch {}
+  const config = buildConfig(results, existing || {});
+  const exists = existing !== null;
 
   if (exists && !options.yes) {
     const overwrite = await confirm('metadata.config.json already exists. Overwrite? [y/N]\n> ');

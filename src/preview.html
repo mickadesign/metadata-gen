@@ -144,7 +144,7 @@
     .refine-label {
       font-size: 12px;
       color: var(--text-muted);
-      width: 90px;
+      width: 120px;
       flex-shrink: 0;
     }
 
@@ -178,6 +178,37 @@
     }
 
     .ff-input::placeholder { color: var(--text-muted); }
+
+    /* Multiline variant of ff-input — same hover/focus treatment */
+    .ff-textarea {
+      flex: 1;
+      min-height: 80px;
+      padding: 10px 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      transition: all 80ms;
+    }
+    .ff-textarea:hover {
+      background: var(--bg-muted);
+      border-color: var(--border);
+    }
+    .ff-textarea:focus {
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 0 0 1px var(--focus-ring);
+    }
+    .ff-textarea::placeholder { color: var(--text-muted); }
+
+    /* Refine row for multiline inputs: top-align the label with the textarea. */
+    .refine-row.textarea { align-items: flex-start; }
+    .refine-row.textarea .refine-label { padding-top: 10px; }
 
     /* --- FF-inspired Color Picker --- */
 
@@ -345,12 +376,26 @@
 
     /* --- Favicon section --- */
 
-    .favicon-section {
-      margin-top: 24px;
+    /* Shared 2-col row for both the preview and settings rows. */
+    .row-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 32px;
+      align-items: start;
+      margin-bottom: 40px;
+    }
+    .row-col {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .favicon-preview-col {
       display: flex;
       flex-direction: column;
       gap: 16px;
-      max-width: 720px;
+      min-width: 0;
     }
 
     .favicon-tab-previews {
@@ -358,13 +403,20 @@
       flex-direction: row;
       gap: 16px;
       flex-wrap: wrap;
-      margin-bottom: 60px;
+    }
+    .favicon-tab-previews > div {
+      flex: 1 1 180px;
+      min-width: 0;
+    }
+
+    @media (max-width: 960px) {
+      .row-split { grid-template-columns: 1fr; }
     }
 
     .tab-preview {
       position: relative;
-      width: 240px;
-      height: 137px;
+      width: 100%;
+      aspect-ratio: 400 / 228;
       border-radius: 8px;
       overflow: hidden;
       background-size: cover;
@@ -681,20 +733,507 @@
     }
 
     .favicon-customize-panel {
-      display: none;
-      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       padding: 16px 20px;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      max-width: 720px;
     }
 
-    .favicon-customize-panel.open { display: flex; flex-direction: column; gap: 8px; }
+    .favicon-mode-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .favicon-mode-panel { display: none; }
+    .favicon-mode-panel.active { display: block; }
+    .favicon-mode-panel .favicon-card { margin-bottom: 0; }
+    /* Vertical tabs gets a fixed section height with its content centered. */
+    .favicon-mode-panel[data-mode="v-tabs"].active {
+      display: flex;
+      align-items: center;
+      min-height: 300px;
+    }
+    .favicon-mode-panel[data-mode="v-tabs"] .favicon-tab-previews {
+      width: 100%;
+    }
+    /* Each bg tab only shows one mode now — the pill labels it, so hide the
+       in-card label to avoid duplicated text. */
+    .favicon-mode-panel .favicon-mode-label { display: none; }
 
-    .favicon-sizes-panel { display: none; }
-    .favicon-sizes-panel.open { display: block; }
-    .favicon-sizes-panel .favicon-card { margin-bottom: 0; }
+    /* Vertical browser tab — favicon + page title overlaid on the
+       highlighted tab row in the mockup image. */
+    .tab-preview.vertical {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 400 / 228;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    .tab-preview-vcontent {
+      position: absolute;
+      left: 26%;
+      top: 51%;
+      /* Anchor 26% to the left edge of the favicon so the title flows
+         naturally to its right rather than shifting the group around a
+         centered X axis. */
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tab-preview-vfav {
+      width: 28px;
+      height: 28px;
+      display: block;
+      image-rendering: auto;
+      flex-shrink: 0;
+    }
+    .tab-preview-vtitle {
+      font-size: 18px;
+      font-weight: 500;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+    .tab-preview.vertical.light .tab-preview-vtitle { color: #000; }
+    .tab-preview.vertical.dark .tab-preview-vtitle { color: #fff; }
+
+    /* --- Social previews --- */
+
+    .social-section { margin-top: 24px; }
+
+    .social-edit-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 720px;
+    }
+    .social-edit-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .social-edit-row label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .social-edit-row .hint {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    .social-edit-row .hint.warn { color: #d97706; }
+    .social-edit-row input, .social-edit-row textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    .social-edit-row input:focus, .social-edit-row textarea:focus {
+      outline: none;
+      border-color: var(--text);
+    }
+    .social-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+    }
+    .platform-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text);
+    }
+    .platform-icon svg { width: 100%; height: 100%; display: block; }
+    .mi-preview-toggle .platform-icon { width: 16px; height: 16px; }
+    .social-card-viewport {
+      display: flex;
+      justify-content: flex-start;
+    }
+    /* Each mockup caps at something close to its real platform rendering
+       width so it doesn't stretch to fill the column. */
+    .social-card-viewport > * { width: 100%; max-width: 504px; }
+    .social-card-viewport > .mk-wa { max-width: 380px; }
+    .social-card-viewport > .mk-tg { max-width: 420px; }
+    .social-card-viewport > .mk-im-wrap { max-width: 100%; }
+
+    /* Shared: truncation ellipsis */
+    .truncate-1 {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .truncate-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .truncate-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Facebook */
+    .mk-fb { border: 1px solid #dadde1; border-radius: 0; background: #fff; color: #050505; font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; }
+    .mk-fb .mk-fb-img { aspect-ratio: 1200 / 630; background: #e4e6eb; overflow: hidden; }
+    .mk-fb .mk-fb-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-fb .mk-fb-body { padding: 10px 12px; background: #f2f3f5; }
+    .mk-fb .mk-fb-domain { font-size: 12px; color: #65676b; text-transform: uppercase; margin-bottom: 2px; }
+    .mk-fb .mk-fb-title { font-size: 16px; font-weight: 600; line-height: 1.2; margin-bottom: 2px; }
+    .mk-fb .mk-fb-desc { font-size: 13px; color: #65676b; line-height: 1.3; }
+
+    /* X / Twitter — current card style: OG image fills the card with a
+       dark title pill overlaid bottom-left; domain rendered below as
+       "From domain.com" outside the card border. */
+    .mk-x { color: #0f1419; font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; }
+    .mk-x-card { border: 1px solid #cfd9de; border-radius: 16px; overflow: hidden; background: #fff; }
+    .mk-x-img { aspect-ratio: 1200 / 628; background: #f7f9fa; overflow: hidden; position: relative; }
+    .mk-x-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-x-title-pill {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(15, 20, 25, 0.85);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 400;
+      padding: 4px 10px;
+      border-radius: 4px;
+      max-width: calc(100% - 24px);
+    }
+    .mk-x-from { font-size: 13px; color: #536471; margin-top: 8px; padding: 0 4px; }
+
+    /* LinkedIn */
+    .mk-li { border: 1px solid #e0e0e0; border-radius: 2px; background: #fff; color: rgba(0,0,0,0.9); font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; }
+    .mk-li .mk-li-img { aspect-ratio: 1200 / 627; background: #e9e9e9; overflow: hidden; }
+    .mk-li .mk-li-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-li .mk-li-body { padding: 10px 12px; background: #edf3f8; }
+    .mk-li .mk-li-title { font-size: 15px; font-weight: 600; line-height: 1.3; margin-bottom: 3px; }
+    .mk-li .mk-li-domain { font-size: 12px; color: rgba(0,0,0,0.6); }
+
+    /* WhatsApp */
+    .mk-wa { background: #e5ddd5; padding: 16px; border-radius: 10px; font-family: -apple-system, system-ui, sans-serif; }
+    .mk-wa-bubble { background: #dcf8c6; border-radius: 8px; padding: 6px; max-width: 320px; margin-left: auto; display: flex; flex-direction: column; gap: 4px; }
+    .mk-wa-link { background: rgba(0,0,0,0.04); border-radius: 6px; padding: 8px; display: flex; gap: 8px; align-items: center; }
+    .mk-wa-link .thumb { width: 56px; height: 56px; border-radius: 4px; overflow: hidden; background: #ccc; flex-shrink: 0; }
+    .mk-wa-link .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .mk-wa-link .meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .mk-wa-link .title { font-size: 13px; font-weight: 600; color: #111; }
+    .mk-wa-link .desc { font-size: 12px; color: #555; }
+    .mk-wa-link .domain { font-size: 11px; color: #888; }
+    .mk-wa-url { font-size: 13px; color: #039be5; text-decoration: none; padding: 0 4px; }
+    .mk-wa-time { font-size: 10px; color: #999; align-self: flex-end; padding-right: 4px; }
+
+    /* Discord */
+    .mk-dc { background: #2b2d31; color: #dbdee1; border-radius: 4px; padding: 8px 16px 16px; font-family: -apple-system, system-ui, 'gg sans', sans-serif; position: relative; }
+    .mk-dc::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #5865f2; border-radius: 4px 0 0 4px; }
+    .mk-dc-sitename { font-size: 12px; color: #b5bac1; margin-top: 8px; margin-bottom: 2px; }
+    .mk-dc-title { font-size: 16px; font-weight: 600; color: #00a8fc; margin-bottom: 4px; line-height: 1.3; }
+    .mk-dc-desc { font-size: 14px; color: #dbdee1; margin-bottom: 8px; line-height: 1.4; }
+    .mk-dc-img { aspect-ratio: 400 / 210; background: #1e1f22; border-radius: 4px; overflow: hidden; max-width: 400px; }
+    .mk-dc-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Slack */
+    .mk-sl { background: #fff; color: #1d1c1d; font-family: -apple-system, 'Lato', system-ui, sans-serif; border-radius: 6px; padding: 8px 12px; position: relative; }
+    .mk-sl::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #e8e8e8; border-radius: 6px 0 0 6px; }
+    .mk-sl-site { font-size: 13px; color: #1d1c1d; font-weight: 700; margin-bottom: 2px; padding-left: 4px; }
+    .mk-sl-title { font-size: 15px; font-weight: 700; color: #1264a3; margin-bottom: 4px; padding-left: 4px; line-height: 1.3; }
+    .mk-sl-desc { font-size: 14px; color: #1d1c1d; margin-bottom: 8px; padding-left: 4px; line-height: 1.4; }
+    .mk-sl-img { aspect-ratio: 360 / 189; background: #f4f4f4; border-radius: 4px; overflow: hidden; max-width: 360px; margin-left: 4px; }
+    .mk-sl-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Reddit */
+    .mk-rd { background: #fff; border: 1px solid #ccc; border-radius: 8px; font-family: 'IBM Plex Sans', -apple-system, system-ui, sans-serif; color: #1a1a1b; overflow: hidden; }
+    .mk-rd-header { padding: 8px 12px 0; font-size: 12px; color: #7c7c83; }
+    .mk-rd-title { padding: 4px 12px 8px; font-size: 18px; font-weight: 500; line-height: 1.25; color: #1a1a1b; }
+    .mk-rd-body { display: flex; gap: 12px; padding: 0 12px 12px; align-items: flex-start; }
+    .mk-rd-img { aspect-ratio: 1200 / 630; flex: 1; background: #f6f7f8; border-radius: 6px; overflow: hidden; }
+    .mk-rd-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-rd-footer { padding: 4px 12px 8px; font-size: 12px; color: #7c7c83; }
+
+    /* Telegram */
+    .mk-tg { background: #e9f6fc; padding: 12px; border-radius: 12px 12px 12px 0; color: #222; font-family: -apple-system, system-ui, sans-serif; max-width: 420px; display: flex; flex-direction: column; gap: 6px; position: relative; border-left: 3px solid #3390ec; padding-left: 10px; }
+    .mk-tg-title { font-size: 14px; font-weight: 600; color: #3390ec; }
+    .mk-tg-domain { font-size: 12px; color: #3390ec; opacity: 0.7; }
+    .mk-tg-desc { font-size: 13px; color: #222; line-height: 1.3; }
+    .mk-tg-img { aspect-ratio: 1200 / 630; background: #d0e8f5; border-radius: 6px; overflow: hidden; }
+    .mk-tg-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* iMessage */
+    .mk-im-wrap { display: flex; justify-content: flex-end; }
+    .mk-im { background: #e9e9eb; color: #000; border-radius: 18px; overflow: hidden; max-width: 260px; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; }
+    .mk-im-img { aspect-ratio: 1200 / 630; background: #d1d1d6; overflow: hidden; }
+    .mk-im-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-im-body { padding: 8px 12px 10px; }
+    .mk-im-title { font-size: 13px; font-weight: 500; line-height: 1.3; margin-bottom: 2px; }
+    .mk-im-domain { font-size: 11px; color: #8e8e93; }
+    @media (prefers-color-scheme: dark) {
+      .mk-im { background: #262628; color: #fff; }
+      .mk-im-domain { color: #8e8e93; }
+    }
+
+    /* Google Search */
+    .mk-gg { background: #fff; color: #202124; font-family: Arial, -apple-system, system-ui, sans-serif; padding: 4px; display: flex; gap: 12px; align-items: flex-start; }
+    .mk-gg-text { flex: 1; min-width: 0; }
+    .mk-gg-site-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .mk-gg-favicon { width: 18px; height: 18px; border-radius: 50%; background: #eee; flex-shrink: 0; overflow: hidden; }
+    .mk-gg-favicon img { width: 100%; height: 100%; object-fit: cover; }
+    .mk-gg-site { font-size: 12px; color: #202124; line-height: 1.2; }
+    .mk-gg-site .domain { color: #70757a; }
+    .mk-gg-title { font-size: 20px; color: #1a0dab; line-height: 1.3; margin-bottom: 4px; font-weight: 400; }
+    .mk-gg-desc { font-size: 14px; color: #4d5156; line-height: 1.45; }
+    .mk-gg-thumb { width: 92px; height: 92px; border-radius: 8px; background: #f0f0f0; overflow: hidden; flex-shrink: 0; }
+    .mk-gg-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    @media (prefers-color-scheme: dark) {
+      .mk-gg { background: #202124; color: #e8eaed; }
+      .mk-gg-site { color: #e8eaed; }
+      .mk-gg-title { color: #8ab4f8; }
+      .mk-gg-desc { color: #bdc1c6; }
+    }
+
+    /* --- Metadata images: 3-zone flow --- */
+
+    /* Each column's heading row: title left, download button right, shared
+       border-bottom (the h1's native border is suppressed inside the row). */
+    .col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .col-header h1 {
+      margin: 0;
+      padding: 0;
+      border: none;
+    }
+
+    .mi-preview-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .mi-customize-col { min-width: 0; }
+
+    /* Variant strip — tiles live inside the Customize panel */
+    .mi-variants {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .mi-variants.compact {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .mi-variants.compact .mi-variant-card { padding: 8px; }
+    .mi-variants.compact .mi-variant-label { font-size: 11px; }
+    .mi-variants.compact .mi-variant-card.plus { min-height: 120px; }
+    .mi-variants.compact .mi-variant-card.plus .plus-icon { font-size: 22px; margin-bottom: 4px; }
+    .mi-variants.compact .mi-variant-card.plus .plus-label { font-size: 12px; }
+    .mi-variant-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color 120ms, box-shadow 120ms, transform 120ms;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mi-variant-card:hover {
+      border-color: var(--fg-25);
+    }
+    .mi-variant-card.selected {
+      border-color: var(--text);
+      box-shadow: 0 0 0 1px var(--text);
+    }
+    .mi-variant-img {
+      aspect-ratio: 1200 / 630;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-muted);
+    }
+    .mi-variant-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mi-variant-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      padding: 0 2px;
+    }
+    .mi-variant-card.plus {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--text-muted);
+      border-style: dashed;
+      min-height: 200px;
+    }
+    .mi-variant-card.plus:hover { color: var(--text); }
+    .mi-variant-card.plus .plus-icon {
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+    .mi-variant-card.plus .plus-label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* Customize zone — tabbed card (Content / Layout / Layout settings) */
+    .mi-meta-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .mi-settings-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .mi-settings-panel { display: none; }
+    .mi-settings-panel.active {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    #miMetaContentPanel,
+    #miLayoutSettingsPanel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .mi-meta-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    /* Preview zone — icon toggle + one card at a time */
+    .mi-preview-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .mi-preview-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: inherit;
+      transition: all 100ms;
+    }
+    .mi-preview-toggle .platform-icon { color: var(--text-muted); }
+    .mi-preview-toggle:hover .platform-icon,
+    .mi-preview-toggle.active .platform-icon { color: var(--text); }
+    .mi-preview-toggle:hover {
+      color: var(--text);
+      background: var(--bg-muted);
+    }
+    .mi-preview-toggle.active {
+      color: var(--text);
+      border-color: var(--text);
+      box-shadow: 0 0 0 1px var(--text);
+    }
+    .mi-preview-single { max-width: 560px; }
+
+    /* Sticky download bar */
+    /* Composer modal */
+    .mi-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+    .mi-modal.open { display: flex; }
+    .mi-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+    }
+    .mi-modal-panel {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: min(560px, 92vw);
+      max-height: 82vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .mi-modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .mi-modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .mi-modal-close {
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+    .mi-modal-close:hover { color: var(--text); background: transparent; }
+    .mi-modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+    }
+
 
     @media (max-width: 1024px) {
       .cards { grid-template-columns: 1fr; max-width: 640px; }
@@ -702,29 +1241,120 @@
   </style>
 </head>
 <body>
-  <h1>Favicon set</h1>
-  <div class="favicon-section">
-    <div class="favicon-tab-previews">
-      <div>
-        <div class="tab-preview" id="tabPreviewLight" style="background-image:url('/preview-assets/tab-light.png')">
-          <img class="tab-preview-favicon" id="tabFaviconLight" alt="" />
-        </div>
-        <div class="tab-preview-label">Browser tab · light</div>
+  <!-- Two columns: Metadata | Favicon. Each column stacks preview then settings. -->
+  <div class="row-split">
+    <div class="row-col">
+      <div class="col-header">
+        <h1>Metadata preview</h1>
+        <button type="button" class="primary" id="miTopDownload">Download PNG</button>
       </div>
-      <div>
-        <div class="tab-preview" id="tabPreviewDark" style="background-image:url('/preview-assets/tab-dark.png')">
-          <img class="tab-preview-favicon" id="tabFaviconDark" alt="" />
+      <div class="mi-preview-col" id="miPreview">
+        <div class="mi-preview-toggles" id="miPreviewToggles"></div>
+        <div class="mi-preview-single" id="miPreviewSingle"></div>
+      </div>
+      <div class="mi-customize-col" id="miCustomize">
+        <div class="mi-meta-panel">
+          <div class="mi-settings-tabs" id="miSettingsTabs">
+            <button type="button" class="mi-preview-toggle active" data-tab="content">Content</button>
+            <button type="button" class="mi-preview-toggle" data-tab="layout">Layout</button>
+            <button type="button" class="mi-preview-toggle" data-tab="settings">Layout settings</button>
+          </div>
+
+          <div class="mi-settings-panel active" data-tab="content">
+            <div id="miMetaContentPanel"></div>
+          </div>
+          <div class="mi-settings-panel" data-tab="layout">
+            <div class="mi-variants compact" id="miVariants"></div>
+          </div>
+          <div class="mi-settings-panel" data-tab="settings">
+            <div id="miLayoutSettingsPanel"></div>
+          </div>
         </div>
-        <div class="tab-preview-label">Browser tab · dark</div>
       </div>
     </div>
-    <div class="favicon-actions" id="faviconActions"></div>
-    <div class="favicon-sizes-panel" id="faviconGrid"></div>
-    <div class="favicon-customize-panel" id="faviconCustomize"></div>
+
+    <div class="row-col">
+      <div class="col-header">
+        <h1>Favicon preview</h1>
+        <button type="button" class="primary" id="faviconTopDownload">Download favicon set</button>
+      </div>
+      <div class="favicon-preview-col">
+        <div class="favicon-mode-toggles" id="faviconModeToggles">
+          <button type="button" class="mi-preview-toggle active" data-mode="h-tabs">Horizontal tabs</button>
+          <button type="button" class="mi-preview-toggle" data-mode="v-tabs">Vertical tabs</button>
+          <button type="button" class="mi-preview-toggle" data-mode="bg-light">Light background</button>
+          <button type="button" class="mi-preview-toggle" data-mode="bg-dark">Dark background</button>
+          <button type="button" class="mi-preview-toggle" data-mode="bg-custom">Custom background</button>
+        </div>
+
+        <!-- Mode 1: horizontal tabs -->
+        <div class="favicon-mode-panel active" data-mode="h-tabs">
+          <div class="favicon-tab-previews">
+            <div>
+              <div class="tab-preview" id="tabPreviewLight" style="background-image:url('/preview-assets/tab-light.png')">
+                <img class="tab-preview-favicon" id="tabFaviconLight" alt="" />
+              </div>
+              <div class="tab-preview-label">Browser tab · light</div>
+            </div>
+            <div>
+              <div class="tab-preview" id="tabPreviewDark" style="background-image:url('/preview-assets/tab-dark.png')">
+                <img class="tab-preview-favicon" id="tabFaviconDark" alt="" />
+              </div>
+              <div class="tab-preview-label">Browser tab · dark</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 2: vertical tabs -->
+        <div class="favicon-mode-panel" data-mode="v-tabs">
+          <div class="favicon-tab-previews">
+            <div>
+              <div class="tab-preview vertical light" style="background-image:url('/preview-assets/tab-vertical-light.png')">
+                <div class="tab-preview-vcontent">
+                  <img class="tab-preview-vfav" id="tabVFavLight" alt="" />
+                  <span class="tab-preview-vtitle" id="tabVTitleLight"></span>
+                </div>
+              </div>
+              <div class="tab-preview-label">Vertical tab · light</div>
+            </div>
+            <div>
+              <div class="tab-preview vertical dark" style="background-image:url('/preview-assets/tab-vertical-dark.png')">
+                <div class="tab-preview-vcontent">
+                  <img class="tab-preview-vfav" id="tabVFavDark" alt="" />
+                  <span class="tab-preview-vtitle" id="tabVTitleDark"></span>
+                </div>
+              </div>
+              <div class="tab-preview-label">Vertical tab · dark</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 3–5: size previews per background -->
+        <div class="favicon-mode-panel" data-mode="bg-light">
+          <div id="faviconGridLight"></div>
+        </div>
+        <div class="favicon-mode-panel" data-mode="bg-dark">
+          <div id="faviconGridDark"></div>
+        </div>
+        <div class="favicon-mode-panel" data-mode="bg-custom">
+          <div id="faviconGridCustom"></div>
+        </div>
+      </div>
+      <div class="favicon-customize-panel" id="faviconCustomize"></div>
+    </div>
   </div>
 
-  <h1>Metadata images</h1>
-  <div class="cards" id="cards"></div>
+  <!-- Composer modal (opened by the "+" card) -->
+  <div class="mi-modal" id="miComposerModal">
+    <div class="mi-modal-backdrop" data-close-modal></div>
+    <div class="mi-modal-panel">
+      <div class="mi-modal-header">
+        <div class="mi-modal-title">Generate a new layout</div>
+        <button type="button" class="mi-modal-close" data-close-modal aria-label="Close">&times;</button>
+      </div>
+      <div class="mi-modal-body" id="miComposerBody"></div>
+    </div>
+  </div>
 
   <script>
     // Layouts are auto-discovered server-side; the client reads them from /api/previews.
@@ -1008,33 +1638,32 @@
         { value: 'center', label: 'Center' },
         { value: 'right', label: 'Right' },
       ];
-      const logoPosOpts = [
-        { value: 'left', label: 'Left of text' },
-        { value: 'top', label: 'Above text' },
-      ];
       const fontOpts = [
         { value: '__inter__', label: 'Inter (bundled)' },
         ...projectFonts.map(f => ({ value: f.path, label: f.label, hint: 'project' })),
       ];
 
       const panel = el('div', { className: 'refine-panel', id: `refine-${layout}` },
-        ffColor('background', colors.background, (v) => updateOverride(layout, 'background', v)),
-        ffColor('heading', colors.foreground, (v) => updateOverride(layout, 'foreground', v)),
-        ffColor('tagline', colors.foreground, (v) => updateOverride(layout, 'taglineColor', v)),
-        ffColor('accent', colors.accent, (v) => updateOverride(layout, 'accent', v)),
+        // Text
         ffInput('headline', config.title, (v) => updateOverride(layout, 'headline', v)),
-        ffInput('tagline text', config.tagline, (v) => updateOverride(layout, 'tagline', v)),
+        ffInput('tagline', config.tagline, (v) => updateOverride(layout, 'tagline', v)),
+        // Colors
+        ffColor('background color', colors.background, (v) => updateOverride(layout, 'background', v)),
+        ffColor('headline color', colors.foreground, (v) => updateOverride(layout, 'foreground', v)),
+        ffColor('tagline color', colors.foreground, (v) => updateOverride(layout, 'taglineColor', v)),
+        // Typography
         el('div', { className: 'refine-row' },
-          el('span', { className: 'refine-label', textContent: 'heading size' }),
+          el('span', { className: 'refine-label', textContent: 'headline size' }),
           ffSlider(DEFAULT_HEADING_SIZES[layout] ?? FALLBACK_HEADING_SIZE, 24, 96, 'px', (v) => updateOverride(layout, 'headingSize', v))
         ),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'tagline size' }),
           ffSlider(DEFAULT_TAGLINE_SIZES[layout] ?? FALLBACK_TAGLINE_SIZE, 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
         ),
-        ffSelect('heading font', fontOpts, '__inter__', (v) => updateOverride(layout, 'headingFont', v)),
+        ffSelect('headline font', fontOpts, '__inter__', (v) => updateOverride(layout, 'headingFont', v)),
         ffSelect('tagline font', fontOpts, '__inter__', (v) => updateOverride(layout, 'taglineFont', v)),
         ffSelect('alignment', alignOpts, defaults.align, (v) => updateOverride(layout, 'align', v)),
+        // Logo
         ffSearchSelect('logo', logoOpts, '__none__', (val) => {
           if (val === '__hide__') {
             cardOverrides[layout].showLogo = false;
@@ -1048,7 +1677,6 @@
           }
           rerender(layout);
         }, { placeholder: 'Search logos or type a path…' }),
-        ffSelect('logo position', logoPosOpts, defaults.logoPosition, (v) => updateOverride(layout, 'logoPosition', v)),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'logo size' }),
           ffSlider(defaults.logoSize, 24, 260, 'px', (v) => updateOverride(layout, 'logoSize', v))
@@ -1061,25 +1689,29 @@
       return panel;
     }
 
-    function buildCard(layout, index, imageSrc) {
-      const previewImg = el('img', { id: `preview-${layout}`, src: imageSrc, alt: `Option ${index + 1}` });
-
-      const customizeBtn = el('button', { textContent: 'Customize' });
-      customizeBtn.addEventListener('click', () => toggleRefine(layout));
-
-      const dlBtn = el('button', { className: 'primary', id: `dl-${layout}`, textContent: 'Download PNG' });
-      dlBtn.addEventListener('click', () => downloadOg(layout));
-
-      return el('div', { className: 'card' },
-        el('div', { className: 'card-header' },
-          el('div', { className: 'card-label', textContent: `Option ${index + 1}` })
-        ),
-        el('div', { className: 'card-preview' }, previewImg),
-        el('div', { className: 'card-footer' },
-          el('div', { className: 'card-actions' }, customizeBtn, dlBtn)
-        ),
-        buildRefinePanel(layout)
+    // The Pick zone: a compact selectable card per layout. Clicking the card
+    // selects the variant (no per-card buttons). Selection is the only
+    // interaction here — customization and download live in the zones below.
+    function buildVariantCard(layout, index, imageSrc) {
+      const img = el('img', { id: `preview-${layout}`, src: imageSrc, alt: `Option ${index + 1}` });
+      const card = el('div', { className: 'mi-variant-card', 'data-layout': layout },
+        el('div', { className: 'mi-variant-img' }, img),
+        el('div', { className: 'mi-variant-label', textContent: `Option ${index + 1}` })
       );
+      card.addEventListener('click', () => selectVariant(layout));
+      return card;
+    }
+
+    // The "+" card in the Pick row opens the composer modal (Option 4).
+    function buildPlusCard() {
+      const card = el('div', { className: 'mi-variant-card plus' },
+        el('div', {},
+          el('div', { className: 'plus-icon', textContent: '+' }),
+          el('div', { className: 'plus-label', textContent: 'Generate new' })
+        )
+      );
+      card.addEventListener('click', openComposerModal);
+      return card;
     }
 
     // --- Option 4: free-text composer that wraps the user's style in a prompt ---
@@ -1122,14 +1754,7 @@
       ].join('\n');
     }
 
-    function buildOption4Card() {
-      const preview = el('div', { className: 'card-preview' },
-        el('div', { className: 'card-preview-inner' },
-          el('div', { className: 'title', textContent: 'Generate a new layout' }),
-          el('div', { className: 'sub', textContent: 'Describe a style, then copy the prompt into your AI coding assistant' })
-        )
-      );
-
+    function buildComposerPanel() {
       const textarea = el('textarea', {
         className: 'prompt-textarea',
         placeholder: 'Describe your layout style… e.g. "Diagonal gradient, 72px centered headline, no logo"',
@@ -1169,20 +1794,151 @@
         }
       });
 
-      const composer = el('div', { className: 'prompt-composer' },
+      return el('div', { className: 'prompt-composer' },
         el('div', { className: 'prompt-chip-label', textContent: 'Start from a preset' }),
         chipRow,
         textarea,
         el('div', { className: 'prompt-composer-actions' }, copyBtn)
       );
+    }
 
-      return el('div', { className: 'card option-4' },
-        el('div', { className: 'card-header' },
-          el('div', { className: 'card-label', textContent: 'Option 4' })
+    function openComposerModal() {
+      const modal = document.getElementById('miComposerModal');
+      const body = document.getElementById('miComposerBody');
+      body.innerHTML = '';
+      body.appendChild(buildComposerPanel());
+      modal.classList.add('open');
+    }
+    function closeComposerModal() {
+      document.getElementById('miComposerModal').classList.remove('open');
+    }
+    document.addEventListener('click', (e) => {
+      if (e.target.hasAttribute && e.target.hasAttribute('data-close-modal')) closeComposerModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeComposerModal();
+    });
+
+    // --- Selection + Customize + Preview flow ---
+
+    let selectedLayout = null;
+
+    function selectVariant(layout) {
+      selectedLayout = layout;
+      document.querySelectorAll('.mi-variant-card[data-layout]').forEach(c => {
+        c.classList.toggle('selected', c.getAttribute('data-layout') === layout);
+      });
+      // Social previews follow the selected variant's image so the mockups
+      // show whatever the user is editing.
+      const smallImg = document.getElementById(`preview-${layout}`);
+      if (smallImg) {
+        socialState.ogImage = smallImg.src;
+        renderSocialCards();
+      }
+      buildMetaPanel(layout);
+    }
+
+    // Debounce helper for live social preview updates
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    function buildMetaPanel(layout) {
+      const contentPanel = document.getElementById('miMetaContentPanel');
+      const settingsPanel = document.getElementById('miLayoutSettingsPanel');
+      if (!contentPanel || !settingsPanel) return;
+      contentPanel.innerHTML = '';
+      settingsPanel.innerHTML = '';
+
+      const titleInput = el('input', { type: 'text', className: 'ff-input', value: socialState.title || config.title || '', placeholder: SOCIAL_DEFAULTS.title, maxLength: '500' });
+      const descInput = el('textarea', { className: 'ff-textarea', rows: 3, placeholder: SOCIAL_DEFAULTS.description, maxLength: '1000' });
+      descInput.value = socialState.description || config.tagline || '';
+      const urlInput = el('input', { type: 'text', className: 'ff-input', value: socialState.url || config.url || '', placeholder: SOCIAL_DEFAULTS.url, maxLength: '500' });
+
+      // Live updates: socials re-render on every keystroke (client-only);
+      // OG thumbnails re-render server-side, debounced. Title is global so it
+      // propagates to every variant; description/URL only touch the socials.
+      const scheduleBigRenderAll = debounce(() => {
+        for (const l of layouts) rerender(l);
+      }, 400);
+
+      titleInput.addEventListener('input', () => {
+        const v = titleInput.value;
+        socialState.title = v;
+        config.title = v;
+        renderSocialCards();
+        updateVerticalTabTitles(v);
+        for (const l of layouts) {
+          cardOverrides[l] = cardOverrides[l] || {};
+          cardOverrides[l].headline = v || undefined;
+        }
+        scheduleBigRenderAll();
+      });
+      // Description drives only the metadata description shown in social
+      // previews. The OG image tagline stays editable separately under
+      // Layout settings → Tagline text.
+      descInput.addEventListener('input', () => {
+        const v = descInput.value;
+        socialState.description = v;
+        config.tagline = v;
+        renderSocialCards();
+      });
+      urlInput.addEventListener('input', () => {
+        const v = urlInput.value;
+        socialState.url = v;
+        config.url = v;
+        renderSocialCards();
+      });
+
+      const saveBtn = el('button', { className: 'primary', textContent: 'Save to metadata.config.json' });
+      const saveStatus = el('span', { className: 'hint' });
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
+        saveStatus.textContent = 'Saving\u2026';
+        saveStatus.classList.remove('warn');
+        try {
+          const res = await fetch('/api/save-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: socialState.title,
+              tagline: socialState.description,
+              url: socialState.url,
+            }),
+          });
+          if (!res.ok) throw new Error(await res.text());
+          saveStatus.textContent = '\u2713 Saved — rebuild your site for meta tags to update';
+        } catch (err) {
+          saveStatus.textContent = 'Save failed';
+          saveStatus.classList.add('warn');
+          console.error(err);
+        } finally {
+          saveBtn.disabled = false;
+          setTimeout(() => { saveStatus.textContent = ''; }, 6000);
+        }
+      });
+
+      contentPanel.append(
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'title' }),
+          titleInput
         ),
-        preview,
-        composer
+        el('div', { className: 'refine-row textarea' },
+          el('span', { className: 'refine-label', textContent: 'description' }),
+          descInput
+        ),
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'site url' }),
+          urlInput
+        ),
+        el('div', { className: 'mi-meta-actions' }, saveStatus, saveBtn)
       );
+
+      // Layout settings tab — the refine panel's rows, unwrapped so they
+      // inherit the panel's gap instead of the refine-panel padding.
+      const refine = buildRefinePanel(layout);
+      while (refine.firstChild) settingsPanel.appendChild(refine.firstChild);
     }
 
     async function loadPreviews() {
@@ -1202,16 +1958,29 @@
       layouts = Object.keys(previews).sort();
       layouts.forEach((l) => { cardOverrides[l] ??= {}; });
 
-      const container = document.getElementById('cards');
-      container.innerHTML = '';
+      const row = document.getElementById('miVariants');
+      row.innerHTML = '';
       layouts.forEach((layout, i) => {
-        container.appendChild(buildCard(layout, i, previews[layout]));
+        row.appendChild(buildVariantCard(layout, i, previews[layout]));
       });
-      container.appendChild(buildOption4Card());
-    }
+      row.appendChild(buildPlusCard());
 
-    function toggleRefine(layout) {
-      document.getElementById(`refine-${layout}`).classList.toggle('open');
+      // Download PNG button lives in the column header now.
+      const dlBtn = document.getElementById('miTopDownload');
+      dlBtn.addEventListener('click', () => {
+        if (selectedLayout) downloadOg(selectedLayout, dlBtn);
+      });
+
+      // Settings tabs (Content / Layout / Layout settings). Static DOM, wire once.
+      const tabBtns = document.querySelectorAll('#miSettingsTabs .mi-preview-toggle');
+      const tabPanels = document.querySelectorAll('.mi-settings-panel');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          tabBtns.forEach(b => b.classList.toggle('active', b === btn));
+          tabPanels.forEach(p => p.classList.toggle('active', p.getAttribute('data-tab') === tab));
+        });
+      });
     }
 
     async function updateOverride(layout, key, value) {
@@ -1221,7 +1990,7 @@
 
     async function rerender(layout) {
       const img = document.getElementById(`preview-${layout}`);
-      img.style.opacity = '0.5';
+      if (img) img.style.opacity = '0.5';
       try {
         const res = await fetch('/api/render', {
           method: 'POST',
@@ -1229,18 +1998,23 @@
           body: JSON.stringify({ layout, overrides: cardOverrides[layout] }),
         });
         const data = await res.json();
-        img.src = data.image;
+        if (img) img.src = data.image;
+        // Keep social previews in sync with the selected variant's image
+        if (layout === selectedLayout) {
+          socialState.ogImage = data.image;
+          renderSocialCards();
+        }
       } catch (err) {
         console.error('Render failed:', err);
       } finally {
-        img.style.opacity = '1';
+        if (img) img.style.opacity = '1';
       }
     }
 
-    async function downloadOg(layout) {
-      const btn = document.getElementById(`dl-${layout}`);
+    async function downloadOg(layout, btn) {
+      const label = btn.textContent;
       btn.disabled = true;
-      btn.textContent = 'Saving...';
+      btn.textContent = 'Saving\u2026';
       try {
         const res = await fetch('/api/download/og', {
           method: 'POST',
@@ -1248,11 +2022,18 @@
           body: JSON.stringify({ layout }),
         });
         const data = await res.json();
-        const span = el('span', { className: 'success', textContent: `\u2713 Saved to ${data.path}` });
-        btn.replaceWith(span);
+        btn.textContent = `\u2713 Saved to ${data.path}`;
+        setTimeout(() => {
+          btn.textContent = label;
+          btn.disabled = false;
+        }, 3000);
       } catch (err) {
         btn.textContent = 'Error';
         console.error('Download failed:', err);
+        setTimeout(() => {
+          btn.textContent = label;
+          btn.disabled = false;
+        }, 2000);
       }
     }
 
@@ -1300,35 +2081,46 @@
     }
 
     function renderFaviconGrid(data) {
-      const grid = document.getElementById('faviconGrid');
       const sizes = [16, 32, 96, 180];
-      grid.innerHTML = '';
       const customBg = faviconOverrides.customBg || '#6B97FF';
       const customPreviews = data.custom || (() => {
-        // When no custom previews yet (first load), fall back to light previews visually
+        // When no custom previews yet (first load), fall back to light previews visually.
         const fallback = {};
         for (const s of sizes) fallback[s] = data.light[s];
         return fallback;
       })();
-      const customMode = buildFaviconMode(
-        'Custom background',
-        'custom',
-        customPreviews,
-        sizes,
-        buildCustomBgPicker()
-      );
-      customMode.style.background = customBg;
-      grid.appendChild(el('div', { className: 'favicon-card' },
-        buildFaviconMode('Light background', 'light', data.light, sizes),
-        buildFaviconMode('Dark background', 'dark', data.dark, sizes),
-        customMode
+
+      // Each background now lives in its own tab panel — render into three
+      // separate containers so the pill toggle reveals them one at a time.
+      const lightGrid = document.getElementById('faviconGridLight');
+      lightGrid.innerHTML = '';
+      lightGrid.appendChild(el('div', { className: 'favicon-card' },
+        buildFaviconMode('Light background', 'light', data.light, sizes)
       ));
 
-      // Update browser tab previews with the 32px favicon from each mode
-      const tabLight = document.getElementById('tabFaviconLight');
-      const tabDark = document.getElementById('tabFaviconDark');
-      if (tabLight && data.light?.[32]) tabLight.src = data.light[32];
-      if (tabDark && data.dark?.[32]) tabDark.src = data.dark[32];
+      const darkGrid = document.getElementById('faviconGridDark');
+      darkGrid.innerHTML = '';
+      darkGrid.appendChild(el('div', { className: 'favicon-card' },
+        buildFaviconMode('Dark background', 'dark', data.dark, sizes)
+      ));
+
+      const customGrid = document.getElementById('faviconGridCustom');
+      customGrid.innerHTML = '';
+      const customMode = buildFaviconMode('Custom background', 'custom', customPreviews, sizes, buildCustomBgPicker());
+      customMode.style.background = customBg;
+      customGrid.appendChild(el('div', { className: 'favicon-card' }, customMode));
+
+      // Update horizontal + vertical browser tab previews with the 32px favicon.
+      const bindings = [
+        ['tabFaviconLight', data.light?.[32]],
+        ['tabFaviconDark',  data.dark?.[32]],
+        ['tabVFavLight',    data.light?.[32]],
+        ['tabVFavDark',     data.dark?.[32]],
+      ];
+      for (const [id, src] of bindings) {
+        const node = document.getElementById(id);
+        if (node && src) node.src = src;
+      }
     }
 
     async function rerenderFavicons() {
@@ -1460,49 +2252,314 @@
       const data = await res.json();
       renderFaviconGrid(data);
 
-      const actions = document.getElementById('faviconActions');
-      actions.innerHTML = '';
+      // Customize panel sits alongside the preview now — always rendered.
+      buildFaviconCustomizePanel();
 
-      const customizeBtn = el('button', { textContent: 'Customize' });
-      customizeBtn.addEventListener('click', () => {
-        const panel = document.getElementById('faviconCustomize');
-        if (!panel.hasChildNodes()) buildFaviconCustomizePanel();
-        panel.classList.toggle('open');
+      // Mode toggles (horizontal / vertical / sizes) — reveal one panel at a time.
+      const toggles = document.querySelectorAll('#faviconModeToggles .mi-preview-toggle');
+      toggles.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-mode');
+          toggles.forEach(b => b.classList.toggle('active', b === btn));
+          document.querySelectorAll('.favicon-mode-panel').forEach(p => {
+            p.classList.toggle('active', p.getAttribute('data-mode') === mode);
+          });
+        });
       });
 
-      const dlBtn = el('button', { className: 'primary', textContent: 'Download favicon set' });
+      // Download favicon set button lives in the column header now.
+      const dlBtn = document.getElementById('faviconTopDownload');
+      const originalLabel = dlBtn.textContent;
       dlBtn.addEventListener('click', async () => {
         dlBtn.disabled = true;
-        dlBtn.textContent = 'Saving...';
+        dlBtn.textContent = 'Saving\u2026';
         try {
           const res = await fetch('/api/download/favicons', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
           });
           const data = await res.json();
-          const span = el('span', { className: 'success',
-            textContent: `\u2713 Saved to ${config.outputDir || 'public/metadata'}/ (${data.count} files)` });
-          dlBtn.replaceWith(span);
+          dlBtn.textContent = `\u2713 Saved (${data.count} files)`;
         } catch (err) {
           dlBtn.textContent = 'Error';
           console.error('Favicon download failed:', err);
+        } finally {
+          setTimeout(() => {
+            dlBtn.textContent = originalLabel;
+            dlBtn.disabled = false;
+          }, 3000);
         }
       });
-
-      const sizesBtn = el('button', { textContent: 'Show all sizes' });
-      sizesBtn.addEventListener('click', () => {
-        const panel = document.getElementById('faviconGrid');
-        const isOpen = panel.classList.toggle('open');
-        sizesBtn.textContent = isOpen ? 'Hide all sizes' : 'Show all sizes';
-      });
-
-      actions.appendChild(sizesBtn);
-      actions.appendChild(customizeBtn);
-      actions.appendChild(dlBtn);
     }
 
-    loadPreviews();
-    loadFaviconPreviews();
+    function updateVerticalTabTitles(title) {
+      ['tabVTitleLight', 'tabVTitleDark'].forEach(id => {
+        const e = document.getElementById(id);
+        if (e) e.textContent = title;
+      });
+    }
+
+    // --- Social previews -------------------------------------------------
+
+    const SOCIAL_DEFAULTS = {
+      title: 'Your site title',
+      description: 'A short description of what this page is about.',
+      url: 'https://yourdomain.com',
+    };
+
+    // Characters each platform shows before clipping (approximate, based on
+    // feed renderings; real numbers drift with platform UI updates).
+    const SOCIAL_LIMITS = {
+      facebook:  { title: 60,  desc: 120 },
+      x:         { title: 70,  desc: 0   },   // X hides desc on large card
+      linkedin:  { title: 70,  desc: 100 },
+      whatsapp:  { title: 65,  desc: 155 },
+      discord:   { title: 100, desc: 350 },
+      slack:     { title: 90,  desc: 150 },
+      reddit:    { title: 120, desc: 0   },   // Reddit rarely shows desc
+      telegram:  { title: 65,  desc: 160 },
+      imessage:  { title: 50,  desc: 0   },
+      google:    { title: 60,  desc: 160 },
+    };
+
+    let socialState = { title: '', description: '', url: '', ogImage: null, faviconImage: null };
+
+    function truncate(str, max) {
+      if (!str) return '';
+      if (!max || str.length <= max) return str;
+      return str.slice(0, max - 1).trimEnd() + '\u2026';
+    }
+
+    function domainFromUrl(url) {
+      if (!url) return 'yourdomain.com';
+      try { return new URL(url).hostname.replace(/^www\./, ''); }
+      catch { return url.replace(/^https?:\/\//, '').split('/')[0] || 'yourdomain.com'; }
+    }
+
+    // Official brand logos (simplified single-path, from simpleicons.org — CC0).
+    // Rendered as white-on-brand-color inside each chip.
+    const PLATFORM_ICON_SVGS = {
+      facebook: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.198 21.5h4v-8.01h3.604l.396-3.98h-4V7.5a1 1 0 0 1 1-1h3v-4h-3a5 5 0 0 0-5 5v2.01h-2l-.396 3.98h2.396v8.01Z"/></svg>',
+      x: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.451-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644Z"/></svg>',
+      linkedin: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.5 21.5h-5v-13h5v13ZM4 6.5C2.5 6.5 1.5 5.3 1.5 4s1-2.4 2.5-2.4c1.6 0 2.5 1 2.6 2.4 0 1.4-1 2.5-2.6 2.5Zm18.5 15h-5v-7c0-1.9-.7-3.1-2.4-3.1-1.3 0-2.1.9-2.4 1.8-.1.3-.1.7-.1 1.1v7h-5s.1-12.7 0-13h5v2c.7-1 1.8-2.4 4.3-2.4 3.2 0 5.6 2.1 5.6 6.5v7Z"/></svg>',
+      whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.554-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24Zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981Zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.074-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.371-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414Z"/></svg>',
+      discord: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.08.08 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.06.06 0 0 0-.031-.03ZM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z"/></svg>',
+      slack: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52Zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313ZM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834Zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312Zm10.122 2.521a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834Zm-1.268 0a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312Zm-2.523 10.122a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52Zm0-1.268a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313Z"/></svg>',
+      reddit: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0Zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.11 3.11 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701ZM9.25 12c-.687 0-1.25.561-1.25 1.25 0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249Zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249Zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095Z"/></svg>',
+      telegram: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0Zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635Z"/></svg>',
+      imessage: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C5.925 2 1 6.142 1 11.252c0 2.946 1.621 5.573 4.137 7.284l-.982 3.15a.36.36 0 0 0 .547.402l3.55-2.214c1.174.306 2.436.472 3.748.472 6.075 0 11-4.142 11-9.252C23 6.142 18.075 2 12 2Z"/></svg>',
+      google: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.545 10.24v3.82h5.44c-.71 2.32-2.64 3.98-5.44 3.98a6.03 6.03 0 1 1 0-12.07c1.5 0 2.87.55 3.92 1.46l2.82-2.82A9.97 9.97 0 0 0 12.545 2C7.02 2 2.543 6.48 2.543 12s4.478 10 10.002 10c8.4 0 10.25-7.85 9.43-11.75l-9.43-.01Z"/></svg>',
+    };
+
+    function platformIcon(id) {
+      const span = el('span', { className: 'platform-icon', 'data-platform': id });
+      span.innerHTML = PLATFORM_ICON_SVGS[id] || '';
+      return span;
+    }
+
+    // Each renderer returns the inner markup for a platform's viewport.
+    const SOCIAL_PLATFORMS = [
+      {
+        id: 'slack', label: 'Slack', iconLetter: 'S', iconBg: '#4a154b',
+        render: ({ title, description, domain, ogImage }) => el('div', { className: 'mk-sl' },
+          el('div', { className: 'mk-sl-site', textContent: domain }),
+          el('div', { className: 'mk-sl-title truncate-2', textContent: truncate(title, SOCIAL_LIMITS.slack.title) }),
+          el('div', { className: 'mk-sl-desc truncate-3', textContent: truncate(description, SOCIAL_LIMITS.slack.desc) }),
+          el('div', { className: 'mk-sl-img' }, ogImage ? el('img', { src: ogImage }) : null)
+        ),
+      },
+      {
+        id: 'x', label: 'X (Twitter)', iconLetter: '𝕏', iconBg: '#000',
+        render: ({ title, domain, ogImage }) => el('div', { className: 'mk-x' },
+          el('div', { className: 'mk-x-card' },
+            el('div', { className: 'mk-x-img' },
+              ogImage ? el('img', { src: ogImage }) : null,
+              el('div', { className: 'mk-x-title-pill truncate-1', textContent: truncate(title, SOCIAL_LIMITS.x.title) })
+            )
+          ),
+          el('div', { className: 'mk-x-from', textContent: `From ${domain}` })
+        ),
+      },
+      {
+        id: 'linkedin', label: 'LinkedIn', iconLetter: 'in', iconBg: '#0a66c2',
+        render: ({ title, domain, ogImage }) => el('div', { className: 'mk-li' },
+          el('div', { className: 'mk-li-img' }, ogImage ? el('img', { src: ogImage }) : null),
+          el('div', { className: 'mk-li-body' },
+            el('div', { className: 'mk-li-title truncate-2', textContent: truncate(title, SOCIAL_LIMITS.linkedin.title) }),
+            el('div', { className: 'mk-li-domain', textContent: domain })
+          )
+        ),
+      },
+      {
+        id: 'whatsapp', label: 'WhatsApp', iconLetter: 'W', iconBg: '#25d366',
+        render: ({ title, description, domain, url, ogImage }) => el('div', { className: 'mk-wa' },
+          el('div', { className: 'mk-wa-bubble' },
+            el('div', { className: 'mk-wa-link' },
+              el('div', { className: 'thumb' }, ogImage ? el('img', { src: ogImage }) : null),
+              el('div', { className: 'meta' },
+                el('div', { className: 'title truncate-1', textContent: truncate(title, SOCIAL_LIMITS.whatsapp.title) }),
+                el('div', { className: 'desc truncate-2', textContent: truncate(description, SOCIAL_LIMITS.whatsapp.desc) }),
+                el('div', { className: 'domain', textContent: domain })
+              )
+            ),
+            el('a', { className: 'mk-wa-url', textContent: url || 'https://' + domain }),
+            el('span', { className: 'mk-wa-time', textContent: '9:41 AM \u2713\u2713' })
+          )
+        ),
+      },
+      {
+        id: 'reddit', label: 'Reddit', iconLetter: 'r', iconBg: '#ff4500',
+        render: ({ title, domain, ogImage }) => el('div', { className: 'mk-rd' },
+          el('div', { className: 'mk-rd-header', textContent: `${domain} \u2022 submitted by u/you` }),
+          el('div', { className: 'mk-rd-title truncate-2', textContent: truncate(title, SOCIAL_LIMITS.reddit.title) }),
+          el('div', { className: 'mk-rd-body' },
+            el('div', { className: 'mk-rd-img' }, ogImage ? el('img', { src: ogImage }) : null)
+          ),
+          el('div', { className: 'mk-rd-footer', textContent: '\u25b2 128   \ud83d\udcac 24 comments   \u21aa Share' })
+        ),
+      },
+      {
+        id: 'telegram', label: 'Telegram', iconLetter: 'T', iconBg: '#2aabee',
+        render: ({ title, description, domain, ogImage }) => el('div', { className: 'mk-tg' },
+          el('div', { className: 'mk-tg-title truncate-1', textContent: truncate(title, SOCIAL_LIMITS.telegram.title) }),
+          el('div', { className: 'mk-tg-domain', textContent: domain }),
+          el('div', { className: 'mk-tg-desc truncate-2', textContent: truncate(description, SOCIAL_LIMITS.telegram.desc) }),
+          el('div', { className: 'mk-tg-img' }, ogImage ? el('img', { src: ogImage }) : null)
+        ),
+      },
+      {
+        id: 'imessage', label: 'iMessage', iconLetter: '\ud83d\udcac', iconBg: '#34c759',
+        render: ({ title, domain, ogImage }) => el('div', { className: 'mk-im-wrap' },
+          el('div', { className: 'mk-im' },
+            el('div', { className: 'mk-im-img' }, ogImage ? el('img', { src: ogImage }) : null),
+            el('div', { className: 'mk-im-body' },
+              el('div', { className: 'mk-im-title truncate-1', textContent: truncate(title, SOCIAL_LIMITS.imessage.title) }),
+              el('div', { className: 'mk-im-domain', textContent: domain })
+            )
+          )
+        ),
+      },
+      {
+        id: 'google', label: 'Google Search', iconLetter: 'G', iconBg: '#4285f4',
+        render: ({ title, description, domain, url, faviconImage, ogImage }) => el('div', { className: 'mk-gg' },
+          el('div', { className: 'mk-gg-text' },
+            el('div', { className: 'mk-gg-site-row' },
+              el('div', { className: 'mk-gg-favicon' }, faviconImage ? el('img', { src: faviconImage }) : null),
+              el('div', { className: 'mk-gg-site' },
+                el('div', { textContent: domain }),
+                el('div', { className: 'domain', textContent: url || 'https://' + domain })
+              )
+            ),
+            el('div', { className: 'mk-gg-title truncate-1', textContent: truncate(title, SOCIAL_LIMITS.google.title) }),
+            el('div', { className: 'mk-gg-desc truncate-2', textContent: truncate(description, SOCIAL_LIMITS.google.desc) })
+          ),
+          el('div', { className: 'mk-gg-thumb' }, ogImage ? el('img', { src: ogImage }) : null)
+        ),
+      },
+      {
+        id: 'facebook', label: 'Facebook', iconLetter: 'f', iconBg: '#1877f2',
+        render: ({ title, description, domain, ogImage }) => el('div', { className: 'mk-fb' },
+          el('div', { className: 'mk-fb-img' }, ogImage ? el('img', { src: ogImage }) : null),
+          el('div', { className: 'mk-fb-body' },
+            el('div', { className: 'mk-fb-domain', textContent: domain.toUpperCase() }),
+            el('div', { className: 'mk-fb-title', textContent: truncate(title, SOCIAL_LIMITS.facebook.title) }),
+            el('div', { className: 'mk-fb-desc truncate-2', textContent: truncate(description, SOCIAL_LIMITS.facebook.desc) })
+          )
+        ),
+      },
+      {
+        id: 'discord', label: 'Discord', iconLetter: 'D', iconBg: '#5865f2',
+        render: ({ title, description, domain, ogImage }) => el('div', { className: 'mk-dc' },
+          el('div', { className: 'mk-dc-sitename', textContent: domain }),
+          el('div', { className: 'mk-dc-title', textContent: truncate(title, SOCIAL_LIMITS.discord.title) }),
+          el('div', { className: 'mk-dc-desc truncate-3', textContent: truncate(description, SOCIAL_LIMITS.discord.desc) }),
+          el('div', { className: 'mk-dc-img' }, ogImage ? el('img', { src: ogImage }) : null)
+        ),
+      },
+    ];
+
+    // Only one platform preview renders at a time; user toggles via icons.
+    let activePlatformId = 'slack';
+
+    function socialCtx() {
+      return {
+        title: socialState.title || SOCIAL_DEFAULTS.title,
+        description: socialState.description || SOCIAL_DEFAULTS.description,
+        url: socialState.url || SOCIAL_DEFAULTS.url,
+        domain: domainFromUrl(socialState.url || SOCIAL_DEFAULTS.url),
+        ogImage: socialState.ogImage,
+        faviconImage: socialState.faviconImage,
+      };
+    }
+
+    function renderPreviewToggles() {
+      const row = document.getElementById('miPreviewToggles');
+      if (!row) return;
+      row.innerHTML = '';
+      for (const p of SOCIAL_PLATFORMS) {
+        const btn = el('button', {
+          type: 'button',
+          className: 'mi-preview-toggle' + (p.id === activePlatformId ? ' active' : ''),
+          'data-platform-id': p.id,
+        },
+          platformIcon(p.id, p.iconBg),
+          document.createTextNode(p.label)
+        );
+        btn.addEventListener('click', () => {
+          activePlatformId = p.id;
+          renderPreviewToggles();
+          renderSocialCards();
+        });
+        row.appendChild(btn);
+      }
+    }
+
+    function renderSocialCards() {
+      const host = document.getElementById('miPreviewSingle');
+      if (!host) return;
+      const platform = SOCIAL_PLATFORMS.find(p => p.id === activePlatformId) || SOCIAL_PLATFORMS[0];
+      host.innerHTML = '';
+      host.appendChild(
+        el('div', { className: 'social-card-viewport' }, platform.render(socialCtx()))
+      );
+    }
+
+    async function loadSocialPreviews() {
+      // Seed social state from current config + first rendered OG + 96px favicon.
+      const [configRes, previewsRes, faviconRes] = await Promise.all([
+        fetch('/api/config'),
+        fetch('/api/previews'),
+        fetch('/api/render-favicon', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        }),
+      ]);
+      const cfg = await configRes.json();
+      const previews = await previewsRes.json();
+      const favData = await faviconRes.json();
+
+      socialState.title = cfg.title || '';
+      socialState.description = cfg.tagline || '';
+      socialState.url = cfg.url || '';
+      const firstLetter = Object.keys(previews).sort()[0];
+      socialState.ogImage = firstLetter ? previews[firstLetter] : null;
+      socialState.faviconImage = favData?.light?.[96] || favData?.light?.[32] || null;
+
+      renderPreviewToggles();
+      renderSocialCards();
+    }
+
+    (async () => {
+      // Load social + favicon state first so the meta panel (built by
+      // selectVariant) reads populated values.
+      await Promise.all([loadSocialPreviews(), loadFaviconPreviews()]);
+      await loadPreviews();
+      // Config is now populated from /api/config — seed the vertical-tab
+      // titles with the actual title rather than the empty string that was
+      // available before loadPreviews ran.
+      updateVerticalTabTitles(config.title || '');
+      if (layouts.length) selectVariant(layouts[0]);
+    })();
   </script>
 </body>
 </html>

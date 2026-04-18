@@ -163,6 +163,28 @@ export async function startServer(options = {}) {
     res.json(toolInfo);
   });
 
+  // API: persist title / tagline / url edits back to metadata.config.json.
+  // The user still has to rebuild their site for the new meta tags to appear
+  // — this only updates the source of truth the preview reads from.
+  app.post('/api/save-config', async (req, res) => {
+    try {
+      const body = req.body || {};
+      const patch = {};
+      for (const key of ['title', 'tagline', 'url']) {
+        if (typeof body[key] === 'string') patch[key] = body[key].slice(0, 500);
+      }
+      if (Object.keys(patch).length === 0) {
+        return res.status(400).json({ error: 'Nothing to save' });
+      }
+      Object.assign(config, patch);
+      await writeFile(configPath, JSON.stringify(config, null, 2) + '\n');
+      res.json({ ok: true, config });
+    } catch (err) {
+      console.error('Save config error:', err.message);
+      res.status(500).json({ error: 'Save failed' });
+    }
+  });
+
   // API: re-render a single variant with overrides
   app.post('/api/render', async (req, res) => {
     try {
