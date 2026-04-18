@@ -380,8 +380,8 @@
     .row-split {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 32px;
-      align-items: start;
+      gap: 64px;
+      align-items: stretch;
       margin-bottom: 40px;
     }
     .row-col {
@@ -389,6 +389,16 @@
       display: flex;
       flex-direction: column;
       gap: 24px;
+      position: relative;
+    }
+    .row-split > .row-col + .row-col::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -32px;
+      width: 1px;
+      background: var(--border);
     }
 
     .favicon-preview-col {
@@ -1039,6 +1049,12 @@
       padding: 0;
       border: none;
     }
+    .col-footer {
+      margin-top: auto;
+      padding-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
 
     .mi-preview-col {
       display: flex;
@@ -1246,7 +1262,6 @@
     <div class="row-col">
       <div class="col-header">
         <h1>Metadata preview</h1>
-        <button type="button" class="primary" id="miTopDownload">Download PNG</button>
       </div>
       <div class="mi-preview-col" id="miPreview">
         <div class="mi-preview-toggles" id="miPreviewToggles"></div>
@@ -1271,12 +1286,14 @@
           </div>
         </div>
       </div>
+      <div class="col-footer">
+        <button type="button" class="primary" id="miTopDownload">Download PNG</button>
+      </div>
     </div>
 
     <div class="row-col">
       <div class="col-header">
         <h1>Favicon preview</h1>
-        <button type="button" class="primary" id="faviconTopDownload">Download favicon set</button>
       </div>
       <div class="favicon-preview-col">
         <div class="favicon-mode-toggles" id="faviconModeToggles">
@@ -1341,6 +1358,9 @@
         </div>
       </div>
       <div class="favicon-customize-panel" id="faviconCustomize"></div>
+      <div class="col-footer">
+        <button type="button" class="primary" id="faviconTopDownload">Download favicon set</button>
+      </div>
     </div>
   </div>
 
@@ -1645,7 +1665,7 @@
 
       const panel = el('div', { className: 'refine-panel', id: `refine-${layout}` },
         // Text
-        ffInput('headline', config.title, (v) => updateOverride(layout, 'headline', v)),
+        ffInput('headline', cardOverrides[layout]?.headline ?? config.title, (v) => updateOverride(layout, 'headline', v)),
         ffInput('tagline', config.tagline, (v) => updateOverride(layout, 'tagline', v)),
         // Colors
         ffColor('background color', colors.background, (v) => updateOverride(layout, 'background', v)),
@@ -1859,21 +1879,25 @@
       // Live updates: socials re-render on every keystroke (client-only);
       // OG thumbnails re-render server-side, debounced. Title is global so it
       // propagates to every variant; description/URL only touch the socials.
-      const scheduleBigRenderAll = debounce(() => {
-        for (const l of layouts) rerender(l);
+      const scheduleBigRenderAll = debounce((only) => {
+        const targets = Array.isArray(only) ? only : layouts;
+        for (const l of targets) rerender(l);
       }, 400);
 
+      // Title drives social/meta + the default headline for any variant
+      // that hasn't been given its own headline override in Layout settings.
       titleInput.addEventListener('input', () => {
         const v = titleInput.value;
         socialState.title = v;
         config.title = v;
         renderSocialCards();
         updateVerticalTabTitles(v);
+        const affected = [];
         for (const l of layouts) {
           cardOverrides[l] = cardOverrides[l] || {};
-          cardOverrides[l].headline = v || undefined;
+          if (cardOverrides[l].headline == null) affected.push(l);
         }
-        scheduleBigRenderAll();
+        if (affected.length) scheduleBigRenderAll(affected);
       });
       // Description drives only the metadata description shown in social
       // previews. The OG image tagline stays editable separately under
@@ -1891,7 +1915,7 @@
         renderSocialCards();
       });
 
-      const saveBtn = el('button', { className: 'primary', textContent: 'Save to metadata.config.json' });
+      const saveBtn = el('button', { textContent: 'Save to metadata.config.json' });
       const saveStatus = el('span', { className: 'hint' });
       saveBtn.addEventListener('click', async () => {
         saveBtn.disabled = true;
