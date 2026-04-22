@@ -158,11 +158,11 @@ function generateFaviconSvg(config) {
   const borderRadiusPct = config.faviconBorderRadius ?? 19;
   const rx = Math.round(32 * (borderRadiusPct / 100));
   const letterColor = config.colors.accent || '#333333';
+  const darkLetterColor = config.faviconDarkAccent || letterColor;
 
-  const bg = config.colors.background;
-  const darkBg = bg;
-  const darkFg = letterColor;
-  const lightBg = '#ffffff';
+  const darkBg = config.faviconDarkBg || '#000000';
+  const darkFg = darkLetterColor;
+  const lightBg = config.colors.background || '#ffffff';
   const lightFg = letterColor;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
@@ -264,45 +264,35 @@ export async function generateFaviconSet(config, projectRoot = process.cwd(), ou
  *
  * Shape: { light: { 16: base64, 32: ..., 96: ..., 180: ... }, dark: { ... } }
  */
-export async function generateFaviconPreviews(config, projectRoot = process.cwd()) {
+export async function generateFaviconPreviews(config, projectRoot = process.cwd(), filter = {}) {
   const hasLogo = !!config.faviconSrc;
-  const previewSizes = [16, 32, 96, 180];
+  const allSizes = [16, 32, 96, 180];
+  const requestedSizes = filter.sizes && filter.sizes.length ? filter.sizes : allSizes;
+  const allModes = ['light', 'dark', 'custom'];
+  const requestedModes = filter.modes && filter.modes.length ? filter.modes : allModes;
 
-  // Build light config (white/light bg)
-  const lightConfig = {
-    ...config,
-    colors: { ...config.colors, background: config.colors.background || '#ffffff' },
+  const lightAccent = config.colors.accent;
+  const darkAccent = config.faviconDarkAccent || lightAccent;
+  const modeConfigs = {
+    light: { ...config, colors: { ...config.colors, background: config.colors.background || '#ffffff', accent: lightAccent } },
+    dark:  { ...config, colors: { ...config.colors, background: config.faviconDarkBg || '#000000', accent: darkAccent } },
+    custom: config.faviconCustomBg
+      ? { ...config, colors: { ...config.colors, background: config.faviconCustomBg } }
+      : null,
   };
 
-  // Build dark config (dark bg)
-  const darkConfig = {
-    ...config,
-    colors: { ...config.colors, background: config.faviconDarkBg || '#000000' },
-  };
-
-  // Optional custom-bg config
-  const customBg = config.faviconCustomBg;
-  const customConfig = customBg
-    ? { ...config, colors: { ...config.colors, background: customBg } }
-    : null;
-
-  const light = {};
-  const dark = {};
-  const custom = customConfig ? {} : null;
-
-  for (const size of previewSizes) {
-    const renderSize = size * 2; // 2x for retina
-
-    if (hasLogo) {
-      light[size] = `data:image/png;base64,${(await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, lightConfig)).toString('base64')}`;
-      dark[size] = `data:image/png;base64,${(await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, darkConfig)).toString('base64')}`;
-      if (custom) custom[size] = `data:image/png;base64,${(await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, customConfig)).toString('base64')}`;
-    } else {
-      light[size] = `data:image/png;base64,${(await generateLettermarkPng(lightConfig, renderSize)).toString('base64')}`;
-      dark[size] = `data:image/png;base64,${(await generateLettermarkPng(darkConfig, renderSize)).toString('base64')}`;
-      if (custom) custom[size] = `data:image/png;base64,${(await generateLettermarkPng(customConfig, renderSize)).toString('base64')}`;
+  const out = {};
+  for (const mode of requestedModes) {
+    const cfg = modeConfigs[mode];
+    if (!cfg) continue;
+    out[mode] = {};
+    for (const size of requestedSizes) {
+      const renderSize = size * 2; // 2x for retina
+      const buf = hasLogo
+        ? await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, cfg)
+        : await generateLettermarkPng(cfg, renderSize);
+      out[mode][size] = `data:image/png;base64,${buf.toString('base64')}`;
     }
   }
-
-  return custom ? { light, dark, custom } : { light, dark };
+  return out;
 }

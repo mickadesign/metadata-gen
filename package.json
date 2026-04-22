@@ -1,14 +1,16 @@
 {
   "name": "metadata-gen",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Generate metadata images and favicon sets from your project's existing assets and config",
   "type": "module",
   "bin": {
-    "metadata-gen": "./bin/cli.js"
+    "metadata-gen": "bin/cli.js"
   },
   "files": [
     "bin/",
-    "src/"
+    "src/",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "start": "node bin/cli.js"
@@ -20,7 +22,16 @@
     "social-sharing",
     "cli"
   ],
+  "author": "Micka Touillaud",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mickadesign/metadata-gen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mickadesign/metadata-gen/issues"
+  },
+  "homepage": "https://github.com/mickadesign/metadata-gen#readme",
   "engines": {
     "node": ">=18"
   },

@@ -282,7 +282,7 @@ export async function startServer(options = {}) {
   // API: re-render favicon previews with overrides
   app.post('/api/render-favicon', async (req, res) => {
     try {
-      const { letter, faviconSrc, background, accent, letterSize, borderRadius, transparent, fontWeight, darkBg, customBg } = req.body;
+      const { letter, faviconSrc, background, accent, darkAccent, letterSize, borderRadius, transparent, fontWeight, darkBg, customBg, modes, sizes } = req.body;
       const overrideConfig = {
         ...config,
         colors: { ...config.colors },
@@ -315,7 +315,12 @@ export async function startServer(options = {}) {
       }
       if (typeof background === 'string') overrideConfig.colors.background = background;
       if (typeof accent === 'string') overrideConfig.colors.accent = accent;
-      faviconPreviews = await generateFaviconPreviews(overrideConfig, root);
+      if (typeof darkAccent === 'string') overrideConfig.faviconDarkAccent = darkAccent;
+      const filter = {
+        modes: Array.isArray(modes) ? modes.filter(m => ['light', 'dark', 'custom'].includes(m)) : null,
+        sizes: Array.isArray(sizes) ? sizes.filter(s => [16, 32, 96, 180].includes(s)) : null,
+      };
+      faviconPreviews = await generateFaviconPreviews(overrideConfig, root, filter);
       res.json(faviconPreviews);
     } catch (err) {
       console.error('Favicon render error:', err.message);

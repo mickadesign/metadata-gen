@@ -8,7 +8,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f5f5f5;
+      --bg: #fafafa;
       --bg-card: #ffffff;
       --bg-muted: rgba(0,0,0,0.04);
       --border: #e0e0e0;
@@ -73,7 +73,7 @@
     }
 
     h1 {
-      font-size: 20px;
+      font-size: 26px;
       font-weight: 700;
       color: var(--text);
       margin-bottom: 32px;
@@ -376,11 +376,12 @@
 
     /* --- Favicon section --- */
 
-    /* Shared 2-col row for both the preview and settings rows. */
+    /* Shared 2-col row for both the preview and settings rows. Each column
+       is its own surface: white bg, subtle border, 16px radius, padded. */
     .row-split {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 64px;
+      gap: 48px;
       align-items: stretch;
       margin-bottom: 40px;
     }
@@ -389,16 +390,11 @@
       display: flex;
       flex-direction: column;
       gap: 24px;
-      position: relative;
-    }
-    .row-split > .row-col + .row-col::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: -32px;
-      width: 1px;
-      background: var(--border);
+      background: var(--bg-card);
+      border: 1px solid #fafafa;
+      border-radius: 12px;
+      padding: 24px 32px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     }
 
     .favicon-preview-col {
@@ -746,10 +742,6 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      padding: 16px 20px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
     }
 
     .favicon-mode-toggles {
@@ -758,17 +750,15 @@
       gap: 8px;
     }
     .favicon-mode-panel { display: none; }
-    .favicon-mode-panel.active { display: block; }
-    .favicon-mode-panel .favicon-card { margin-bottom: 0; }
-    /* Vertical tabs gets a fixed section height with its content centered. */
-    .favicon-mode-panel[data-mode="v-tabs"].active {
+    /* Every mode panel reserves the same vertical space and centers its
+       content so tab-switching doesn't shift the page. */
+    .favicon-mode-panel.active {
       display: flex;
       align-items: center;
-      min-height: 300px;
+      min-height: 360px;
     }
-    .favicon-mode-panel[data-mode="v-tabs"] .favicon-tab-previews {
-      width: 100%;
-    }
+    .favicon-mode-panel > * { width: 100%; }
+    .favicon-mode-panel .favicon-card { margin-bottom: 0; }
     /* Each bg tab only shows one mode now — the pill labels it, so hide the
        in-card label to avoid duplicated text. */
     .favicon-mode-panel .favicon-mode-label { display: none; }
@@ -1041,8 +1031,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
     }
     .col-header h1 {
       margin: 0;
@@ -1130,12 +1118,9 @@
       font-weight: 500;
     }
 
-    /* Customize zone — tabbed card (Content / Layout / Layout settings) */
+    /* Customize zone — tabbed card (Content / Layout / Layout settings).
+       Inherits the column's surface; no inner bg/border. */
     .mi-meta-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 20px;
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -1159,7 +1144,7 @@
     }
     .mi-meta-actions {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       gap: 12px;
       margin-top: 4px;
@@ -1395,6 +1380,15 @@
     let projectFonts = [];
     let faviconOverrides = {};
 
+    // Debounce: call fn only after `ms` of idle. Each call resets the timer.
+    function debounce(fn, ms = 150) {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), ms);
+      };
+    }
+
     function el(tag, attrs, ...children) {
       const node = document.createElement(tag);
       if (attrs) {
@@ -1440,7 +1434,13 @@
     function ffColor(label, value, onChange) {
       const hexLabel = el('span', { className: 'ff-color-hex', textContent: value });
       const swatch = el('input', { type: 'color', className: 'ff-color-swatch', value: value });
+      // Update hex label live for immediate feedback, but only fire onChange
+      // on `change` (picker committed) so we don't hammer the server with a
+      // render request on every pixel of drag.
       swatch.addEventListener('input', () => {
+        hexLabel.textContent = swatch.value;
+      });
+      swatch.addEventListener('change', () => {
         hexLabel.textContent = swatch.value;
         onChange(swatch.value);
       });
@@ -1915,12 +1915,11 @@
         renderSocialCards();
       });
 
-      const saveBtn = el('button', { textContent: 'Save to metadata.config.json' });
-      const saveStatus = el('span', { className: 'hint' });
+      const saveBtn = el('button', { textContent: 'Save metadata info' });
+      const originalSaveLabel = saveBtn.textContent;
       saveBtn.addEventListener('click', async () => {
         saveBtn.disabled = true;
-        saveStatus.textContent = 'Saving\u2026';
-        saveStatus.classList.remove('warn');
+        saveBtn.textContent = 'Saving\u2026';
         try {
           const res = await fetch('/api/save-config', {
             method: 'POST',
@@ -1932,14 +1931,15 @@
             }),
           });
           if (!res.ok) throw new Error(await res.text());
-          saveStatus.textContent = '\u2713 Saved — rebuild your site for meta tags to update';
+          saveBtn.textContent = '\u2713 Saved \u2014 rebuild your site for meta tags to update';
         } catch (err) {
-          saveStatus.textContent = 'Save failed';
-          saveStatus.classList.add('warn');
+          saveBtn.textContent = 'Save failed';
           console.error(err);
         } finally {
-          saveBtn.disabled = false;
-          setTimeout(() => { saveStatus.textContent = ''; }, 6000);
+          setTimeout(() => {
+            saveBtn.textContent = originalSaveLabel;
+            saveBtn.disabled = false;
+          }, 6000);
         }
       });
 
@@ -1956,7 +1956,7 @@
           el('span', { className: 'refine-label', textContent: 'site url' }),
           urlInput
         ),
-        el('div', { className: 'mi-meta-actions' }, saveStatus, saveBtn)
+        el('div', { className: 'mi-meta-actions' }, saveBtn)
       );
 
       // Layout settings tab — the refine panel's rows, unwrapped so they
@@ -2007,12 +2007,28 @@
       });
     }
 
-    async function updateOverride(layout, key, value) {
+    // Per-layout debounced render + abort. Rapid knob changes on the same
+    // layout collapse to a single in-flight request; any prior one is aborted
+    // so stale responses can't overwrite fresher state.
+    const layoutRenderControllers = {};
+    const layoutRenderDebounced = {};
+    function scheduleLayoutRender(layout) {
+      if (!layoutRenderDebounced[layout]) {
+        layoutRenderDebounced[layout] = debounce(() => rerender(layout), 150);
+      }
+      layoutRenderDebounced[layout]();
+    }
+
+    function updateOverride(layout, key, value) {
       cardOverrides[layout][key] = value;
-      await rerender(layout);
+      scheduleLayoutRender(layout);
     }
 
     async function rerender(layout) {
+      const prev = layoutRenderControllers[layout];
+      if (prev) prev.abort();
+      const controller = new AbortController();
+      layoutRenderControllers[layout] = controller;
       const img = document.getElementById(`preview-${layout}`);
       if (img) img.style.opacity = '0.5';
       try {
@@ -2020,6 +2036,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ layout, overrides: cardOverrides[layout] }),
+          signal: controller.signal,
         });
         const data = await res.json();
         if (img) img.src = data.image;
@@ -2029,7 +2046,7 @@
           renderSocialCards();
         }
       } catch (err) {
-        console.error('Render failed:', err);
+        if (err.name !== 'AbortError') console.error('Render failed:', err);
       } finally {
         if (img) img.style.opacity = '1';
       }
@@ -2089,14 +2106,14 @@
       const value = faviconOverrides.customBg || '#6B97FF';
       const hexLabel = el('span', { className: 'ff-color-hex', textContent: value });
       const swatch = el('input', { type: 'color', className: 'ff-color-swatch', value: value });
+      // customBg is the outer tint behind the favicon — purely a client-side
+      // preview concern, no server re-render needed.
       swatch.addEventListener('input', () => {
         hexLabel.textContent = swatch.value;
         faviconOverrides.customBg = swatch.value;
-        // Apply bg color immediately for instant feedback
         const mode = document.querySelector('.favicon-mode.custom');
         if (mode) mode.style.background = swatch.value;
       });
-      swatch.addEventListener('change', () => rerenderFavicons());
       const wrap = el('div', { className: 'ff-color-wrap' });
       wrap.style.background = 'rgba(255,255,255,0.08)';
       wrap.addEventListener('click', () => swatch.click());
@@ -2106,33 +2123,36 @@
 
     function renderFaviconGrid(data) {
       const sizes = [16, 32, 96, 180];
-      const customBg = faviconOverrides.customBg || '#6B97FF';
-      const customPreviews = data.custom || (() => {
-        // When no custom previews yet (first load), fall back to light previews visually.
-        const fallback = {};
-        for (const s of sizes) fallback[s] = data.light[s];
-        return fallback;
-      })();
+      const hasAllSizes = (previews) => !!previews && sizes.every(s => previews[s]);
 
-      // Each background now lives in its own tab panel — render into three
-      // separate containers so the pill toggle reveals them one at a time.
-      const lightGrid = document.getElementById('faviconGridLight');
-      lightGrid.innerHTML = '';
-      lightGrid.appendChild(el('div', { className: 'favicon-card' },
-        buildFaviconMode('Light background', 'light', data.light, sizes)
-      ));
-
-      const darkGrid = document.getElementById('faviconGridDark');
-      darkGrid.innerHTML = '';
-      darkGrid.appendChild(el('div', { className: 'favicon-card' },
-        buildFaviconMode('Dark background', 'dark', data.dark, sizes)
-      ));
-
-      const customGrid = document.getElementById('faviconGridCustom');
-      customGrid.innerHTML = '';
-      const customMode = buildFaviconMode('Custom background', 'custom', customPreviews, sizes, buildCustomBgPicker());
-      customMode.style.background = customBg;
-      customGrid.appendChild(el('div', { className: 'favicon-card' }, customMode));
+      // Only rebuild a grid panel when its data is fully populated for this
+      // generation — otherwise we'd paint broken img tags for sizes the
+      // active-mode render skipped. Stale panels stay as they are until the
+      // user visits them (tab-switch triggers a refresh).
+      if (hasAllSizes(data.light)) {
+        const lightGrid = document.getElementById('faviconGridLight');
+        lightGrid.innerHTML = '';
+        lightGrid.appendChild(el('div', { className: 'favicon-card' },
+          buildFaviconMode('Light background', 'light', data.light, sizes)
+        ));
+      }
+      if (hasAllSizes(data.dark)) {
+        const darkGrid = document.getElementById('faviconGridDark');
+        darkGrid.innerHTML = '';
+        darkGrid.appendChild(el('div', { className: 'favicon-card' },
+          buildFaviconMode('Dark background', 'dark', data.dark, sizes)
+        ));
+      }
+      // Custom tab reuses the light-mode favicon PNGs — the "custom bg" is
+      // only the tint behind them, not the favicon's own background.
+      if (hasAllSizes(data.light)) {
+        const customBg = faviconOverrides.customBg || '#6B97FF';
+        const customGrid = document.getElementById('faviconGridCustom');
+        customGrid.innerHTML = '';
+        const customMode = buildFaviconMode('Custom background', 'custom', data.light, sizes, buildCustomBgPicker());
+        customMode.style.background = customBg;
+        customGrid.appendChild(el('div', { className: 'favicon-card' }, customMode));
+      }
 
       // Update horizontal + vertical browser tab previews with the 32px favicon.
       const bindings = [
@@ -2147,18 +2167,84 @@
       }
     }
 
+    // Only render what the currently-visible panel actually needs. The
+    // h-tabs / v-tabs mockups only ever display the 32px favicon; the bg
+    // panels display all four sizes. Cuts server work by ~3x most of the time.
+    // The "Custom background" tab previews the real (light-mode) favicon
+    // against a user-picked outer background — it doesn't need its own baked
+    // bg variant, so we reuse the light PNGs and just tint the panel.
+    const FAVICON_MODE_NEEDS = {
+      'h-tabs':   { modes: ['light', 'dark'], sizes: [32] },
+      'v-tabs':   { modes: ['light', 'dark'], sizes: [32] },
+      'bg-light': { modes: ['light'],         sizes: [16, 32, 96, 180] },
+      'bg-dark':  { modes: ['dark'],          sizes: [16, 32, 96, 180] },
+      'bg-custom':{ modes: ['light'],         sizes: [16, 32, 96, 180] },
+    };
+    let activeFaviconMode = 'h-tabs';
+    // Per-mode cache: { data: { [size]: dataUrl }, gen: number }. gen tracks
+    // which overrides-generation the data was rendered under — when it lags
+    // behind faviconOverridesGen, the data is stale and must be refetched.
+    let faviconOverridesGen = 0;
+    let faviconCache = {
+      light: { data: {}, gen: -1 },
+      dark: { data: {}, gen: -1 },
+      custom: { data: {}, gen: -1 },
+    };
+    let faviconReqController = null;
+    let faviconReqSeq = 0;
+
+    function faviconModeIsStale(mode) {
+      const { modes, sizes } = FAVICON_MODE_NEEDS[mode];
+      for (const m of modes) {
+        const e = faviconCache[m];
+        if (e.gen !== faviconOverridesGen) return true;
+        for (const s of sizes) if (!e.data[s]) return true;
+      }
+      return false;
+    }
+
     async function rerenderFavicons() {
+      if (faviconReqController) faviconReqController.abort();
+      const controller = new AbortController();
+      faviconReqController = controller;
+      const seq = ++faviconReqSeq;
+      const gen = faviconOverridesGen;
+      const { modes, sizes } = FAVICON_MODE_NEEDS[activeFaviconMode];
       try {
         const res = await fetch('/api/render-favicon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(faviconOverrides),
+          body: JSON.stringify({ ...faviconOverrides, modes, sizes }),
+          signal: controller.signal,
         });
         const data = await res.json();
-        renderFaviconGrid(data);
+        if (seq !== faviconReqSeq) return;
+        for (const m of modes) {
+          if (!data[m]) continue;
+          const e = faviconCache[m];
+          // New generation — drop prior sizes since they reflect old overrides.
+          if (e.gen !== gen) { e.data = {}; e.gen = gen; }
+          for (const s of sizes) {
+            if (data[m][s]) e.data[s] = data[m][s];
+          }
+        }
+        renderFaviconGrid({
+          light: faviconCache.light.data,
+          dark: faviconCache.dark.data,
+          custom: faviconCache.custom.data,
+        });
       } catch (err) {
-        console.error('Favicon render failed:', err);
+        if (err.name !== 'AbortError') console.error('Favicon render failed:', err);
       }
+    }
+
+    // Called on every knob change: bumps the overrides generation so all
+    // cached mode data becomes stale, then triggers a debounced render for
+    // the currently-visible mode. Other modes re-render lazily when selected.
+    const scheduleFaviconRender = debounce(rerenderFavicons, 150);
+    function queueFaviconRender() {
+      faviconOverridesGen++;
+      scheduleFaviconRender();
     }
 
     function ffToggle(label, initial, onChange) {
@@ -2183,12 +2269,19 @@
 
       const letterInput = el('input', { type: 'text', className: 'ff-input', value: defaultLetter, maxLength: '4' });
       letterInput.style.width = '80px';
-      letterInput.style.textAlign = 'center';
-      letterInput.addEventListener('change', () => {
+      letterInput.style.textAlign = 'left';
+      // `change` only fires on blur; fire on `input` (with a short debounce)
+      // so the preview updates as the user types.
+      let letterDebounce;
+      const applyLetter = () => {
         const v = letterInput.value.trim();
         if (v) faviconOverrides.letter = v;
         else delete faviconOverrides.letter;
-        rerenderFavicons();
+        queueFaviconRender();
+      };
+      letterInput.addEventListener('input', () => {
+        clearTimeout(letterDebounce);
+        letterDebounce = setTimeout(applyLetter, 250);
       });
 
       const srcOpts = [{ value: '__lettermark__', label: 'Lettermark' }];
@@ -2207,7 +2300,7 @@
       panel.appendChild(ffSearchSelect('source', srcOpts, initialSrc, (v) => {
         faviconOverrides.faviconSrc = v === '__lettermark__' ? null : v;
         updateLettermarkVisibility(v === '__lettermark__');
-        rerenderFavicons();
+        queueFaviconRender();
       }, { placeholder: 'Search logos or upload…' }));
 
       // Transparent toggle sits directly below source
@@ -2216,16 +2309,16 @@
         ffToggle('Transparent background', false, (v) => {
           faviconOverrides.transparent = v;
           updateTransparentVisibility(v);
-          rerenderFavicons();
+          queueFaviconRender();
         })
       ));
 
       // Opaque-only rows (apply to both lettermark & logo sources)
-      const bgRow = ffColor('background', colors.background, (v) => { faviconOverrides.background = v; rerenderFavicons(); });
-      const darkBgRow = ffColor('dark bg', '#000000', (v) => { faviconOverrides.darkBg = v; rerenderFavicons(); });
+      const bgRow = ffColor('background', colors.background, (v) => { faviconOverrides.background = v; queueFaviconRender(); });
+      const darkBgRow = ffColor('dark bg', '#000000', (v) => { faviconOverrides.darkBg = v; queueFaviconRender(); });
       const cornerRow = el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'corner radius' }),
-        ffSlider(19, 0, 50, '%', (v) => { faviconOverrides.borderRadius = v; rerenderFavicons(); })
+        ffSlider(19, 0, 50, '%', (v) => { faviconOverrides.borderRadius = v; queueFaviconRender(); })
       );
       [bgRow, darkBgRow, cornerRow].forEach(r => { r.dataset.opaqueOnly = '1'; });
 
@@ -2241,18 +2334,19 @@
 
       // Lettermark-only controls — hidden when a logo source is selected
       const lettermarkRows = [
-        ffColor('letter color', defaultAccent, (v) => { faviconOverrides.accent = v; rerenderFavicons(); }),
+        ffColor('letter color', defaultAccent, (v) => { faviconOverrides.accent = v; queueFaviconRender(); }),
+        ffColor('dark letter color', defaultAccent, (v) => { faviconOverrides.darkAccent = v; queueFaviconRender(); }),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'letter' }),
           letterInput
         ),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'letter size' }),
-          ffSlider(60, 20, 80, '%', (v) => { faviconOverrides.letterSize = v; rerenderFavicons(); })
+          ffSlider(60, 20, 80, '%', (v) => { faviconOverrides.letterSize = v; queueFaviconRender(); })
         ),
         ffSelect('font weight', weightOpts, '700', (v) => {
           faviconOverrides.fontWeight = parseInt(v);
-          rerenderFavicons();
+          queueFaviconRender();
         }),
       ];
       lettermarkRows.forEach(r => { r.dataset.lettermarkOnly = '1'; panel.appendChild(r); });
@@ -2268,18 +2362,14 @@
     async function loadFaviconPreviews() {
       // Seed default customBg so the custom mode renders on first paint
       faviconOverrides.customBg = faviconOverrides.customBg || '#6B97FF';
-      const res = await fetch('/api/render-favicon', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(faviconOverrides),
-      });
-      const data = await res.json();
-      renderFaviconGrid(data);
+      // Initial paint: render only what the active mode needs.
+      await rerenderFavicons();
 
       // Customize panel sits alongside the preview now — always rendered.
       buildFaviconCustomizePanel();
 
       // Mode toggles (horizontal / vertical / sizes) — reveal one panel at a time.
+      // When switching to a mode whose cache is stale, kick off a fresh render.
       const toggles = document.querySelectorAll('#faviconModeToggles .mi-preview-toggle');
       toggles.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2288,6 +2378,8 @@
           document.querySelectorAll('.favicon-mode-panel').forEach(p => {
             p.classList.toggle('active', p.getAttribute('data-mode') === mode);
           });
+          activeFaviconMode = mode;
+          if (faviconModeIsStale(mode)) rerenderFavicons();
         });
       });
 
