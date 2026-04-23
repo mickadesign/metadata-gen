@@ -28,6 +28,7 @@
       --surface: rgba(0,0,0,0.04);
       --surface-active: rgba(0,0,0,0.08);
       --fg-8: rgba(0,0,0,0.08);
+      --fg-15: rgba(0,0,0,0.15);
       --fg-25: rgba(0,0,0,0.25);
       --fg-50: rgba(0,0,0,0.5);
       --accent-40: rgba(99,102,241,0.4);
@@ -55,6 +56,7 @@
         --surface: rgba(255,255,255,0.06);
         --surface-active: rgba(255,255,255,0.1);
         --fg-8: rgba(255,255,255,0.08);
+        --fg-15: rgba(255,255,255,0.15);
         --fg-25: rgba(255,255,255,0.25);
         --fg-50: rgba(255,255,255,0.5);
         --accent-40: rgba(99,102,241,0.25);
@@ -350,7 +352,7 @@
     }
 
     .ff-select-trigger:hover { background: var(--bg-muted); }
-    .ff-select-trigger:focus { box-shadow: 0 0 0 1px var(--focus-ring); }
+    .ff-select:focus-within .ff-select-trigger { box-shadow: 0 0 0 1px var(--focus-ring); border-color: var(--focus-ring); }
 
     .ff-select-chevron {
       flex-shrink: 0;
@@ -391,7 +393,7 @@
       flex-direction: column;
       gap: 24px;
       background: var(--bg-card);
-      border: 1px solid #fafafa;
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 24px 32px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
@@ -510,11 +512,18 @@
       border: 1px solid var(--border);
       position: relative;
       transition: all 80ms;
+      padding: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .ff-toggle-track:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 1px var(--focus-ring);
     }
 
     .ff-toggle-track.active {
-      background: var(--primary-bg);
-      border-color: var(--primary-bg);
+      background: var(--focus-ring);
+      border-color: var(--focus-ring);
     }
 
     .ff-toggle-thumb {
@@ -559,7 +568,7 @@
     }
 
     .ff-search-input:hover { background: var(--bg-muted); }
-    .ff-search-input:focus { box-shadow: 0 0 0 1px var(--focus-ring); }
+    .ff-search-input:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--focus-ring); border-color: var(--focus-ring); }
     .ff-search-input::placeholder { color: var(--text-muted); }
 
     .ff-search-option.upload {
@@ -687,8 +696,6 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding: 16px 20px;
-      border-top: 1px solid var(--border);
     }
     .prompt-chip-label {
       font-size: 11px;
@@ -702,15 +709,23 @@
       gap: 6px;
     }
     .prompt-chip {
-      font-size: 11px;
-      padding: 5px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid var(--border-60);
       border-radius: 999px;
-      background: var(--bg-muted);
-      border: 1px solid var(--border);
-      color: var(--text);
+      background: transparent;
       cursor: pointer;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: inherit;
+      transition: all 100ms;
     }
-    .prompt-chip:hover { background: var(--bg-card); }
+    .prompt-chip:hover {
+      color: var(--text);
+      background: var(--bg-muted);
+    }
     .prompt-textarea {
       width: 100%;
       min-height: 96px;
@@ -732,6 +747,7 @@
     .prompt-composer-actions {
       display: flex;
       justify-content: flex-end;
+      margin-top: 12px;
     }
     .prompt-copy-full {
       font-size: 12px;
@@ -762,6 +778,38 @@
     /* Each bg tab only shows one mode now — the pill labels it, so hide the
        in-card label to avoid duplicated text. */
     .favicon-mode-panel .favicon-mode-label { display: none; }
+    .favicon-custom-picker {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 24px;
+    }
+
+    .mi-credit {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px 6px 6px;
+      border-radius: 999px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-60);
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 100ms, border-color 100ms;
+      z-index: 20;
+    }
+    .mi-credit:hover { color: var(--text); border-color: var(--fg-15); }
+    .mi-credit-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      background: var(--bg-muted);
+    }
 
     /* Vertical browser tab — favicon + page title overlaid on the
        highlighted tab row in the mockup image. */
@@ -875,6 +923,8 @@
     .social-card-viewport {
       display: flex;
       justify-content: flex-start;
+      align-items: center;
+      min-height: 340px;
     }
     /* Each mockup caps at something close to its real platform rendering
        width so it doesn't stretch to fill the column. */
@@ -991,7 +1041,7 @@
     .mk-tg-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     /* iMessage */
-    .mk-im-wrap { display: flex; justify-content: flex-end; }
+    .mk-im-wrap { display: flex; justify-content: flex-start; }
     .mk-im { background: #e9e9eb; color: #000; border-radius: 18px; overflow: hidden; max-width: 260px; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; }
     .mk-im-img { aspect-ratio: 1200 / 630; background: #d1d1d6; overflow: hidden; }
     .mk-im-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -1000,6 +1050,7 @@
     .mk-im-domain { font-size: 11px; color: #8e8e93; }
     @media (prefers-color-scheme: dark) {
       .mk-im { background: #262628; color: #fff; }
+      .mk-im-img { background: #262628; }
       .mk-im-domain { color: #8e8e93; }
     }
 
@@ -1020,6 +1071,59 @@
       .mk-gg-site { color: #e8eaed; }
       .mk-gg-title { color: #8ab4f8; }
       .mk-gg-desc { color: #bdc1c6; }
+      .mk-gg-favicon { background: #303134; }
+
+      /* Slack — dark sidebar theme */
+      .mk-sl { background: #1a1d21; color: #d1d2d3; }
+      .mk-sl::before { background: #2c2f33; }
+      .mk-sl-site { color: #d1d2d3; }
+      .mk-sl-title { color: #1d9bd1; }
+      .mk-sl-desc { color: #d1d2d3; }
+      .mk-sl-img { background: #222529; }
+
+      /* X — lights-out */
+      .mk-x { color: #e7e9ea; }
+      .mk-x-card { background: #000; border-color: #2f3336; }
+      .mk-x-img { background: #16181c; }
+      .mk-x-from { color: #71767b; }
+
+      /* LinkedIn */
+      .mk-li { background: #1b1f23; color: rgba(255,255,255,0.9); border-color: #38434f; }
+      .mk-li .mk-li-img { background: #2a2f34; }
+      .mk-li .mk-li-body { background: #1d2226; }
+      .mk-li .mk-li-domain { color: rgba(255,255,255,0.6); }
+
+      /* WhatsApp — dark chat, outgoing bubble stays green but darker */
+      .mk-wa { background: #0b141a; }
+      .mk-wa-bubble { background: #005c4b; }
+      .mk-wa-link { background: rgba(255,255,255,0.08); }
+      .mk-wa-link .thumb { background: #2a3942; }
+      .mk-wa-link .title { color: #e9edef; }
+      .mk-wa-link .desc { color: #8696a0; }
+      .mk-wa-link .domain { color: #8696a0; }
+      .mk-wa-url { color: #53bdeb; }
+      .mk-wa-time { color: #8696a0; }
+
+      /* Reddit */
+      .mk-rd { background: #1a1a1b; color: #d7dadc; border-color: #343536; }
+      .mk-rd-header { color: #818384; }
+      .mk-rd-title { color: #d7dadc; }
+      .mk-rd-img { background: #272729; }
+      .mk-rd-footer { color: #818384; }
+
+      /* Telegram */
+      .mk-tg { background: #182533; color: #e4e6eb; border-left-color: #3390ec; }
+      .mk-tg-title { color: #6ab7f5; }
+      .mk-tg-domain { color: #6ab7f5; }
+      .mk-tg-desc { color: #e4e6eb; }
+      .mk-tg-img { background: #223548; }
+
+      /* Facebook */
+      .mk-fb { background: #242526; color: #e4e6eb; border-color: #3e4042; }
+      .mk-fb .mk-fb-img { background: #18191a; }
+      .mk-fb .mk-fb-body { background: #3a3b3c; }
+      .mk-fb .mk-fb-domain { color: #b0b3b8; }
+      .mk-fb .mk-fb-desc { color: #b0b3b8; }
     }
 
     /* --- Metadata images: 3-zone flow --- */
@@ -1077,12 +1181,20 @@
       flex-direction: column;
       gap: 8px;
     }
-    .mi-variant-card:hover {
-      border-color: var(--fg-25);
+    .mi-variant-card:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 1px var(--focus-ring);
+      border-color: var(--focus-ring);
+    }
+    .mi-variant-card:hover .mi-variant-label {
+      color: var(--text);
     }
     .mi-variant-card.selected {
-      border-color: var(--text);
-      box-shadow: 0 0 0 1px var(--text);
+      background: var(--bg-muted);
+      border-color: var(--fg-15);
+    }
+    .mi-variant-card.selected .mi-variant-label {
+      color: var(--text);
     }
     .mi-variant-img {
       aspect-ratio: 1200 / 630;
@@ -1094,8 +1206,9 @@
     .mi-variant-label {
       font-size: 12px;
       font-weight: 600;
-      color: var(--text);
+      color: var(--text-muted);
       padding: 0 2px;
+      transition: color 100ms;
     }
     .mi-variant-card.plus {
       display: flex;
@@ -1162,9 +1275,9 @@
       align-items: center;
       gap: 8px;
       padding: 6px 12px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-60);
       border-radius: 999px;
-      background: var(--bg-card);
+      background: transparent;
       cursor: pointer;
       font-size: 12px;
       color: var(--text-muted);
@@ -1180,8 +1293,8 @@
     }
     .mi-preview-toggle.active {
       color: var(--text);
-      border-color: var(--text);
-      box-shadow: 0 0 0 1px var(--text);
+      background: var(--bg-muted);
+      border-color: var(--fg-15);
     }
     .mi-preview-single { max-width: 560px; }
 
@@ -1213,8 +1326,7 @@
       overflow: hidden;
     }
     .mi-modal-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
+      padding: 24px 24px 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1223,15 +1335,18 @@
     .mi-modal-close {
       background: transparent;
       border: none;
-      font-size: 22px;
       line-height: 1;
       color: var(--text-muted);
       cursor: pointer;
-      padding: 4px 8px;
+      padding: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
+    .mi-modal-close svg { width: 18px; height: 18px; display: block; }
     .mi-modal-close:hover { color: var(--text); background: transparent; }
     .mi-modal-body {
-      padding: 16px 20px;
+      padding: 24px;
       overflow-y: auto;
     }
 
@@ -1354,12 +1469,21 @@
     <div class="mi-modal-backdrop" data-close-modal></div>
     <div class="mi-modal-panel">
       <div class="mi-modal-header">
-        <div class="mi-modal-title">Generate a new layout</div>
-        <button type="button" class="mi-modal-close" data-close-modal aria-label="Close">&times;</button>
+        <div class="mi-modal-title">Generate new layout</div>
+        <button type="button" class="mi-modal-close" data-close-modal aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
       </div>
       <div class="mi-modal-body" id="miComposerBody"></div>
     </div>
   </div>
+
+  <a class="mi-credit" href="https://twitter.com/micka_design" target="_blank" rel="noopener noreferrer">
+    <img class="mi-credit-avatar" src="https://unavatar.io/twitter/micka_design" alt="" loading="lazy" />
+    <span>Created by @micka_design</span>
+  </a>
 
   <script>
     // Layouts are auto-discovered server-side; the client reads them from /api/previews.
@@ -1718,7 +1842,16 @@
         el('div', { className: 'mi-variant-img' }, img),
         el('div', { className: 'mi-variant-label', textContent: `Option ${index + 1}` })
       );
+      card.setAttribute('role', 'radio');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', `Option ${index + 1}`);
       card.addEventListener('click', () => selectVariant(layout));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectVariant(layout);
+        }
+      });
       return card;
     }
 
@@ -1730,16 +1863,25 @@
           el('div', { className: 'plus-label', textContent: 'Generate new' })
         )
       );
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', 'Generate new layout');
       card.addEventListener('click', openComposerModal);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openComposerModal();
+        }
+      });
       return card;
     }
 
     // --- Option 4: free-text composer that wraps the user's style in a prompt ---
 
     const LAYOUT_STYLE_PRESETS = [
-      { title: 'Gradient hero', text: 'Diagonal gradient from colors.background to colors.accent, 72px centered headline, tagline at 60% opacity, no logo.' },
-      { title: 'Split with logo', text: 'Horizontal split — left 40% is colors.accent with centered 180px logo; right 60% is colors.background with top-aligned 56px headline and 24px tagline below.' },
-      { title: 'Minimalist mono', text: 'Solid colors.background, 32px accent border inset at 15% opacity, centered 64px headline, small uppercase tagline (18px, letter-spacing 0.12em) beneath, 48px logo top-left.' },
+      { title: 'Editorial', text: 'Solid colors.background. 48px logo top-left. Headline (64px, weight 700) and 26px tagline bottom-left, tagline above headline. 80px padding all sides. Left-aligned.' },
+      { title: 'Statement', text: 'Solid colors.background. No logo, no tagline. Single 96px centered headline (weight 700, line-height 1.05) with 120px horizontal padding. Foreground color from colors.foreground.' },
+      { title: 'Side rule', text: 'Solid colors.background with a 6px vertical colors.accent stripe along the left edge. 64px logo top-left (after stripe). Left-aligned 56px headline and 24px tagline (60% opacity), vertically centered. 72px padding.' },
     ];
 
     let toolInfo = null;
@@ -1781,23 +1923,24 @@
         rows: 4,
       });
 
+      const copyBtn = el('button', { type: 'button', className: 'primary prompt-copy-full', textContent: 'Copy prompt' });
+      copyBtn.disabled = true;
+      const syncDisabled = () => { copyBtn.disabled = !textarea.value.trim(); };
+      textarea.addEventListener('input', syncDisabled);
+
       const chipRow = el('div', { className: 'prompt-chip-row' });
       LAYOUT_STYLE_PRESETS.forEach((p) => {
         const chip = el('button', { type: 'button', className: 'prompt-chip', textContent: p.title });
         chip.addEventListener('click', () => {
           textarea.value = p.text;
+          syncDisabled();
           textarea.focus();
         });
         chipRow.appendChild(chip);
       });
-
-      const copyBtn = el('button', { type: 'button', className: 'primary prompt-copy-full', textContent: 'Copy prompt' });
       copyBtn.addEventListener('click', async () => {
         const style = (textarea.value || '').trim();
-        if (!style) {
-          textarea.focus();
-          return;
-        }
+        if (!style) return;
         const prompt = buildPrompt(style);
         if (!prompt) {
           copyBtn.textContent = 'All 26 letters used';
@@ -1806,18 +1949,16 @@
         }
         try {
           await navigator.clipboard.writeText(prompt);
-          const prev = copyBtn.textContent;
-          copyBtn.textContent = 'Copied';
-          setTimeout(() => { copyBtn.textContent = prev; }, 1400);
+          copyBtn.textContent = '\u2713 Copied';
+          setTimeout(() => { copyBtn.textContent = 'Copy prompt'; }, 1400);
         } catch (err) {
           console.error('Copy failed:', err);
         }
       });
 
       return el('div', { className: 'prompt-composer' },
-        el('div', { className: 'prompt-chip-label', textContent: 'Start from a preset' }),
-        chipRow,
         textarea,
+        chipRow,
         el('div', { className: 'prompt-composer-actions' }, copyBtn)
       );
     }
@@ -1828,9 +1969,11 @@
       body.innerHTML = '';
       body.appendChild(buildComposerPanel());
       modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
     }
     function closeComposerModal() {
       document.getElementById('miComposerModal').classList.remove('open');
+      document.body.style.overflow = '';
     }
     document.addEventListener('click', (e) => {
       if (e.target.hasAttribute && e.target.hasAttribute('data-close-modal')) closeComposerModal();
@@ -2115,7 +2258,6 @@
         if (mode) mode.style.background = swatch.value;
       });
       const wrap = el('div', { className: 'ff-color-wrap' });
-      wrap.style.background = 'rgba(255,255,255,0.08)';
       wrap.addEventListener('click', () => swatch.click());
       wrap.append(hexLabel, swatch);
       return wrap;
@@ -2149,9 +2291,11 @@
         const customBg = faviconOverrides.customBg || '#6B97FF';
         const customGrid = document.getElementById('faviconGridCustom');
         customGrid.innerHTML = '';
-        const customMode = buildFaviconMode('Custom background', 'custom', data.light, sizes, buildCustomBgPicker());
+        const customMode = buildFaviconMode('Custom background', 'custom', data.light, sizes);
         customMode.style.background = customBg;
         customGrid.appendChild(el('div', { className: 'favicon-card' }, customMode));
+        const pickerRow = el('div', { className: 'favicon-custom-picker' }, buildCustomBgPicker());
+        customGrid.appendChild(pickerRow);
       }
 
       // Update horizontal + vertical browser tab previews with the 32px favicon.
@@ -2248,17 +2392,26 @@
     }
 
     function ffToggle(label, initial, onChange) {
-      const track = el('div', { className: `ff-toggle-track${initial ? ' active' : ''}` });
+      const track = el('button', {
+        type: 'button',
+        className: `ff-toggle-track${initial ? ' active' : ''}`,
+      });
+      track.setAttribute('role', 'switch');
+      track.setAttribute('aria-checked', initial ? 'true' : 'false');
+      track.setAttribute('aria-label', label);
       const thumb = el('div', { className: 'ff-toggle-thumb' });
       track.appendChild(thumb);
       let state = initial;
-      const wrap = el('div', { className: 'ff-toggle' });
-      wrap.addEventListener('click', () => {
+      const labelText = el('span', { textContent: label });
+      const wrap = el('label', { className: 'ff-toggle' });
+      track.addEventListener('click', () => {
         state = !state;
         track.classList.toggle('active', state);
+        track.setAttribute('aria-checked', state ? 'true' : 'false');
         onChange(state);
       });
-      wrap.append(track, document.createTextNode(label));
+      labelText.addEventListener('click', () => track.click());
+      wrap.append(track, labelText);
       return wrap;
     }
 
@@ -2532,15 +2685,6 @@
             el('div', { className: 'mk-rd-img' }, ogImage ? el('img', { src: ogImage }) : null)
           ),
           el('div', { className: 'mk-rd-footer', textContent: '\u25b2 128   \ud83d\udcac 24 comments   \u21aa Share' })
-        ),
-      },
-      {
-        id: 'telegram', label: 'Telegram', iconLetter: 'T', iconBg: '#2aabee',
-        render: ({ title, description, domain, ogImage }) => el('div', { className: 'mk-tg' },
-          el('div', { className: 'mk-tg-title truncate-1', textContent: truncate(title, SOCIAL_LIMITS.telegram.title) }),
-          el('div', { className: 'mk-tg-domain', textContent: domain }),
-          el('div', { className: 'mk-tg-desc truncate-2', textContent: truncate(description, SOCIAL_LIMITS.telegram.desc) }),
-          el('div', { className: 'mk-tg-img' }, ogImage ? el('img', { src: ogImage }) : null)
         ),
       },
       {
