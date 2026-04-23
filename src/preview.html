@@ -219,7 +219,7 @@
       align-items: center;
       gap: 8px;
       height: 36px;
-      padding: 0 4px 0 12px;
+      padding: 0 12px 0 4px;
       background: transparent;
       border: 1px solid transparent;
       border-radius: 8px;
@@ -342,7 +342,7 @@
       font-family: inherit;
       color: var(--text);
       background: transparent;
-      border: 1px solid var(--border);
+      border: 1px solid transparent;
       border-radius: 8px;
       cursor: pointer;
       outline: none;
@@ -351,7 +351,10 @@
       appearance: none;
     }
 
-    .ff-select-trigger:hover { background: var(--bg-muted); }
+    .ff-select:hover .ff-select-trigger {
+      background: var(--bg-muted);
+      border-color: var(--border);
+    }
     .ff-select:focus-within .ff-select-trigger { box-shadow: 0 0 0 1px var(--focus-ring); border-color: var(--focus-ring); }
 
     .ff-select-chevron {
@@ -362,7 +365,7 @@
       transition: color 80ms;
     }
 
-    .ff-select-trigger:hover .ff-select-chevron { color: var(--text); }
+    .ff-select:hover .ff-select-chevron { color: var(--text); }
 
     /* Native select overlay (invisible, handles interaction) */
     .ff-select select {
@@ -1543,7 +1546,7 @@
       function update(v) {
         const pct = ((v - min) / (max - min)) * 100;
         fill.style.width = `${pct}%`;
-        handle.style.left = `calc(${pct}% - 1px)`;
+        handle.style.left = `calc(${pct}% - 9px)`;
         valueEl.textContent = `${v}${unit}`;
       }
 
@@ -1570,7 +1573,7 @@
       });
       const wrap = el('div', { className: 'ff-color-wrap' });
       wrap.addEventListener('click', () => swatch.click());
-      wrap.append(hexLabel, swatch);
+      wrap.append(swatch, hexLabel);
       return el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: label }),
         wrap
@@ -2259,7 +2262,7 @@
       });
       const wrap = el('div', { className: 'ff-color-wrap' });
       wrap.addEventListener('click', () => swatch.click());
-      wrap.append(hexLabel, swatch);
+      wrap.append(swatch, hexLabel);
       return wrap;
     }
 
