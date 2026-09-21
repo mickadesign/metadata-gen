@@ -2,6 +2,8 @@
 
 Generate metadata images and a complete favicon set from your project's existing assets and config. No API keys, no external services — everything runs locally.
 
+**[metadata-gen.micka.design](https://metadata-gen.micka.design)**
+
 **What it does:**
 
 - Scans your project for colors, logo, title, and tagline

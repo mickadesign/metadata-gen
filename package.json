@@ -31,7 +31,7 @@
   "bugs": {
     "url": "https://github.com/mickadesign/metadata-gen/issues"
   },
-  "homepage": "https://github.com/mickadesign/metadata-gen#readme",
+  "homepage": "https://metadata-gen.micka.design",
   "engines": {
     "node": ">=18"
   },
