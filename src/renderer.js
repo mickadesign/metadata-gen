@@ -194,6 +194,7 @@ export async function renderOgImage(config, layout, overrides = {}, projectRoot 
     logoBase64,
     headingSize: overrides.headingSize,
     taglineSize: overrides.taglineSize,
+    textWidth: overrides.textWidth,
     align: overrides.align,
     logoSize: overrides.logoSize,
     logoGap: overrides.logoGap,

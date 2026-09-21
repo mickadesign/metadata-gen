@@ -20,6 +20,7 @@ const FALLBACK_IMAGES = { A: 'og-a.png', B: 'og-b.png', C: 'og-c.png' };
 const DEFAULT_HEADING_SIZES = { A: 64, B: 56, C: 72 };
 const DEFAULT_TAGLINE_SIZES = { A: 28, B: 26, C: 22 };
 const DEFAULT_ALIGN = { A: 'left', B: 'center', C: 'left' };
+const DEFAULT_TEXT_WIDTHS = { A: 1040, B: 900, C: 1000 };
 
 // Seeded with what `metadata-gen init` found for this repo.
 const state = {
@@ -30,7 +31,7 @@ const state = {
   layout: 'A',
   overrides: { A: {}, B: {}, C: {} },
   images: { ...FALLBACK_IMAGES },
-  platform: 'slack',
+  platform: 'x',
 };
 
 const fav = {
@@ -48,9 +49,7 @@ const fav = {
 
 const $ = (id) => document.getElementById(id);
 
-// ---------------------------------------------------------------------------
-// Ported verbatim from src/preview.html
-// ---------------------------------------------------------------------------
+// >>> ported from src/preview.html — do not edit here, run `npm run sync-docs`
 
 function normalizeHex(v) {
   if (typeof v !== 'string') return '#000000';
@@ -228,15 +227,6 @@ function platformIcon(id) {
 
 const SOCIAL_PLATFORMS = [
   {
-    id: 'slack', label: 'Slack', iconLetter: 'S', iconBg: '#4a154b',
-    render: ({ title, description, domain, ogImage }) => el('div', { className: 'mk-sl' },
-      el('div', { className: 'mk-sl-site', textContent: domain }),
-      el('div', { className: 'mk-sl-title truncate-2', textContent: truncate(title, SOCIAL_LIMITS.slack.title) }),
-      el('div', { className: 'mk-sl-desc truncate-3', textContent: truncate(description, SOCIAL_LIMITS.slack.desc) }),
-      el('div', { className: 'mk-sl-img' }, ogImage ? el('img', { src: ogImage }) : null)
-    ),
-  },
-  {
     id: 'x', label: 'X (Twitter)', iconLetter: '𝕏', iconBg: '#000',
     render: ({ title, domain, ogImage }) => el('div', { className: 'mk-x' },
       el('div', { className: 'mk-x-card' },
@@ -246,6 +236,20 @@ const SOCIAL_PLATFORMS = [
         )
       ),
       el('div', { className: 'mk-x-from', textContent: `From ${domain}` })
+    ),
+  },
+  {
+    id: 'slack', label: 'Slack', iconLetter: 'S', iconBg: '#4a154b',
+    render: ({ title, description, domain, ogImage, faviconImage }) => el('div', { className: 'mk-sl' },
+      el('div', { className: 'mk-sl-body' },
+        el('div', { className: 'mk-sl-title truncate-2', textContent: truncate(title, SOCIAL_LIMITS.slack.title) }),
+        el('div', { className: 'mk-sl-desc truncate-3', textContent: truncate(description, SOCIAL_LIMITS.slack.desc) }),
+        el('div', { className: 'mk-sl-site' },
+          faviconImage ? el('img', { src: faviconImage, alt: '' }) : null,
+          el('span', { textContent: domain })
+        )
+      ),
+      el('div', { className: 'mk-sl-img' }, ogImage ? el('img', { src: ogImage }) : null)
     ),
   },
   {
@@ -337,6 +341,8 @@ const SOCIAL_PLATFORMS = [
   },
 ];
 
+// <<< end ported
+
 // ---------------------------------------------------------------------------
 // Copy variants (mirrors src/copy.js)
 // ---------------------------------------------------------------------------
@@ -397,6 +403,7 @@ async function renderLayout(layout) {
     logoBase64: null,
     headingSize: o.headingSize,
     taglineSize: o.taglineSize,
+    textWidth: o.textWidth,
     align: o.align,
   };
   let svg;
@@ -624,6 +631,7 @@ function buildSettingsPanel() {
     ffColor('tagline color', o.taglineColor ?? state.colors.foreground, (v) => set('taglineColor', v)),
     row('headline size', ffSlider(o.headingSize ?? DEFAULT_HEADING_SIZES[layout], 24, 96, 'px', (v) => set('headingSize', v))),
     row('tagline size', ffSlider(o.taglineSize ?? DEFAULT_TAGLINE_SIZES[layout], 14, 48, 'px', (v) => set('taglineSize', v))),
+    row('text width', ffSlider(o.textWidth ?? DEFAULT_TEXT_WIDTHS[layout], 320, 1040, 'px', (v) => set('textWidth', v))),
     ffSelect('alignment', alignOpts, o.align ?? DEFAULT_ALIGN[layout], (v) => set('align', v)),
   );
 }

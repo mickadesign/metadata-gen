@@ -14,6 +14,7 @@ export function layoutA(config) {
     logoSize = 120,
     logoGap = 60,
     logoPosition = 'left',
+    textWidth = 1040,
     headingFont = 'Inter',
     taglineFont = 'Inter',
   } = config;
@@ -46,6 +47,7 @@ export function layoutA(config) {
         justifyContent: 'center',
         alignItems: crossAlign,
         flex: 1,
+        maxWidth: `${textWidth}px`,
       },
       children: [
         {

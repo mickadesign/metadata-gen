@@ -164,8 +164,6 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .row .key.wide { flex-basis: 64px; }
-
     .row .name { color: var(--foreground); font-weight: 500; }
     .row .desc { color: var(--subtle); }
     .row .desc::before { content: " "; }
@@ -250,28 +248,50 @@
 
     /* --- Try it: breakout stage with the two preview columns --- */
 
-    .try > p { margin-bottom: 24px; }
+    .try > p { margin-bottom: 32px; }
 
+    /* Narrow: a regular single column, same width as the rest of the page. */
     .demo {
-      --w: min(960px, 100vw - 32px);
-      width: var(--w);
-      margin-left: calc(50% - var(--w) / 2);
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
       display: grid;
       grid-template-columns: 1fr;
       gap: 48px;
     }
 
-    @media (min-width: 900px) {
-      .demo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
-      .demo-col:first-child { padding-right: 40px; }
-      .demo-col + .demo-col { padding-left: 40px; border-left: 1px solid var(--border); }
-    }
-
-    .demo-col {
+    .demo-col,
+    .demo-settings {
       min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 20px;
+    }
+    .demo-col + .demo-col {
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Side by side: one shared grid so both columns' heading, pills, preview
+       and settings start on the same row. The 1px middle track is the divider. */
+    @media (min-width: 900px) {
+      .demo {
+        --w: min(960px, 100vw - 32px);
+        width: var(--w);
+        margin-left: calc(50% - var(--w) / 2);
+        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+        grid-template-rows: repeat(4, auto);
+        grid-auto-flow: column;
+        column-gap: 40px;
+        row-gap: 20px;
+      }
+      .demo::before {
+        content: '';
+        grid-column: 2;
+        grid-row: 1 / -1;
+        background: var(--border);
+      }
+      .demo-col { display: contents; }
+      .demo-col + .demo-col { padding-top: 0; border-top: 0; }
     }
 
     .demo-col h3 {
@@ -281,7 +301,7 @@
       color: var(--foreground);
     }
 
-    .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pills { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
 
     .pill {
       display: inline-flex;
@@ -328,8 +348,8 @@
 
     .social-card-viewport {
       display: flex;
-      align-items: center;
-      min-height: 320px;
+      align-items: flex-start;
+      min-height: 340px;
     }
     .social-card-viewport > * { width: 100%; max-width: 504px; }
     .social-card-viewport > .mk-wa { max-width: 380px; }
@@ -338,7 +358,7 @@
 
     /* Favicon previews */
     .fav-panel { display: none; }
-    .fav-panel.active { display: flex; flex-direction: column; justify-content: center; min-height: 260px; }
+    .fav-panel.active { display: flex; flex-direction: column; justify-content: flex-start; min-height: 240px; }
 
     .tab-previews { display: flex; flex-wrap: wrap; gap: 16px; }
     .tab-previews > div { flex: 1 1 180px; min-width: 0; }
@@ -370,12 +390,12 @@
       transform: translateY(-50%);
       display: flex;
       align-items: center;
-      gap: 2.5cqw;
+      gap: calc(2.5cqw + 4px);
       max-width: 62cqw;
     }
     .tab-preview-vfav { width: 7cqw; height: 7cqw; display: block; flex-shrink: 0; }
     .tab-preview-vtitle {
-      font-size: 4.25cqw;
+      font-size: 6.1cqw;
       font-weight: 500;
       line-height: 1.1;
       white-space: nowrap;
@@ -403,7 +423,8 @@
     .fav-grid.custom .fav-item span { color: rgba(255, 255, 255, 0.75); mix-blend-mode: difference; }
     .fav-custom-picker { display: flex; margin-top: 16px; }
 
-    /* --- Ported from src/preview.html: form controls --- */
+    /* >>> ported from src/preview.html — do not edit here, run `npm run sync-docs` */
+
     /* --- Refine panel --- */
 
     .refine-panel {
@@ -702,7 +723,6 @@
       transform: translateX(16px);
     }
 
-    /* --- Ported from src/preview.html: social mockups --- */
     .platform-icon {
       display: inline-flex;
       align-items: center;
@@ -793,14 +813,15 @@
     .mk-dc-img { aspect-ratio: 400 / 210; background: #1e1f22; border-radius: 4px; overflow: hidden; max-width: 400px; }
     .mk-dc-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* Slack */
-    .mk-sl { background: #fff; color: #1d1c1d; font-family: -apple-system, 'Lato', system-ui, sans-serif; border-radius: 6px; padding: 8px 12px; position: relative; }
-    .mk-sl::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #e8e8e8; border-radius: 6px 0 0 6px; }
-    .mk-sl-site { font-size: 13px; color: #1d1c1d; font-weight: 700; margin-bottom: 2px; padding-left: 4px; }
-    .mk-sl-title { font-size: 15px; font-weight: 700; color: #1264a3; margin-bottom: 4px; padding-left: 4px; line-height: 1.3; }
-    .mk-sl-desc { font-size: 14px; color: #1d1c1d; margin-bottom: 8px; padding-left: 4px; line-height: 1.4; }
-    .mk-sl-img { aspect-ratio: 360 / 189; background: #f4f4f4; border-radius: 4px; overflow: hidden; max-width: 360px; margin-left: 4px; }
-    .mk-sl-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* Slack — card unfurl: text left, site row with favicon, image bleeding right */
+    .mk-sl { display: flex; align-items: stretch; background: #fff; color: #1d1c1d; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden; font-family: -apple-system, 'Lato', system-ui, sans-serif; }
+    .mk-sl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 12px 12px; }
+    .mk-sl-title { font-size: 15px; font-weight: 700; line-height: 1.35; color: #1d1c1d; }
+    .mk-sl-desc { font-size: 14px; color: #616061; line-height: 1.4; }
+    .mk-sl-site { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: #616061; }
+    .mk-sl-site img { width: 16px; height: 16px; border-radius: 4px; display: block; flex-shrink: 0; }
+    .mk-sl-img { position: relative; flex: 0 0 22.5%; background: #f4f4f4; }
+    .mk-sl-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
     /* Reddit */
     .mk-rd { background: #fff; border: 1px solid #ccc; border-radius: 8px; font-family: 'IBM Plex Sans', -apple-system, system-ui, sans-serif; color: #1a1a1b; overflow: hidden; }
@@ -852,12 +873,11 @@
       .mk-gg-desc { color: #bdc1c6; }
       .mk-gg-favicon { background: #303134; }
 
-      /* Slack — dark sidebar theme */
-      .mk-sl { background: #1a1d21; color: #d1d2d3; }
-      .mk-sl::before { background: #2c2f33; }
-      .mk-sl-site { color: #d1d2d3; }
-      .mk-sl-title { color: #1d9bd1; }
-      .mk-sl-desc { color: #d1d2d3; }
+      /* Slack — dark theme */
+      .mk-sl { background: #1a1d21; color: #d1d2d3; border-color: #35373b; }
+      .mk-sl-title { color: #d1d2d3; }
+      .mk-sl-desc { color: #ababad; }
+      .mk-sl-site { color: #ababad; }
       .mk-sl-img { background: #222529; }
 
       /* X — lights-out */
@@ -905,6 +925,8 @@
       .mk-fb .mk-fb-desc { color: #b0b3b8; }
     }
 
+    /* <<< end ported */
+
     /* --- File tree --- */
 
     .tree {
@@ -947,13 +969,12 @@
     </header>
 
     <div class="intro">
-      <p>A CLI that generates OG images and a full favicon set from what your project already has: colors, logo, title, tagline.</p>
+      <p>A CLI that generates metadata (OG) images and a full favicon set from what your project already has.</p>
       <p>Runs locally. No API keys. Preview, refine, download into your repo.</p>
-      <p>By <a href="https://micka.design">Micka</a>. MIT.</p>
     </div>
 
     <section aria-labelledby="quick-start">
-      <h2 id="quick-start">Quick start</h2>
+      <h2 id="quick-start">Installation</h2>
       <div class="code" id="install"><span class="prompt">$ </span>npx metadata-gen init
 <span class="prompt">$ </span>npx metadata-gen<button class="copy" type="button" aria-label="Copy commands" data-copy="npx metadata-gen init&#10;npx metadata-gen">
         <svg class="idle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
@@ -974,12 +995,13 @@
 
     <section aria-labelledby="output" class="try">
       <h2 id="output">What you get</h2>
-      <p>Three OG options and a favicon set. The CLI's preview, live here. Edit, switch, recolor.</p>
+      <p>Fully customizable metadata image and favicon set.</p>
       <div class="demo">
         <div class="demo-col" id="demoMeta">
           <h3>Metadata image</h3>
           <div class="pills" id="platformPills" role="group" aria-label="Platform"></div>
           <div class="social-card-viewport" id="socialViewport"></div>
+          <div class="demo-settings">
           <div class="pills" id="metaTabs" role="group" aria-label="Metadata settings">
             <button type="button" class="pill active" data-tab="content" aria-pressed="true">Content</button>
             <button type="button" class="pill" data-tab="layout" aria-pressed="false">Layout</button>
@@ -988,6 +1010,7 @@
           <div class="panel active" data-tab="content" id="metaContent"></div>
           <div class="panel" data-tab="layout"><div class="tiles" id="tiles" role="radiogroup" aria-label="Layout"></div></div>
           <div class="panel" data-tab="settings" id="metaSettings"></div>
+          </div>
         </div>
 
         <div class="demo-col" id="demoFavicon">
@@ -1037,7 +1060,9 @@
             <div class="fav-custom-picker" id="favCustomPicker"></div>
           </div>
 
-          <div class="panel active" id="favSettings"></div>
+          <div class="demo-settings">
+            <div class="panel active" id="favSettings"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -1045,22 +1070,10 @@
     <section aria-labelledby="how">
       <h2 id="how">How it works</h2>
       <ol class="rows">
-        <li class="row"><span class="key">01</span><span><span class="name">Init</span><span class="desc">Scans the project, writes <code>metadata.config.json</code>.</span></span></li>
-        <li class="row"><span class="key">02</span><span><span class="name">Generate</span><span class="desc">Renders three layouts and the favicon set, opens a preview.</span></span></li>
+        <li class="row"><span class="key">01</span><span><span class="name">Scan</span><span class="desc">Title, tagline, colors, and logo from <code>package.json</code>, README, CSS variables, Tailwind themes, token files, and <code>logo.svg</code>. Read-only.</span></span></li>
+        <li class="row"><span class="key">02</span><span><span class="name">Generate</span><span class="desc">Three layouts and the favicon set, in a local preview.</span></span></li>
         <li class="row"><span class="key">03</span><span><span class="name">Refine</span><span class="desc">Tweak colors, text, logo. Download to <code>public/metadata/</code>.</span></span></li>
-        <li class="row"><span class="key">04</span><span><span class="name">Extend</span><span class="desc">Drop <code>layout-d.js</code> in <code>metadata-templates/</code> for a fourth option. An AGENTS.md contract lets an AI agent write it.</span></span></li>
       </ol>
-    </section>
-
-    <section aria-labelledby="scans">
-      <h2 id="scans">What it scans</h2>
-      <ul class="rows">
-        <li class="row"><span class="key wide">Title</span><span class="desc"><code>package.json</code> name, README heading, folder name</span></li>
-        <li class="row"><span class="key wide">Tagline</span><span class="desc"><code>package.json</code> description</span></li>
-        <li class="row"><span class="key wide">Colors</span><span class="desc">CSS custom properties, Tailwind v3 and v4 themes, design token JSON</span></li>
-        <li class="row"><span class="key wide">Logo</span><span class="desc"><code>logo.svg</code> in root, <code>public/</code>, <code>assets/</code>, or <code>src/assets/</code></span></li>
-      </ul>
-      <p class="note">Static and read-only. Your code never runs.</p>
     </section>
 
     <section aria-labelledby="files">
@@ -1079,7 +1092,7 @@
     </section>
 
     <footer>
-      <span>MIT · v0.2.1</span>
+      <span>MIT · v0.2.2</span>
       <nav aria-label="Links">
         <a href="https://github.com/mickadesign/metadata-gen">GitHub<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
         <a href="https://www.npmjs.com/package/metadata-gen">npm<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>

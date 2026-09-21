@@ -14,6 +14,7 @@ export function layoutB(config) {
     logoSize = 80,
     logoGap = 32,
     logoPosition = 'top',
+    textWidth = 900,
     headingFont = 'Inter',
     taglineFont = 'Inter',
   } = config;
@@ -44,7 +45,7 @@ export function layoutB(config) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: crossAlign,
-        maxWidth: '900px',
+        maxWidth: `${textWidth}px`,
       },
       children: [
         {
@@ -71,7 +72,7 @@ export function layoutB(config) {
                   opacity: colors.tagline ? 1 : 0.6,
                   textAlign: align,
                   marginTop: '20px',
-                  maxWidth: '700px',
+                  maxWidth: `${Math.min(700, textWidth)}px`,
                   lineHeight: 1.4,
                   fontFamily: taglineFont,
                 },

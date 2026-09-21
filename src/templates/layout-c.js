@@ -14,6 +14,7 @@ export function layoutC(config) {
     logoSize = 80,
     logoGap = 32,
     logoPosition = 'top',
+    textWidth = 1000,
     headingFont = 'Inter',
     taglineFont = 'Inter',
   } = config;
@@ -45,7 +46,7 @@ export function layoutC(config) {
         fontWeight: 700,
         color: colors.foreground,
         lineHeight: 1.1,
-        maxWidth: '1000px',
+        maxWidth: `${textWidth}px`,
         textAlign: align,
         fontFamily: headingFont,
       },
