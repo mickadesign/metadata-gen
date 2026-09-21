@@ -2,3 +2,4 @@ node_modules/
 public/metadata/
 *.log
 .DS_Store
+.vercel/
