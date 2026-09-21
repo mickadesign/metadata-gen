@@ -4,53 +4,59 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>metadata-gen preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg: #fafafa;
-      --bg-card: #ffffff;
-      --bg-muted: rgba(0,0,0,0.04);
-      --border: #e0e0e0;
-      --border-60: rgba(0,0,0,0.08);
-      --text: #111;
-      --text-muted: #888;
-      --text-tertiary: #aaa;
-      --btn-bg: #f0f0f0;
-      --btn-border: #ddd;
-      --btn-text: #333;
-      --btn-hover-bg: #e5e5e5;
-      --primary-bg: #111;
-      --primary-text: #fff;
+      --bg-card: #fafafa;
+      --bg-muted: #f0f0f0;
+      --border: rgba(0, 0, 0, 0.06);
+      --border-60: rgba(0, 0, 0, 0.12);
+      --text: #050505;
+      --text-body: #333;
+      --text-muted: #999;
+      --text-tertiary: #bbb;
+      --btn-bg: transparent;
+      --btn-border: rgba(0, 0, 0, 0.12);
+      --btn-text: #050505;
+      --btn-hover-bg: rgba(20, 20, 20, 0.06);
+      --primary-bg: #050505;
+      --primary-text: #fafafa;
       --primary-hover: #333;
       --success: #16a34a;
-      --focus-ring: #6B97FF;
-      --surface: rgba(0,0,0,0.04);
-      --surface-active: rgba(0,0,0,0.08);
+      --focus-ring: #6b97ff;
+      --surface: rgba(20, 20, 20, 0.06);
+      --surface-active: rgba(20, 20, 20, 0.1);
       --fg-8: rgba(0,0,0,0.08);
       --fg-15: rgba(0,0,0,0.15);
       --fg-25: rgba(0,0,0,0.25);
       --fg-50: rgba(0,0,0,0.5);
       --accent-40: rgba(99,102,241,0.4);
-      --dropdown-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      --dropdown-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      --radius: 8px;
+      color-scheme: light;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0a0a0a;
-        --bg-card: #111;
-        --bg-muted: rgba(255,255,255,0.06);
-        --border: #1a1a1a;
-        --border-60: rgba(255,255,255,0.08);
-        --text: #e5e5e5;
-        --text-muted: #666;
-        --text-tertiary: #555;
-        --btn-bg: #1a1a1a;
-        --btn-border: #333;
-        --btn-text: #ccc;
-        --btn-hover-bg: #222;
-        --primary-bg: #fff;
-        --primary-text: #000;
+        --bg: #050505;
+        --bg-card: #0d0d0d;
+        --bg-muted: #1f1f1f;
+        --border: rgba(255,255,255,0.08);
+        --border-60: rgba(255,255,255,0.14);
+        --text: #fafafa;
+        --text-body: #999;
+        --text-muted: #999;
+        --text-tertiary: #666;
+        --btn-border: rgba(255,255,255,0.14);
+        --btn-text: #fafafa;
+        --btn-hover-bg: rgba(240,240,240,0.08);
+        --primary-bg: #fafafa;
+        --primary-text: #050505;
         --primary-hover: #e5e5e5;
         --success: #4ade80;
         --surface: rgba(255,255,255,0.06);
@@ -61,62 +67,106 @@
         --fg-50: rgba(255,255,255,0.5);
         --accent-40: rgba(99,102,241,0.25);
         --dropdown-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        color-scheme: dark;
       }
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 21px;
       background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      padding: 40px 32px 80px;
-      max-width: 1440px;
-      margin: 0 auto;
+      color: var(--text-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: "cv11", "ss01";
     }
 
-    h1 {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 32px;
-      padding-bottom: 12px;
+    :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+    /* --- Page frame: header, two columns, footer --- */
+
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 40px 32px 96px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 20px;
+      margin-bottom: 48px;
       border-bottom: 1px solid var(--border);
     }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
-      margin-bottom: 64px;
-      align-items: start;
+    .wordmark {
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -0.028em;
+      color: var(--text);
+      text-decoration: none;
     }
 
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+    .page-nav { display: flex; gap: 20px; }
+
+    .page-nav a,
+    .page-footer a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .page-nav a:hover,
+    .page-footer a:hover,
+    .wordmark:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--border-60);
     }
 
-    .card-header { padding: 16px 20px 12px; }
-    .card-label { font-size: 14px; font-weight: 600; color: var(--text); }
+    .ext {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      margin-left: 5px;
+      vertical-align: 1px;
+      color: var(--text-muted);
+    }
 
-    .card-preview { aspect-ratio: 1200 / 630; padding: 0 12px; }
-    .card-preview img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px; }
+    .page-footer {
+      margin-top: 96px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px 24px;
+      color: var(--text-muted);
+    }
+    .page-footer nav { display: flex; gap: 20px; }
 
-    .card-footer { padding: 12px 20px 16px; }
-    .card-actions { display: flex; gap: 12px; }
+    h1 {
+      font-size: 14px;
+      line-height: 21px;
+      font-weight: 600;
+      color: var(--text);
+    }
 
     button {
       font-family: inherit;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 8px;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
       border: 1px solid var(--btn-border);
       background: var(--btn-bg);
       color: var(--btn-text);
       cursor: pointer;
-      transition: all 80ms;
+      transition: background 80ms, color 80ms, border-color 80ms;
     }
 
     button:hover { background: var(--btn-hover-bg); color: var(--text); }
@@ -144,7 +194,7 @@
     }
 
     .refine-label {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--text-muted);
       width: 120px;
       flex-shrink: 0;
@@ -161,7 +211,7 @@
       background: transparent;
       border: 1px solid transparent;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text);
       font-family: inherit;
       outline: none;
@@ -189,7 +239,7 @@
       background: transparent;
       border: 1px solid transparent;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.5;
       color: var(--text);
       font-family: inherit;
@@ -338,7 +388,7 @@
       width: 100%;
       height: 36px;
       padding: 0 12px;
-      font-size: 13px;
+      font-size: 14px;
       font-family: inherit;
       color: var(--text);
       background: transparent;
@@ -386,21 +436,17 @@
     .row-split {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 48px;
+      gap: 0;
       align-items: stretch;
-      margin-bottom: 40px;
     }
     .row-col {
       min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 24px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px 32px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     }
+    .row-col:first-child { padding-right: 48px; }
+    .row-col + .row-col { padding-left: 48px; border-left: 1px solid var(--border); }
 
     .favicon-preview-col {
       display: flex;
@@ -422,8 +468,18 @@
 
     @media (max-width: 960px) {
       .row-split { grid-template-columns: 1fr; }
+      .row-col:first-child { padding-right: 0; }
+      .row-col + .row-col {
+        padding-left: 0;
+        border-left: 0;
+        margin-top: 48px;
+        padding-top: 48px;
+        border-top: 1px solid var(--border);
+      }
     }
 
+    /* The mockup images are 400x228. Everything overlaid on them is sized in
+       container-query units so it scales with the image (1cqw = 1% of width). */
     .tab-preview {
       position: relative;
       width: 100%;
@@ -432,6 +488,7 @@
       overflow: hidden;
       background-size: cover;
       background-position: center;
+      container-type: inline-size;
     }
 
     .tab-preview-favicon {
@@ -439,14 +496,14 @@
       left: 55%;
       top: 47%;
       transform: translate(-50%, -50%);
-      width: 32px;
-      height: 32px;
+      width: 8cqw;
+      height: 8cqw;
       display: block;
       image-rendering: auto;
     }
 
     .tab-preview-label {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
       margin-top: 6px;
       text-align: center;
@@ -455,10 +512,9 @@
     .favicon-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       overflow: hidden;
       margin-bottom: 24px;
-      max-width: 720px;
     }
 
     .favicon-mode { padding: 24px 20px; }
@@ -481,7 +537,7 @@
 
     .favicon-mode.light { background: #fafafa; }
     .favicon-mode.light .favicon-mode-label { color: #999; }
-    .favicon-mode.dark { background: #000; }
+    .favicon-mode.dark { background: #050505; }
     .favicon-mode.dark .favicon-mode-label { color: #666; }
     .favicon-mode.dark .favicon-size { color: #bbb; }
     .favicon-mode.custom .favicon-mode-label { color: rgba(255,255,255,0.75); mix-blend-mode: difference; }
@@ -543,7 +599,7 @@
     .ff-toggle-track.active .ff-toggle-thumb {
       transform: translateX(16px);
     }
-    .favicon-size { font-size: 11px; color: var(--text-muted); }
+    .favicon-size { font-size: 12px; color: var(--text-muted); }
     .favicon-mode.light .favicon-size { color: #aaa; }
 
     .favicon-actions { display: flex; gap: 12px; align-items: center; }
@@ -561,16 +617,16 @@
       height: 36px;
       padding: 0 12px;
       background: transparent;
-      border: 1px solid var(--border);
+      border: 1px solid transparent;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text);
       font-family: inherit;
       outline: none;
       transition: all 80ms;
     }
 
-    .ff-search-input:hover { background: var(--bg-muted); }
+    .ff-search-input:hover { background: var(--bg-muted); border-color: var(--border); }
     .ff-search-input:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--focus-ring); border-color: var(--focus-ring); }
     .ff-search-input::placeholder { color: var(--text-muted); }
 
@@ -609,7 +665,7 @@
 
     .ff-search-option {
       padding: 8px 12px;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text);
       cursor: pointer;
       display: flex;
@@ -715,15 +771,16 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 12px;
+      height: 30px;
+      padding: 0 12px;
       border: 1px solid var(--border-60);
       border-radius: 999px;
       background: transparent;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-muted);
       font-family: inherit;
-      transition: all 100ms;
+      transition: background 80ms, color 80ms;
     }
     .prompt-chip:hover {
       color: var(--text);
@@ -735,12 +792,12 @@
       resize: vertical;
       padding: 10px 12px;
       font-family: inherit;
-      font-size: 12px;
+      font-size: 14px;
       line-height: 1.5;
       color: var(--text);
       background: var(--bg-muted);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
       box-sizing: border-box;
     }
     .prompt-textarea:focus {
@@ -749,12 +806,8 @@
     }
     .prompt-composer-actions {
       display: flex;
-      justify-content: flex-end;
+      justify-content: flex-start;
       margin-top: 12px;
-    }
-    .prompt-copy-full {
-      font-size: 12px;
-      padding: 6px 14px;
     }
 
     .favicon-customize-panel {
@@ -787,33 +840,6 @@
       margin-top: 24px;
     }
 
-    .mi-credit {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 14px 6px 6px;
-      border-radius: 999px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-60);
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 13px;
-      transition: color 100ms, border-color 100ms;
-      z-index: 20;
-    }
-    .mi-credit:hover { color: var(--text); border-color: var(--fg-15); }
-    .mi-credit-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-      display: block;
-      background: var(--bg-muted);
-    }
-
     /* Vertical browser tab — favicon + page title overlaid on the
        highlighted tab row in the mockup image. */
     .tab-preview.vertical {
@@ -834,23 +860,24 @@
       transform: translateY(-50%);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 2.5cqw;
+      max-width: 62cqw;
     }
     .tab-preview-vfav {
-      width: 28px;
-      height: 28px;
+      width: 7cqw;
+      height: 7cqw;
       display: block;
       image-rendering: auto;
       flex-shrink: 0;
     }
     .tab-preview-vtitle {
-      font-size: 18px;
+      font-size: 4.25cqw;
       font-weight: 500;
       line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 200px;
+      min-width: 0;
     }
     .tab-preview.vertical.light .tab-preview-vtitle { color: #000; }
     .tab-preview.vertical.dark .tab-preview-vtitle { color: #fff; }
@@ -1148,7 +1175,7 @@
       margin-top: auto;
       padding-top: 20px;
       display: flex;
-      justify-content: flex-end;
+      justify-content: flex-start;
     }
 
     .mi-preview-col {
@@ -1168,49 +1195,47 @@
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
     }
-    .mi-variants.compact .mi-variant-card { padding: 8px; }
-    .mi-variants.compact .mi-variant-label { font-size: 11px; }
+    .mi-variants.compact .mi-variant-card { padding: 0; }
+    .mi-variants.compact .mi-variant-label { font-size: 13px; }
     .mi-variants.compact .mi-variant-card.plus { min-height: 120px; }
     .mi-variants.compact .mi-variant-card.plus .plus-icon { font-size: 22px; margin-bottom: 4px; }
     .mi-variants.compact .mi-variant-card.plus .plus-label { font-size: 12px; }
     .mi-variant-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
+      background: transparent;
+      border-radius: var(--radius);
+      padding: 0;
       cursor: pointer;
-      transition: border-color 120ms, box-shadow 120ms, transform 120ms;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
     .mi-variant-card:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 1px var(--focus-ring);
-      border-color: var(--focus-ring);
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
     }
     .mi-variant-card:hover .mi-variant-label {
       color: var(--text);
     }
-    .mi-variant-card.selected {
-      background: var(--bg-muted);
-      border-color: var(--fg-15);
+    .mi-variant-card.selected .mi-variant-img {
+      border-color: var(--text);
+      box-shadow: 0 0 0 1px var(--text);
     }
     .mi-variant-card.selected .mi-variant-label {
       color: var(--text);
     }
     .mi-variant-img {
       aspect-ratio: 1200 / 630;
-      border-radius: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       overflow: hidden;
       background: var(--bg-muted);
+      transition: border-color 120ms, box-shadow 120ms;
     }
     .mi-variant-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .mi-variant-label {
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 500;
       color: var(--text-muted);
-      padding: 0 2px;
       transition: color 100ms;
     }
     .mi-variant-card.plus {
@@ -1219,7 +1244,7 @@
       justify-content: center;
       text-align: center;
       color: var(--text-muted);
-      border-style: dashed;
+      border: 1px dashed var(--border-60);
       min-height: 200px;
     }
     .mi-variant-card.plus:hover { color: var(--text); }
@@ -1260,7 +1285,7 @@
     }
     .mi-meta-actions {
       display: flex;
-      justify-content: flex-end;
+      justify-content: flex-start;
       align-items: center;
       gap: 12px;
       margin-top: 4px;
@@ -1277,27 +1302,29 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 12px;
+      height: 30px;
+      padding: 0 12px;
       border: 1px solid var(--border-60);
       border-radius: 999px;
       background: transparent;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 500;
       color: var(--text-muted);
       font-family: inherit;
-      transition: all 100ms;
+      transition: background 80ms, color 80ms, border-color 80ms;
     }
     .mi-preview-toggle .platform-icon { color: var(--text-muted); }
     .mi-preview-toggle:hover .platform-icon,
     .mi-preview-toggle.active .platform-icon { color: var(--text); }
     .mi-preview-toggle:hover {
       color: var(--text);
-      background: var(--bg-muted);
+      background: var(--btn-hover-bg);
     }
     .mi-preview-toggle.active {
       color: var(--text);
       background: var(--bg-muted);
-      border-color: var(--fg-15);
+      border-color: transparent;
     }
     .mi-preview-single { max-width: 560px; }
 
@@ -1322,6 +1349,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
       width: min(560px, 92vw);
       max-height: 82vh;
       display: flex;
@@ -1353,18 +1381,22 @@
       overflow-y: auto;
     }
 
-
-    @media (max-width: 1024px) {
-      .cards { grid-template-columns: 1fr; max-width: 640px; }
-    }
   </style>
 </head>
 <body>
+  <main class="page">
+  <header class="page-header">
+    <a class="wordmark" href="https://metadata-gen.micka.design" target="_blank" rel="noopener noreferrer">metadata-gen</a>
+    <nav class="page-nav" aria-label="Links">
+      <a href="https://github.com/mickadesign/metadata-gen" target="_blank" rel="noopener noreferrer">GitHub<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
+    </nav>
+  </header>
+
   <!-- Two columns: Metadata | Favicon. Each column stacks preview then settings. -->
   <div class="row-split">
     <div class="row-col">
       <div class="col-header">
-        <h1>Metadata preview</h1>
+        <h1>Metadata image</h1>
       </div>
       <div class="mi-preview-col" id="miPreview">
         <div class="mi-preview-toggles" id="miPreviewToggles"></div>
@@ -1396,7 +1428,7 @@
 
     <div class="row-col">
       <div class="col-header">
-        <h1>Favicon preview</h1>
+        <h1>Favicon set</h1>
       </div>
       <div class="favicon-preview-col">
         <div class="favicon-mode-toggles" id="faviconModeToggles">
@@ -1467,6 +1499,15 @@
     </div>
   </div>
 
+  <footer class="page-footer">
+    <span>Downloads land in your project's output folder.</span>
+    <nav aria-label="Credits">
+      <a href="https://metadata-gen.micka.design" target="_blank" rel="noopener noreferrer">metadata-gen<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
+      <a href="https://micka.design" target="_blank" rel="noopener noreferrer">Created by Micka<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
+    </nav>
+  </footer>
+  </main>
+
   <!-- Composer modal (opened by the "+" card) -->
   <div class="mi-modal" id="miComposerModal">
     <div class="mi-modal-backdrop" data-close-modal></div>
@@ -1482,11 +1523,6 @@
       <div class="mi-modal-body" id="miComposerBody"></div>
     </div>
   </div>
-
-  <a class="mi-credit" href="https://twitter.com/micka_design" target="_blank" rel="noopener noreferrer">
-    <img class="mi-credit-avatar" src="https://unavatar.io/twitter/micka_design" alt="" loading="lazy" />
-    <span>Created by @micka_design</span>
-  </a>
 
   <script>
     // Layouts are auto-discovered server-side; the client reads them from /api/previews.
