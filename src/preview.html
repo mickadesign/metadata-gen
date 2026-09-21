@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>metadata-gen preview</title>
+  <!-- __METADATA_GEN_BOOT__ -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
@@ -433,27 +434,28 @@
 
     /* Shared 2-col row for both the preview and settings rows. Each column
        is its own surface: white bg, subtle border, 16px radius, padded. */
+    /* One shared grid for both columns so headers, toggles, previews and
+       settings start on the same row. Each column has five boxes: header,
+       toggles, preview, settings, footer (hidden favicon panels have no box).
+       The middle 1px track is the divider. */
     .row-split {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 0;
-      align-items: stretch;
+      grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+      grid-template-rows: repeat(5, auto);
+      grid-auto-flow: column;
+      column-gap: 48px;
+      row-gap: 24px;
     }
-    .row-col {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+    .row-split::before {
+      content: '';
+      grid-column: 2;
+      grid-row: 1 / -1;
+      background: var(--border);
     }
-    .row-col:first-child { padding-right: 48px; }
-    .row-col + .row-col { padding-left: 48px; border-left: 1px solid var(--border); }
+    .row-col,
+    .mi-preview-col,
+    .favicon-preview-col { display: contents; }
 
-    .favicon-preview-col {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      min-width: 0;
-    }
 
     .favicon-tab-previews {
       display: flex;
@@ -467,12 +469,14 @@
     }
 
     @media (max-width: 960px) {
-      .row-split { grid-template-columns: 1fr; }
-      .row-col:first-child { padding-right: 0; }
-      .row-col + .row-col {
-        padding-left: 0;
-        border-left: 0;
-        margin-top: 48px;
+      .row-split {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        grid-auto-flow: row;
+      }
+      .row-split::before { display: none; }
+      .row-col + .row-col > .col-header {
+        margin-top: 24px;
         padding-top: 48px;
         border-top: 1px solid var(--border);
       }
@@ -819,6 +823,7 @@
     .favicon-mode-toggles {
       display: flex;
       flex-wrap: wrap;
+      align-content: flex-start;
       gap: 8px;
     }
     .favicon-mode-panel { display: none; }
@@ -826,8 +831,8 @@
        content so tab-switching doesn't shift the page. */
     .favicon-mode-panel.active {
       display: flex;
-      align-items: center;
-      min-height: 360px;
+      align-items: flex-start;
+      min-height: 260px;
     }
     .favicon-mode-panel > * { width: 100%; }
     .favicon-mode-panel .favicon-card { margin-bottom: 0; }
@@ -860,7 +865,7 @@
       transform: translateY(-50%);
       display: flex;
       align-items: center;
-      gap: 2.5cqw;
+      gap: calc(2.5cqw + 4px);
       max-width: 62cqw;
     }
     .tab-preview-vfav {
@@ -871,7 +876,7 @@
       flex-shrink: 0;
     }
     .tab-preview-vtitle {
-      font-size: 4.25cqw;
+      font-size: 6.1cqw;
       font-weight: 500;
       line-height: 1.1;
       white-space: nowrap;
@@ -953,7 +958,7 @@
     .social-card-viewport {
       display: flex;
       justify-content: flex-start;
-      align-items: center;
+      align-items: flex-start;
       min-height: 340px;
     }
     /* Each mockup caps at something close to its real platform rendering
@@ -1044,14 +1049,15 @@
     .mk-dc-img { aspect-ratio: 400 / 210; background: #1e1f22; border-radius: 4px; overflow: hidden; max-width: 400px; }
     .mk-dc-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* Slack */
-    .mk-sl { background: #fff; color: #1d1c1d; font-family: -apple-system, 'Lato', system-ui, sans-serif; border-radius: 6px; padding: 8px 12px; position: relative; }
-    .mk-sl::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #e8e8e8; border-radius: 6px 0 0 6px; }
-    .mk-sl-site { font-size: 13px; color: #1d1c1d; font-weight: 700; margin-bottom: 2px; padding-left: 4px; }
-    .mk-sl-title { font-size: 15px; font-weight: 700; color: #1264a3; margin-bottom: 4px; padding-left: 4px; line-height: 1.3; }
-    .mk-sl-desc { font-size: 14px; color: #1d1c1d; margin-bottom: 8px; padding-left: 4px; line-height: 1.4; }
-    .mk-sl-img { aspect-ratio: 360 / 189; background: #f4f4f4; border-radius: 4px; overflow: hidden; max-width: 360px; margin-left: 4px; }
-    .mk-sl-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* Slack — card unfurl: text left, site row with favicon, image bleeding right */
+    .mk-sl { display: flex; align-items: stretch; background: #fff; color: #1d1c1d; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden; font-family: -apple-system, 'Lato', system-ui, sans-serif; }
+    .mk-sl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 12px 12px; }
+    .mk-sl-title { font-size: 15px; font-weight: 700; line-height: 1.35; color: #1d1c1d; }
+    .mk-sl-desc { font-size: 14px; color: #616061; line-height: 1.4; }
+    .mk-sl-site { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: #616061; }
+    .mk-sl-site img { width: 16px; height: 16px; border-radius: 4px; display: block; flex-shrink: 0; }
+    .mk-sl-img { position: relative; flex: 0 0 22.5%; background: #f4f4f4; }
+    .mk-sl-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
     /* Reddit */
     .mk-rd { background: #fff; border: 1px solid #ccc; border-radius: 8px; font-family: 'IBM Plex Sans', -apple-system, system-ui, sans-serif; color: #1a1a1b; overflow: hidden; }
@@ -1103,12 +1109,11 @@
       .mk-gg-desc { color: #bdc1c6; }
       .mk-gg-favicon { background: #303134; }
 
-      /* Slack — dark sidebar theme */
-      .mk-sl { background: #1a1d21; color: #d1d2d3; }
-      .mk-sl::before { background: #2c2f33; }
-      .mk-sl-site { color: #d1d2d3; }
-      .mk-sl-title { color: #1d9bd1; }
-      .mk-sl-desc { color: #d1d2d3; }
+      /* Slack — dark theme */
+      .mk-sl { background: #1a1d21; color: #d1d2d3; border-color: #35373b; }
+      .mk-sl-title { color: #d1d2d3; }
+      .mk-sl-desc { color: #ababad; }
+      .mk-sl-site { color: #ababad; }
       .mk-sl-img { background: #222529; }
 
       /* X — lights-out */
@@ -1178,11 +1183,6 @@
       justify-content: flex-start;
     }
 
-    .mi-preview-col {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
     .mi-customize-col { min-width: 0; }
 
     /* Variant strip — tiles live inside the Customize panel */
@@ -1295,8 +1295,8 @@
     .mi-preview-toggles {
       display: flex;
       flex-wrap: wrap;
+      align-content: flex-start;
       gap: 8px;
-      margin-bottom: 16px;
     }
     .mi-preview-toggle {
       display: inline-flex;
@@ -1387,10 +1387,24 @@
   <main class="page">
   <header class="page-header">
     <a class="wordmark" href="https://metadata-gen.micka.design" target="_blank" rel="noopener noreferrer">metadata-gen</a>
+    <div class="view-toggle" id="viewToggle" role="tablist" aria-label="Who is using this page">
+      <button type="button" class="mi-preview-toggle active" role="tab" aria-selected="true" data-view="human">Human</button>
+      <button type="button" class="mi-preview-toggle" role="tab" aria-selected="false" data-view="agent">Agent</button>
+    </div>
     <nav class="page-nav" aria-label="Links">
       <a href="https://github.com/mickadesign/metadata-gen" target="_blank" rel="noopener noreferrer">GitHub<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
     </nav>
   </header>
+
+  <!-- Agent view: everything an agent (or the person wiring one up) needs. -->
+  <section class="agent-view" id="agentView" role="tabpanel" hidden>
+    <div class="agent-lead">
+      <h1>Agent access</h1>
+      <p>Everything on this page is available as tools, so an agent can inspect, change and save the metadata image and favicon set without screenshots or clicks. One tool set, two transports: MCP on the local server for coding agents, WebMCP in this page for browser agents. Changes an agent makes show up live in the Human view.</p>
+    </div>
+    <div class="agent-status-grid" id="agentStatusGrid"></div>
+    <div class="agent-sections" id="agentSections"></div>
+  </section>
 
   <!-- Two columns: Metadata | Favicon. Each column stacks preview then settings. -->
   <div class="row-split">
@@ -1422,7 +1436,7 @@
         </div>
       </div>
       <div class="col-footer">
-        <button type="button" class="primary" id="miTopDownload">Download PNG</button>
+        <button type="button" class="primary" id="miTopDownload" data-action="save-og">Download PNG</button>
       </div>
     </div>
 
@@ -1494,7 +1508,7 @@
       </div>
       <div class="favicon-customize-panel" id="faviconCustomize"></div>
       <div class="col-footer">
-        <button type="button" class="primary" id="faviconTopDownload">Download favicon set</button>
+        <button type="button" class="primary" id="faviconTopDownload" data-action="save-favicons">Download favicon set</button>
       </div>
     </div>
   </div>
@@ -1524,11 +1538,88 @@
     </div>
   </div>
 
+  <style>
+    /* --- Agent surface: consent bar, status, panel --- */
+    .agent-consent {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      display: none; align-items: center; gap: 12px; max-width: min(720px, calc(100% - 32px));
+      padding: 12px 16px; border-radius: 12px; z-index: 60;
+      background: var(--bg-card); color: var(--text); border: 1px solid var(--border);
+      box-shadow: var(--dropdown-shadow), 0 1px 2px rgba(0,0,0,0.08); font-size: 13px;
+    }
+    .agent-consent.open { display: flex; }
+    .agent-consent .agent-consent-text { flex: 1; min-width: 0; }
+    .agent-consent .agent-consent-text strong { display: block; font-weight: 600; }
+    .agent-consent .agent-consent-text span { color: var(--text-muted); }
+    .agent-consent .agent-consent-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .agent-status {
+      position: fixed; right: 16px; bottom: 16px; z-index: 50; display: none;
+      padding: 8px 12px; border-radius: 999px; font-size: 12px;
+      background: var(--primary-bg); color: var(--primary-text);
+    }
+    .agent-status.open { display: block; }
+    .view-toggle { display: flex; gap: 6px; }
+    body.view-agent .row-split { display: none; }
+    body.view-agent .agent-view { display: block; }
+    .agent-view { display: none; max-width: 860px; margin: 0 auto 64px; }
+    .agent-view[hidden] { display: none; }
+    .agent-lead h1 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 12px; }
+    .agent-lead p { color: var(--text-body); font-size: 15px; line-height: 1.55; margin: 0 0 28px; max-width: 700px; }
+    .agent-status-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 40px;
+    }
+    .agent-stat { padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); min-width: 0; }
+    .agent-stat .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; }
+    .agent-stat .value { font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
+    .agent-stat .value.ok { color: var(--success); }
+    .agent-section { margin-bottom: 40px; }
+    .agent-section h2 { font-size: 17px; letter-spacing: -0.01em; margin: 0 0 6px; }
+    .agent-section > p { color: var(--text-body); font-size: 14px; line-height: 1.55; margin: 0 0 16px; max-width: 700px; }
+    .agent-snippet { margin: 0 0 16px; }
+    .agent-snippet-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .agent-snippet-head h3 { font-size: 13px; font-weight: 600; margin: 0; }
+    .agent-snippet-head span { font-size: 12px; color: var(--text-muted); }
+    .agent-snippet pre {
+      margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--bg-muted); color: var(--text);
+      font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; position: relative;
+    }
+    .agent-snippet pre code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .agent-snippet .copy { position: absolute; top: 8px; right: 8px; font-size: 11px; padding: 3px 9px; height: auto; }
+    .agent-tools { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .agent-tools th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); padding: 0 12px 8px 0; border-bottom: 1px solid var(--border); }
+    .agent-tools td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .agent-tools code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .agent-tools .params { color: var(--text-muted); font-size: 12px; }
+    .agent-kind { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; border: 1px solid var(--border-60); color: var(--text-muted); }
+    .agent-kind.write { color: var(--text); border-color: var(--text); }
+    .agent-list { margin: 0; padding-left: 18px; color: var(--text-body); font-size: 14px; line-height: 1.6; }
+    @media (max-width: 720px) {
+      .page-header { flex-wrap: wrap; }
+      .agent-tools .params { display: block; }
+    }
+  </style>
+
+  <div class="agent-consent" id="agentConsent" role="alertdialog" aria-live="assertive" aria-labelledby="agentConsentTitle">
+    <div class="agent-consent-text">
+      <strong id="agentConsentTitle"></strong>
+      <span id="agentConsentDetail"></span>
+    </div>
+    <div class="agent-consent-actions">
+      <button type="button" data-consent="deny">Deny</button>
+      <button type="button" data-consent="session">Allow this session</button>
+      <button type="button" class="primary" data-consent="once">Allow</button>
+    </div>
+  </div>
+  <div class="agent-status" id="agentStatus" role="status" aria-live="polite"></div>
+
   <script>
     // Layouts are auto-discovered server-side; the client reads them from /api/previews.
     let layouts = [];
     const DEFAULT_HEADING_SIZES = { A: 64, B: 56, C: 72 };
     const DEFAULT_TAGLINE_SIZES = { A: 28, B: 26, C: 22 };
+    // Max width of the text block; each layout's built-in default.
+    const DEFAULT_TEXT_WIDTHS = { A: 1040, B: 900, C: 1000 };
+    const FALLBACK_TEXT_WIDTH = 1040;
     const FALLBACK_HEADING_SIZE = 64;
     const FALLBACK_TAGLINE_SIZE = 26;
     const DEFAULT_LAYOUT_SETTINGS = {
@@ -1545,6 +1636,41 @@
     let logoCandidates = [];
     let projectFonts = [];
     let faviconOverrides = {};
+    // Latest revision per layout and for the favicon, as the server reports
+    // them. Saves send these so a stale preview is never written.
+    const ogRevisions = {};
+    let faviconRevision = 0;
+
+    // Boot data injected by the server: session token, MCP endpoint, version.
+    const BOOT = (() => {
+      try { return JSON.parse(document.getElementById('metadata-gen-boot').textContent); }
+      catch { return {}; }
+    })();
+    // Identifies this tab so it can ignore the echo of its own changes on
+    // the event stream while still mirroring what agents and other tabs do.
+    const CLIENT_ID = Math.random().toString(36).slice(2, 10);
+
+    // Every mutation goes through here: same-origin, token, client id.
+    async function apiPost(path, body, opts = {}) {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Metadata-Gen-Token': BOOT.token || '',
+          'X-Metadata-Gen-Client': CLIENT_ID,
+        },
+        body: JSON.stringify(body ?? {}),
+        signal: opts.signal,
+      });
+      if (!res.ok) {
+        let message = `${res.status} ${res.statusText}`;
+        try { const data = await res.json(); if (data && data.error) message = data.error; } catch {}
+        const err = new Error(message);
+        err.status = res.status;
+        throw err;
+      }
+      return res.json();
+    }
 
     // Debounce: call fn only after `ms` of idle. Each call resets the timer.
     function debounce(fn, ms = 150) {
@@ -1712,13 +1838,7 @@
           const bytes = new Uint8Array(buf);
           for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
           const dataBase64 = btoa(binary);
-          const res = await fetch('/api/upload-logo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename: file.name, dataBase64 }),
-          });
-          if (!res.ok) throw new Error('Upload failed');
-          const data = await res.json();
+          const data = await apiPost('/api/upload-logo', { filename: file.name, dataBase64 });
           logoCandidates = data.candidates;
           if (!currentOptions.some(o => o.value === data.path)) {
             currentOptions.push({ value: data.path, label: data.path, hint: 'uploaded' });
@@ -1868,6 +1988,11 @@
           el('span', { className: 'refine-label', textContent: 'tagline size' }),
           ffSlider(ov.taglineSize ?? DEFAULT_TAGLINE_SIZES[layout] ?? FALLBACK_TAGLINE_SIZE, 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
         ),
+        // Narrower text keeps the headline inside square crops (chat thumbnails).
+        el('div', { className: 'refine-row' },
+          el('span', { className: 'refine-label', textContent: 'text width' }),
+          ffSlider(ov.textWidth ?? DEFAULT_TEXT_WIDTHS[layout] ?? FALLBACK_TEXT_WIDTH, 320, 1040, 'px', (v) => updateOverride(layout, 'textWidth', v))
+        ),
         ffSelect('headline font', fontOpts, ov.headingFont ?? '__inter__', (v) => updateOverride(layout, 'headingFont', v)),
         ffSelect('tagline font', fontOpts, ov.taglineFont ?? '__inter__', (v) => updateOverride(layout, 'taglineFont', v)),
         ffSelect('alignment', alignOpts, ov.align ?? defaults.align, (v) => updateOverride(layout, 'align', v)),
@@ -1972,7 +2097,7 @@
         '',
         'Quick reference (full details in AGENTS.md):',
         '- Export one function: (config) => Satori JSX object. Canvas is 1200x630.',
-        '- config: { headline, tagline, colors: { background, foreground, accent, tagline }, logoBase64, headingSize, taglineSize, align, logoSize, logoGap, logoPosition }',
+        '- config: { headline, tagline, colors: { background, foreground, accent, tagline }, logoBase64, headingSize, taglineSize, textWidth, align, logoSize, logoGap, logoPosition }',
         "- Satori CSS subset: flex only (no grid/transform/filter/pseudo-elements/box-shadow-spread). linear-gradient, borderRadius, opacity, position:absolute all OK. fontFamily 'Inter' at weight 400 or 700.",
         '- No registration — the file is auto-discovered on next server restart.',
         '',
@@ -2051,8 +2176,9 @@
 
     let selectedLayout = null;
 
-    function selectVariant(layout) {
+    function selectVariant(layout, { report = true } = {}) {
       selectedLayout = layout;
+      if (report) apiPost('/api/select', { layout }).catch(() => {});
       document.querySelectorAll('.mi-variant-card[data-layout]').forEach(c => {
         c.classList.toggle('selected', c.getAttribute('data-layout') === layout);
       });
@@ -2130,22 +2256,17 @@
         renderSocialCards();
       });
 
-      const saveBtn = el('button', { textContent: 'Save metadata info' });
+      const saveBtn = el('button', { textContent: 'Save metadata info', 'data-action': 'save-config' });
       const originalSaveLabel = saveBtn.textContent;
       saveBtn.addEventListener('click', async () => {
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving\u2026';
         try {
-          const res = await fetch('/api/save-config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: socialState.title,
-              tagline: socialState.description,
-              url: socialState.url,
-            }),
+          await saveConfig({
+            title: socialState.title,
+            tagline: socialState.description,
+            url: socialState.url,
           });
-          if (!res.ok) throw new Error(await res.text());
           saveBtn.textContent = '\u2713 Saved \u2014 rebuild your site for meta tags to update';
         } catch (err) {
           saveBtn.textContent = 'Save failed';
@@ -2257,25 +2378,47 @@
           baseTitle: config.title || '',
           baseTagline: config.tagline || '',
         };
-        const res = await fetch('/api/render', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ layout, overrides }),
-          signal: controller.signal,
-        });
-        const data = await res.json();
-        if (img) img.src = data.image;
-        if (data.copy) layoutCopy[layout] = data.copy;
-        // Keep social previews in sync with the selected variant's image
-        if (layout === selectedLayout) {
-          socialState.ogImage = data.image;
-          renderSocialCards();
-        }
+        const data = await apiPost('/api/render', { layout, overrides }, { signal: controller.signal });
+        if (data.stale) return null;
+        applyRenderResult(layout, data);
+        return { layout, revision: data.revision, url: data.url };
       } catch (err) {
         if (err.name !== 'AbortError') console.error('Render failed:', err);
+        if (err.name === 'AbortError') return null;
+        throw err;
       } finally {
         if (img) img.style.opacity = '1';
       }
+    }
+
+    // Put a render result (own request or mirrored from the event stream)
+    // into the page: image, copy, revision, social mockups.
+    function applyRenderResult(layout, data) {
+      const img = document.getElementById(`preview-${layout}`);
+      if (img) img.src = data.image || data.url;
+      if (data.copy) layoutCopy[layout] = data.copy;
+      if (typeof data.revision === 'number') {
+        ogRevisions[layout] = data.revision;
+        const card = document.querySelector(`.mi-variant-card[data-layout="${layout}"]`);
+        if (card) card.setAttribute('data-revision', String(data.revision));
+      }
+      if (layout === selectedLayout) {
+        socialState.ogImage = data.image || data.url;
+        renderSocialCards();
+      }
+    }
+
+    // --- Saves (shared by buttons and agent tools) ---
+    function saveOg(layout) {
+      if (typeof ogRevisions[layout] !== 'number') return Promise.reject(new Error('Preview not ready yet'));
+      return apiPost('/api/download/og', { layout, revision: ogRevisions[layout] });
+    }
+    function saveFavicons() {
+      if (typeof faviconRevision !== 'number' || faviconRevision < 1) return Promise.reject(new Error('Preview not ready yet'));
+      return apiPost('/api/download/favicons', { revision: faviconRevision });
+    }
+    function saveConfig(patch) {
+      return apiPost('/api/save-config', patch);
     }
 
     async function downloadOg(layout, btn) {
@@ -2283,12 +2426,7 @@
       btn.disabled = true;
       btn.textContent = 'Saving\u2026';
       try {
-        const res = await fetch('/api/download/og', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ layout }),
-        });
-        const data = await res.json();
+        const data = await saveOg(layout);
         btn.textContent = `\u2713 Saved to ${data.path}`;
         setTimeout(() => {
           btn.textContent = label;
@@ -2438,14 +2576,9 @@
       const gen = faviconOverridesGen;
       const { modes, sizes } = FAVICON_MODE_NEEDS[activeFaviconMode];
       try {
-        const res = await fetch('/api/render-favicon', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...faviconOverrides, modes, sizes }),
-          signal: controller.signal,
-        });
-        const data = await res.json();
-        if (seq !== faviconReqSeq) return;
+        const data = await apiPost('/api/render-favicon', { ...faviconOverrides, modes, sizes }, { signal: controller.signal });
+        if (seq !== faviconReqSeq) return null;
+        if (typeof data.revision === 'number') faviconRevision = data.revision;
         for (const m of modes) {
           if (!data[m]) continue;
           const e = faviconCache[m];
@@ -2471,7 +2604,9 @@
         }
       } catch (err) {
         if (err.name !== 'AbortError') console.error('Favicon render failed:', err);
+        return null;
       }
+      return { revision: faviconRevision };
     }
 
     // Called on every knob change: bumps the overrides generation so all
@@ -2512,7 +2647,8 @@
       const colors = config.colors || {};
       const defaultAccent = colors.accent || '#333333';
 
-      const letterInput = el('input', { type: 'text', className: 'ff-input', value: defaultLetter, maxLength: '4' });
+      const fo = faviconOverrides;
+      const letterInput = el('input', { type: 'text', className: 'ff-input', value: fo.letter ?? defaultLetter, maxLength: '4' });
       letterInput.style.width = '80px';
       letterInput.style.textAlign = 'left';
       // `change` only fires on blur; fire on `input` (with a short debounce)
@@ -2541,7 +2677,7 @@
       panel.innerHTML = '';
 
       // Source first — Lettermark or a logo file
-      const initialSrc = config.faviconSrc || '__lettermark__';
+      const initialSrc = fo.faviconSrc === null ? '__lettermark__' : (fo.faviconSrc ?? (config.faviconSrc || '__lettermark__'));
       panel.appendChild(ffSearchSelect('source', srcOpts, initialSrc, (v) => {
         faviconOverrides.faviconSrc = v === '__lettermark__' ? null : v;
         updateLettermarkVisibility(v === '__lettermark__');
@@ -2551,7 +2687,7 @@
       // Transparent toggle sits directly below source
       panel.appendChild(el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'transparent' }),
-        ffToggle('Transparent background', false, (v) => {
+        ffToggle('Transparent background', !!fo.transparent, (v) => {
           faviconOverrides.transparent = v;
           updateTransparentVisibility(v);
           queueFaviconRender();
@@ -2559,11 +2695,11 @@
       ));
 
       // Opaque-only rows (apply to both lettermark & logo sources)
-      const bgRow = ffColor('background', colors.background || '#ffffff', (v) => { faviconOverrides.background = v; queueFaviconRender(); });
-      const darkBgRow = ffColor('dark bg', '#000000', (v) => { faviconOverrides.darkBg = v; queueFaviconRender(); });
+      const bgRow = ffColor('background', fo.background ?? (colors.background || '#ffffff'), (v) => { faviconOverrides.background = v; queueFaviconRender(); });
+      const darkBgRow = ffColor('dark bg', fo.darkBg ?? '#000000', (v) => { faviconOverrides.darkBg = v; queueFaviconRender(); });
       const cornerRow = el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'corner radius' }),
-        ffSlider(19, 0, 50, '%', (v) => { faviconOverrides.borderRadius = v; queueFaviconRender(); })
+        ffSlider(fo.borderRadius ?? 19, 0, 50, '%', (v) => { faviconOverrides.borderRadius = v; queueFaviconRender(); })
       );
       [bgRow, darkBgRow, cornerRow].forEach(r => { r.dataset.opaqueOnly = '1'; });
 
@@ -2579,17 +2715,17 @@
 
       // Lettermark-only controls — hidden when a logo source is selected
       const lettermarkRows = [
-        ffColor('letter color', defaultAccent, (v) => { faviconOverrides.accent = v; queueFaviconRender(); }),
-        ffColor('dark letter color', defaultAccent, (v) => { faviconOverrides.darkAccent = v; queueFaviconRender(); }),
+        ffColor('letter color', fo.accent ?? defaultAccent, (v) => { faviconOverrides.accent = v; queueFaviconRender(); }),
+        ffColor('dark letter color', fo.darkAccent ?? defaultAccent, (v) => { faviconOverrides.darkAccent = v; queueFaviconRender(); }),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'letter' }),
           letterInput
         ),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'letter size' }),
-          ffSlider(60, 20, 80, '%', (v) => { faviconOverrides.letterSize = v; queueFaviconRender(); })
+          ffSlider(fo.letterSize ?? 60, 20, 80, '%', (v) => { faviconOverrides.letterSize = v; queueFaviconRender(); })
         ),
-        ffSelect('font weight', weightOpts, '700', (v) => {
+        ffSelect('font weight', weightOpts, String(fo.fontWeight ?? 700), (v) => {
           faviconOverrides.fontWeight = parseInt(v);
           queueFaviconRender();
         }),
@@ -2602,6 +2738,7 @@
         });
       }
       updateLettermarkVisibility(initialSrc === '__lettermark__');
+      updateTransparentVisibility(!!fo.transparent);
     }
 
     async function loadFaviconPreviews() {
@@ -2635,11 +2772,7 @@
         dlBtn.disabled = true;
         dlBtn.textContent = 'Saving\u2026';
         try {
-          const res = await fetch('/api/download/favicons', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          });
-          const data = await res.json();
+          const data = await saveFavicons();
           dlBtn.textContent = `\u2713 Saved (${data.count} files)`;
         } catch (err) {
           dlBtn.textContent = 'Error';
@@ -2721,15 +2854,6 @@
     // Each renderer returns the inner markup for a platform's viewport.
     const SOCIAL_PLATFORMS = [
       {
-        id: 'slack', label: 'Slack', iconLetter: 'S', iconBg: '#4a154b',
-        render: ({ title, description, domain, ogImage }) => el('div', { className: 'mk-sl' },
-          el('div', { className: 'mk-sl-site', textContent: domain }),
-          el('div', { className: 'mk-sl-title truncate-2', textContent: truncate(title, SOCIAL_LIMITS.slack.title) }),
-          el('div', { className: 'mk-sl-desc truncate-3', textContent: truncate(description, SOCIAL_LIMITS.slack.desc) }),
-          el('div', { className: 'mk-sl-img' }, ogImage ? el('img', { src: ogImage }) : null)
-        ),
-      },
-      {
         id: 'x', label: 'X (Twitter)', iconLetter: '𝕏', iconBg: '#000',
         render: ({ title, domain, ogImage }) => el('div', { className: 'mk-x' },
           el('div', { className: 'mk-x-card' },
@@ -2739,6 +2863,20 @@
             )
           ),
           el('div', { className: 'mk-x-from', textContent: `From ${domain}` })
+        ),
+      },
+      {
+        id: 'slack', label: 'Slack', iconLetter: 'S', iconBg: '#4a154b',
+        render: ({ title, description, domain, ogImage, faviconImage }) => el('div', { className: 'mk-sl' },
+          el('div', { className: 'mk-sl-body' },
+            el('div', { className: 'mk-sl-title truncate-2', textContent: truncate(title, SOCIAL_LIMITS.slack.title) }),
+            el('div', { className: 'mk-sl-desc truncate-3', textContent: truncate(description, SOCIAL_LIMITS.slack.desc) }),
+            el('div', { className: 'mk-sl-site' },
+              faviconImage ? el('img', { src: faviconImage, alt: '' }) : null,
+              el('span', { textContent: domain })
+            )
+          ),
+          el('div', { className: 'mk-sl-img' }, ogImage ? el('img', { src: ogImage }) : null)
         ),
       },
       {
@@ -2831,7 +2969,7 @@
     ];
 
     // Only one platform preview renders at a time; user toggles via icons.
-    let activePlatformId = 'slack';
+    let activePlatformId = 'x';
 
     function socialCtx() {
       return {
@@ -2881,14 +3019,11 @@
       const [configRes, previewsRes, faviconRes] = await Promise.all([
         fetch('/api/config'),
         fetch('/api/previews'),
-        fetch('/api/render-favicon', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
-        }),
+        apiPost('/api/render-favicon', { modes: ['light'], sizes: [32, 96] }),
       ]);
       const cfg = await configRes.json();
       const previews = await previewsRes.json();
-      const favData = await faviconRes.json();
+      const favData = faviconRes;
 
       socialState.title = cfg.title || '';
       socialState.description = cfg.tagline || '';
@@ -2901,7 +3036,401 @@
       renderSocialCards();
     }
 
+    // --- Action layer ------------------------------------------------------
+    // One set of functions for controls, agent tools and the event stream.
+    // Each resolves after the render finished and the UI reflects it.
+
+    function stripBase(overrides) {
+      const { baseTitle, baseTagline, ...rest } = overrides || {};
+      return rest;
+    }
+
+    function syncOgControls(layout) {
+      if (layout === selectedLayout) buildMetaPanel(layout);
+    }
+
+    async function applyOgOverrides(layout, patch, { replace = false } = {}) {
+      if (!layouts.includes(layout)) throw new Error(`Unknown layout "${layout}". Available: ${layouts.join(', ')}`);
+      const next = replace ? {} : { ...(cardOverrides[layout] || {}) };
+      for (const [k, v] of Object.entries(patch || {})) {
+        if (v === null || v === undefined) delete next[k];
+        else next[k] = v;
+      }
+      cardOverrides[layout] = next;
+      syncOgControls(layout);
+      const result = await rerender(layout);
+      if (result) return result;
+      // A newer render for this layout superseded ours; report the latest.
+      const rev = ogRevisions[layout];
+      return { layout, revision: rev, url: `${location.origin}/preview/og/${layout.toLowerCase()}.png?rev=${rev}`, superseded: true };
+    }
+
+    async function applyFaviconOptions(patch, { replace = false } = {}) {
+      const next = replace ? { customBg: faviconOverrides.customBg } : { ...faviconOverrides };
+      for (const [k, v] of Object.entries(patch || {})) {
+        if (k === 'faviconSrc' && v === null) next[k] = null; // null = lettermark
+        else if (v === null || v === undefined) delete next[k];
+        else next[k] = v;
+      }
+      faviconOverrides = next;
+      faviconOverridesGen++;
+      buildFaviconCustomizePanel();
+      const result = await rerenderFavicons();
+      return result || { revision: faviconRevision };
+    }
+
+    function setSocialText(patch, { report = true } = {}) {
+      const applied = {};
+      if (typeof patch.title === 'string') { socialState.title = patch.title; config.title = patch.title; applied.title = patch.title; }
+      if (typeof patch.tagline === 'string') { socialState.description = patch.tagline; config.tagline = patch.tagline; applied.tagline = patch.tagline; }
+      if (typeof patch.url === 'string') { socialState.url = patch.url; config.url = patch.url; applied.url = patch.url; }
+      renderSocialCards();
+      updateVerticalTabTitles(socialState.title || '');
+      if (selectedLayout) buildMetaPanel(selectedLayout);
+      if (report && Object.keys(applied).length) apiPost('/api/social', applied).catch(() => {});
+      return applied;
+    }
+
+    // --- Consent for agent-initiated writes --------------------------------
+    const sessionApprovals = new Set();
+    let consentQueue = Promise.resolve();
+
+    function requestConsent({ tool, title, detail }) {
+      if (sessionApprovals.has(tool)) return Promise.resolve(true);
+      // One bar at a time: later requests wait for the current answer.
+      const run = () => new Promise((resolve) => {
+        const bar = document.getElementById('agentConsent');
+        document.getElementById('agentConsentTitle').textContent = title;
+        document.getElementById('agentConsentDetail').textContent = detail;
+        bar.classList.add('open');
+        const onClick = (e) => {
+          const choice = e.target.getAttribute && e.target.getAttribute('data-consent');
+          if (!choice) return;
+          bar.removeEventListener('click', onClick);
+          bar.classList.remove('open');
+          if (choice === 'session') sessionApprovals.add(tool);
+          resolve(choice !== 'deny');
+        };
+        bar.addEventListener('click', onClick);
+      });
+      const p = consentQueue.then(run);
+      consentQueue = p.catch(() => {});
+      return p;
+    }
+
+    let statusTimer;
+    function showStatus(text) {
+      const node = document.getElementById('agentStatus');
+      node.textContent = text;
+      node.classList.add('open');
+      clearTimeout(statusTimer);
+      statusTimer = setTimeout(() => node.classList.remove('open'), 3200);
+    }
+
+    // --- Event stream: mirror what agents and other tabs change ------------
+    let eventsRetryMs = 1000;
+    function connectEvents() {
+      if (!('EventSource' in window)) return;
+      const es = new EventSource('/events');
+      const mine = (data) => data && data.client === CLIENT_ID;
+      es.addEventListener('open', () => { eventsRetryMs = 1000; });
+      // EventSource retries every few seconds forever; back off instead so a
+      // stopped server does not flood the console, and reconnect ourselves.
+      es.addEventListener('error', () => {
+        es.close();
+        setTimeout(connectEvents, eventsRetryMs);
+        eventsRetryMs = Math.min(eventsRetryMs * 2, 30000);
+      });
+      es.addEventListener('og', (e) => {
+        const data = JSON.parse(e.data);
+        if (mine(data)) return;
+        cardOverrides[data.layout] = stripBase(data.overrides);
+        syncOgControls(data.layout);
+        applyRenderResult(data.layout, data);
+        if (data.client === 'agent') showStatus(`Agent updated layout ${data.layout}`);
+      });
+      es.addEventListener('favicon', async (e) => {
+        const data = JSON.parse(e.data);
+        if (mine(data)) return;
+        faviconOverrides = { customBg: faviconOverrides.customBg, ...data.options };
+        faviconOverridesGen++;
+        buildFaviconCustomizePanel();
+        await rerenderFavicons();
+        if (data.client === 'agent') showStatus('Agent updated the favicon');
+      });
+      es.addEventListener('social', (e) => {
+        const data = JSON.parse(e.data);
+        if (mine(data)) return;
+        setSocialText(data, { report: false });
+        if (data.client === 'agent') showStatus('Agent updated title and description');
+      });
+      es.addEventListener('select', (e) => {
+        const data = JSON.parse(e.data);
+        if (mine(data)) return;
+        if (layouts.includes(data.layout)) selectVariant(data.layout, { report: false });
+      });
+      es.addEventListener('config', (e) => {
+        const data = JSON.parse(e.data);
+        config = { ...config, ...data.config };
+        setSocialText(data.social, { report: false });
+        showStatus('Saved metadata.config.json');
+      });
+      es.addEventListener('saved', (e) => {
+        const data = JSON.parse(e.data);
+        showStatus(data.kind === 'og' ? `Saved ${data.path}` : `Saved favicon set (${data.files.length} files)`);
+      });
+      es.addEventListener('consent', async (e) => {
+        const data = JSON.parse(e.data);
+        const allowed = await requestConsent({ tool: data.tool, title: `Agent wants to ${data.detail.charAt(0).toLowerCase()}${data.detail.slice(1)}`, detail: 'Requested through the MCP connection.' });
+        apiPost('/api/consent', { id: data.id, allowed }).catch(() => {});
+      });
+    }
+
+    // --- Agent tools: the page's implementation of the shared schema -------
+    function requireLayout(layout) {
+      if (!layouts.includes(layout)) throw new Error(`Unknown layout "${layout}". Available layouts: ${layouts.join(', ')}.`);
+    }
+
+    const pageApi = {
+      getProject: async () => {
+        const res = await fetch('/api/state');
+        return res.json();
+      },
+      getOgPreview: async ({ layout }) => {
+        requireLayout(layout);
+        const rev = ogRevisions[layout];
+        return { layout, revision: rev, url: `${location.origin}/preview/og/${layout.toLowerCase()}.png?rev=${rev}`, width: 1200, height: 630, overrides: stripBase(cardOverrides[layout]) };
+      },
+      getFaviconPreview: async ({ mode, size }) => ({
+        mode, size, revision: faviconRevision, url: `${location.origin}/preview/favicon/${mode}/${size}.png?rev=${faviconRevision}`,
+      }),
+      selectLayout: async ({ layout }) => { requireLayout(layout); selectVariant(layout); return { selectedLayout: layout }; },
+      setOgOverrides: async ({ layout, overrides }) => {
+        const r = await applyOgOverrides(layout, overrides);
+        return { ...r, overrides: stripBase(cardOverrides[layout]) };
+      },
+      resetOgOverrides: async ({ layout }) => applyOgOverrides(layout, {}, { replace: true }),
+      setFaviconOptions: async ({ options }) => {
+        const r = await applyFaviconOptions(options);
+        return { ...r, options: faviconOverrides };
+      },
+      setSocialText: async (args) => {
+        const applied = setSocialText(args);
+        const og = {};
+        for (const l of layouts) {
+          const r = await rerender(l);
+          if (r) og[l] = { revision: r.revision, url: r.url };
+        }
+        return { social: applied, og };
+      },
+      saveConfig: async (args) => {
+        const ok = await requestConsent({ tool: 'save_config', title: 'Agent wants to write metadata.config.json', detail: 'Title, tagline and URL in your project root.' });
+        if (!ok) throw new Error('The user declined this write. Nothing was written.');
+        return saveConfig(args);
+      },
+      saveOgImage: async ({ layout, revision }) => {
+        requireLayout(layout);
+        const ok = await requestConsent({ tool: 'save_og_image', title: `Agent wants to overwrite og.png with layout ${layout}`, detail: 'In your project output folder.' });
+        if (!ok) throw new Error('The user declined this write. Nothing was written.');
+        return apiPost('/api/download/og', { layout, revision });
+      },
+      saveFaviconSet: async ({ revision }) => {
+        const ok = await requestConsent({ tool: 'save_favicon_set', title: 'Agent wants to overwrite the favicon set', detail: 'ICO, SVG, PNGs and webmanifest in your project output folder.' });
+        if (!ok) throw new Error('The user declined this write. Nothing was written.');
+        return apiPost('/api/download/favicons', { revision });
+      },
+    };
+
+    let webmcpState = { status: 'unsupported', count: 0, message: 'Not available in this browser.' };
+    function setWebmcpState(next) {
+      webmcpState = next;
+      const node = document.getElementById('agentWebmcpStatus');
+      if (node) {
+        node.textContent = next.message;
+        node.classList.toggle('ok', next.status === 'registered');
+      }
+    }
+
+    async function registerWebMcpTools() {
+      const ctx = document.modelContext || navigator.modelContext;
+      if (!ctx || typeof ctx.registerTool !== 'function') {
+        setWebmcpState({ status: 'unsupported', count: 0, message: 'Not available in this browser' });
+        return;
+      }
+      try {
+        const mod = await import('/agent-tools.js');
+        const tools = mod.bindTools(pageApi);
+        for (const tool of tools) {
+          await ctx.registerTool({
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.inputSchema,
+            annotations: tool.annotations,
+            execute: tool.execute,
+          });
+        }
+        setWebmcpState({ status: 'registered', count: tools.length, message: `${tools.length} tools registered in this page` });
+      } catch (err) {
+        console.error('WebMCP registration failed:', err);
+        setWebmcpState({ status: 'failed', count: 0, message: `Registration failed: ${err.message}` });
+      }
+    }
+
+    // --- Human / Agent view ------------------------------------------------
+
+    const VIEW_KEY = 'metadata-gen:view';
+    function setView(view, { persist = true } = {}) {
+      const isAgent = view === 'agent';
+      document.body.classList.toggle('view-agent', isAgent);
+      const panel = document.getElementById('agentView');
+      if (panel) panel.hidden = !isAgent;
+      document.querySelectorAll('#viewToggle [data-view]').forEach((b) => {
+        const on = b.getAttribute('data-view') === view;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      if (persist) { try { localStorage.setItem(VIEW_KEY, view); } catch {} }
+    }
+    function setupViewToggle() {
+      document.querySelectorAll('#viewToggle [data-view]').forEach((b) => {
+        b.addEventListener('click', () => setView(b.getAttribute('data-view')));
+      });
+      let initial = 'human';
+      try {
+        const fromQuery = new URLSearchParams(location.search).get('view');
+        const fromStore = localStorage.getItem(VIEW_KEY);
+        initial = fromQuery === 'agent' || fromQuery === 'human' ? fromQuery : (fromStore === 'agent' ? 'agent' : 'human');
+      } catch {}
+      setView(initial, { persist: false });
+    }
+
+    function copyButton(getText, label = 'Copy') {
+      const btn = el('button', { type: 'button', className: 'copy', textContent: label });
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(getText());
+          btn.textContent = '\u2713 Copied';
+          setTimeout(() => { btn.textContent = label; }, 1400);
+        } catch (err) {
+          console.error('Copy failed:', err);
+        }
+      });
+      return btn;
+    }
+
+    function snippet(title, note, text) {
+      const code = el('code', { textContent: text });
+      const pre = el('pre', {}, code, copyButton(() => text));
+      return el('div', { className: 'agent-snippet' },
+        el('div', { className: 'agent-snippet-head' }, el('h3', { textContent: title }), note ? el('span', { textContent: note }) : null),
+        pre
+      );
+    }
+
+    function section(title, intro, ...children) {
+      return el('div', { className: 'agent-section' },
+        el('h2', { textContent: title }),
+        intro ? el('p', { textContent: intro }) : null,
+        ...children
+      );
+    }
+
+    function describeParam(name, schema, required) {
+      let type = Array.isArray(schema.type) ? schema.type.join(' | ') : (schema.type || 'any');
+      if (schema.enum) type = schema.enum.map((v) => JSON.stringify(v)).join(' | ');
+      else if (schema.minimum != null && schema.maximum != null) type += ` ${schema.minimum}\u2013${schema.maximum}`;
+      if (schema.type === 'object' && schema.properties) type = `object { ${Object.keys(schema.properties).join(', ')} }`;
+      return `${name}${required ? '' : '?'}: ${type}`;
+    }
+
+    async function buildAgentView() {
+      const grid = document.getElementById('agentStatusGrid');
+      const sections = document.getElementById('agentSections');
+      if (!grid || !sections) return;
+      grid.innerHTML = '';
+      sections.innerHTML = '';
+
+      const mcpUrl = BOOT.mcpUrl || `${location.origin}/mcp`;
+      const stdioJson = JSON.stringify({ mcpServers: { 'metadata-gen': { command: 'npx', args: ['metadata-gen', 'mcp'] } } }, null, 2);
+      const codexToml = '[mcp_servers.metadata-gen]\ncommand = "npx"\nargs = ["metadata-gen", "mcp"]';
+      const httpCurl = `curl -X POST ${mcpUrl} \\\n  -H "Content-Type: application/json" \\\n  -H "X-Metadata-Gen-Token: ${BOOT.token || '<token>'}" \\\n  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_project","arguments":{}}}'`;
+      const instructions = [
+        '## metadata-gen',
+        '',
+        'OG image and favicon work: use the `metadata-gen` MCP tools. Start with',
+        '`get_project`, then `set_og_overrides`, `set_favicon_options`, `set_social_text`,',
+        'and save with `save_og_image`, `save_favicon_set`, `save_config`. Do not drive',
+        'the preview page with a browser: the tools update it and return preview URLs.',
+        'If a tool reports no server, run `npx metadata-gen` first.',
+      ].join('\n');
+
+      const stat = (label, value, ok) => el('div', { className: 'agent-stat' },
+        el('div', { className: 'label', textContent: label }),
+        el('div', { className: 'value' + (ok ? ' ok' : ''), textContent: value })
+      );
+      grid.append(
+        stat('Preview server', location.origin, true),
+        stat('MCP endpoint', mcpUrl, true),
+        (() => { const n = stat('WebMCP in this page', webmcpState.message, webmcpState.status === 'registered'); n.querySelector('.value').id = 'agentWebmcpStatus'; return n; })(),
+        stat('Writes', 'Confirmed here before anything is written', false)
+      );
+
+      sections.append(
+        section('Connect a coding agent', 'Any MCP client can use the tools. The stdio command finds the running preview server for this project, or starts one without opening a browser when none is running, so the port never appears in your config.',
+          snippet('Any client with an mcpServers config', 'Claude Code (.mcp.json), Cursor (.cursor/mcp.json), Windsurf, Claude Desktop, Gemini CLI', stdioJson),
+          snippet('Claude Code, one command', null, BOOT.addCommand || 'claude mcp add metadata-gen -- npx metadata-gen mcp'),
+          snippet('Codex CLI (config.toml)', null, codexToml),
+          snippet('Any client over HTTP', 'Streamable HTTP, JSON-RPC. The token is per server start; the stdio command handles it for you.', httpCurl),
+          el('p', { textContent: 'Running `npx metadata-gen init` offers to write the mcpServers entry and the instruction block below into your project.' })
+        ),
+        section('Tell the agent to prefer the tools', 'Descriptions alone do not decide between tools and a browser when an agent has both. Put this in the instructions file your agent reads (AGENTS.md, CLAUDE.md, .cursor/rules, or equivalent).',
+          snippet('Instruction block', null, instructions)
+        ),
+        section('Browser agents (WebMCP)', 'The page registers the same tools with document.modelContext when the browser supports it. Chrome 149+ with chrome://flags/#enable-webmcp-testing (origin trial until stable), Edge 150+, and bridge extensions that forward page tools to a local MCP client. Where unsupported, nothing changes.',
+          el('ul', { className: 'agent-list' },
+            el('li', { textContent: 'Check registration in DevTools \u2192 Application \u2192 WebMCP, or with a tool inspector extension.' }),
+            el('li', { textContent: 'Tools run inside this tab, so what the agent does is what you see.' })
+          )
+        ),
+        section('Tools', 'The same eleven tools on both transports. Inputs are validated; an out-of-range or unknown key is reported back so the agent can correct it.',
+          el('div', { id: 'agentToolsTable', textContent: 'Loading tool definitions\u2026' })
+        ),
+        section('How writes and safety work', null,
+          el('ul', { className: 'agent-list' },
+            el('li', { textContent: 'Save tools ask for confirmation in this page when it is open: allow once, allow for this session, or deny. With no page open, your MCP client\u2019s own permission prompt is the gate.' }),
+            el('li', { textContent: 'Every render returns a revision. A save that names an older revision is refused, so a preview that changed since the agent last looked is never written by mistake.' }),
+            el('li', { textContent: 'The server listens on 127.0.0.1 only. Mutations need the session token and are refused from other origins. Preview PNG URLs are read-only.' }),
+            el('li', { textContent: 'No tool executes code. Custom layouts stay a file-based workflow for coding agents with project access.' })
+          )
+        )
+      );
+
+      try {
+        const mod = await import('/agent-tools.js');
+        const table = el('table', { className: 'agent-tools' },
+          el('thead', {}, el('tr', {}, el('th', { textContent: 'Tool' }), el('th', { textContent: 'Kind' }), el('th', { textContent: 'What it does' }))),
+          el('tbody', {}, ...mod.TOOL_DEFINITIONS.map((t) => {
+            const required = new Set(t.inputSchema.required || []);
+            const params = Object.entries(t.inputSchema.properties || {}).map(([k, v]) => describeParam(k, v, required.has(k)));
+            return el('tr', {},
+              el('td', {}, el('code', { textContent: t.name })),
+              el('td', {}, el('span', { className: 'agent-kind ' + t.kind, textContent: t.kind })),
+              el('td', {}, document.createTextNode(t.description + ' '), params.length ? el('div', { className: 'params', textContent: params.join('  \u00b7  ') }) : null)
+            );
+          }))
+        );
+        const host = document.getElementById('agentToolsTable');
+        host.innerHTML = '';
+        host.appendChild(table);
+      } catch (err) {
+        const host = document.getElementById('agentToolsTable');
+        if (host) host.textContent = `Could not load tool definitions: ${err.message}`;
+      }
+    }
+
     (async () => {
+      setupViewToggle();
+      buildAgentView();
       // Load social + favicon state first so the meta panel (built by
       // selectVariant) reads populated values.
       await Promise.all([loadSocialPreviews(), loadFaviconPreviews()]);
@@ -2911,6 +3440,18 @@
       buildFaviconCustomizePanel();
       updateVerticalTabTitles(config.title || '');
       if (layouts.length) selectVariant(layouts[0]);
+      try {
+        const snap = await (await fetch('/api/state')).json();
+        for (const [l, entry] of Object.entries(snap.og || {})) ogRevisions[l] = entry.revision;
+        faviconRevision = snap.favicon ? snap.favicon.revision : faviconRevision;
+        if (snap.selectedLayout && layouts.includes(snap.selectedLayout) && snap.selectedLayout !== selectedLayout) {
+          selectVariant(snap.selectedLayout, { report: false });
+        }
+      } catch (err) {
+        console.error('State load failed:', err);
+      }
+      connectEvents();
+      registerWebMcpTools();
     })();
   </script>
 </body>

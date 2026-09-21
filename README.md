@@ -79,7 +79,27 @@ Downloads write directly to `public/metadata/` in your repo.
 ```bash
 npx metadata-gen --no-open        # skip auto browser open
 npx metadata-gen --output <dir>   # override output directory
+npx metadata-gen init --no-agent  # skip the .mcp.json / AGENTS.md offer
+npx metadata-gen mcp              # MCP server over stdio for agent configs
 ```
+
+## Using with an agent
+
+The preview exposes its actions as tools, so an agent can inspect, tweak and save OG images and favicons without driving the page by screenshots and clicks. The **Agent** tab at the top of the preview page has everything needed to connect one: config snippets for any MCP client, the tool list, and how writes are confirmed. Two transports, one tool set:
+
+- **MCP** on the preview server, for any MCP client (Claude Code, Cursor, Windsurf, Codex CLI, Gemini CLI, Claude Desktop, or your own). `init` offers to add a project-scoped `.mcp.json` entry and a short note to `AGENTS.md` (or `CLAUDE.md`) telling agents to prefer the tools. The generic entry is:
+
+  ```json
+  { "mcpServers": { "metadata-gen": { "command": "npx", "args": ["metadata-gen", "mcp"] } } }
+  ```
+
+  `metadata-gen mcp` connects to the preview server for the current project, or starts one without opening a browser when none is running. The endpoint is also reachable over HTTP at `/mcp` with the session token shown in the Agent tab.
+
+- **WebMCP** in the page, for browser agents (Chrome 149+ with `chrome://flags/#enable-webmcp-testing`, Edge 150+, bridge extensions). Tools register with `document.modelContext` when the browser supports it and do nothing otherwise.
+
+Tools: `get_project`, `get_og_preview`, `get_favicon_preview`, `select_layout`, `set_og_overrides`, `reset_og_overrides`, `set_favicon_options`, `set_social_text`, `save_config`, `save_og_image`, `save_favicon_set`. Changes made by an agent show up live in the open preview page. Writes ask for confirmation in the page when one is open, and refuse to overwrite a preview that changed since the agent last looked at it.
+
+The server only listens on `127.0.0.1`. Mutations require a per-session token that the page and `metadata-gen mcp` hold, and requests from other origins are refused.
 
 ## What it scans
 
@@ -133,6 +153,16 @@ public/metadata/
 ```
 
 All fields are optional with sensible defaults. Edit directly or re-run `init`.
+
+## Development
+
+```bash
+npm test          # unit and integration tests (node --test)
+npm run eval      # scripted agent trajectories over both tool transports
+npm run eval:live # a real model drives the tools; needs Anthropic credentials
+```
+
+`evals/README.md` describes the three eval layers, including the in-page WebMCP eval you paste into the browser console.
 
 ## Requirements
 
