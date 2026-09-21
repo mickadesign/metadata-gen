@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>metadata-gen</title>
+  <meta name="description" content="Generate OG images and a complete favicon set from your project's existing assets and config. Runs locally, no API keys.">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <link rel="canonical" href="https://metadata-gen.micka.design/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://metadata-gen.micka.design/">
+  <meta property="og:title" content="metadata-gen">
+  <meta property="og:description" content="Generate OG images and a complete favicon set from your project's existing assets and config. Runs locally, no API keys.">
+  <meta property="og:image" content="https://metadata-gen.micka.design/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:creator" content="@micka_design">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --background: #fafafa;
+      --foreground: #050505;
+      --body: #333;
+      --subtle: #999;
+      --muted: #f0f0f0;
+      --border: rgba(0, 0, 0, 0.06);
+      --separator: rgba(0, 0, 0, 0.12);
+      --hover: rgba(20, 20, 20, 0.06);
+      --card: #fcfcfc;
+      --ring: #6b97ff;
+      --radius: 0.5rem;
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #050505;
+        --foreground: #fafafa;
+        --body: #999;
+        --subtle: #666;
+        --muted: #1f1f1f;
+        --border: rgba(255, 255, 255, 0.08);
+        --separator: rgba(255, 255, 255, 0.08);
+        --hover: rgba(240, 240, 240, 0.08);
+        --card: #0d0d0d;
+        color-scheme: dark;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 21px;
+      background: var(--background);
+      color: var(--body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: "cv11", "ss01";
+    }
+
+    a {
+      color: var(--foreground);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--separator); }
+
+    :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+
+    main {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 144px 16px 140px;
+    }
+
+    @media (max-width: 600px) {
+      main { padding-top: 88px; }
+    }
+
+    /* --- Hero --- */
+
+    .hero {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 56px;
+    }
+
+    h1 {
+      font-size: 56px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -0.028em;
+      color: var(--foreground);
+      margin-top: 4px;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 40px; }
+    }
+
+
+    .intro p + p { margin-top: 16px; }
+
+    /* --- Sections --- */
+
+    section { margin-top: 64px; }
+
+    h2 {
+      font-size: 14px;
+      line-height: 21px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin-bottom: 12px;
+    }
+
+    .rows { list-style: none; }
+
+    .row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      padding: 6px 0;
+    }
+
+    .row .key {
+      flex: 0 0 40px;
+      color: var(--subtle);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .row .key.wide { flex-basis: 64px; }
+
+    .row .name { color: var(--foreground); font-weight: 500; }
+    .row .desc { color: var(--subtle); }
+    .row .desc::before { content: " "; }
+
+    .row .desc code {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 12.5px;
+    }
+
+    .note { color: var(--subtle); margin-top: 12px; }
+
+    /* --- Code block --- */
+
+    .code {
+      position: relative;
+      background: var(--muted);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 22px;
+      color: var(--foreground);
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code .prompt { color: var(--subtle); user-select: none; }
+    .code .cmt { color: var(--subtle); }
+
+    .copy {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--subtle);
+      cursor: pointer;
+      transition: background 80ms, color 80ms;
+    }
+    .copy:hover { background: var(--hover); color: var(--foreground); }
+    .copy svg { width: 14px; height: 14px; }
+    .copy .done { display: none; }
+    .copy[data-copied="true"] .done { display: block; }
+    .copy[data-copied="true"] .idle { display: none; }
+
+    /* --- Buttons --- */
+
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      padding: 0 14px;
+      border: 1px solid var(--separator);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--foreground);
+      font-weight: 500;
+      font-size: 14px;
+      transition: background 80ms;
+    }
+    .btn:hover { background: var(--hover); text-decoration: none; }
+    .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* --- External link arrow --- */
+
+    .ext {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      margin-left: 5px;
+      vertical-align: 1px;
+      color: var(--subtle);
+    }
+
+    /* --- Gallery --- */
+
+    .gallery {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .gallery figure {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--card);
+    }
+
+    .gallery figure:first-child { grid-column: 1 / -1; }
+
+    .gallery img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1200 / 630;
+    }
+
+    .favicons {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+    }
+
+    .favicons img { display: block; border-radius: 18.75%; }
+
+    .favicons span {
+      flex: 1;
+      text-align: right;
+      color: var(--subtle);
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 480px) {
+      .favicons { flex-wrap: wrap; }
+      .favicons span { flex-basis: 100%; text-align: left; margin-top: 4px; }
+    }
+
+    figcaption { color: var(--subtle); margin-top: 12px; }
+
+    /* --- File tree --- */
+
+    .tree {
+      background: var(--muted);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 21px;
+      color: var(--foreground);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .tree .cmt { color: var(--subtle); }
+
+    /* --- Footer --- */
+
+    footer {
+      margin-top: 96px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px 24px;
+      color: var(--subtle);
+    }
+
+    footer nav { display: flex; gap: 20px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <h1>metadata-gen</h1>
+    </header>
+
+    <div class="intro">
+      <p>metadata-gen is a command-line tool that generates OG images and a complete favicon set from what your project already has: colors, logo, title, and tagline.</p>
+      <p>No API keys, no external services. Everything renders locally, then a preview opens where you refine each option and download the result straight into your repo.</p>
+      <p>Built by <a href="https://micka.design">Micka</a>. Open source, MIT licensed.</p>
+    </div>
+
+    <section aria-labelledby="quick-start">
+      <h2 id="quick-start">Quick start</h2>
+      <div class="code" id="install"><span class="prompt">$ </span>npx metadata-gen init
+<span class="prompt">$ </span>npx metadata-gen<button class="copy" type="button" aria-label="Copy commands" data-copy="npx metadata-gen init&#10;npx metadata-gen">
+        <svg class="idle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
+        <svg class="done" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>
+      </button></div>
+      <p class="note">Two commands, under 90 seconds. Requires Node 18 or newer.</p>
+      <div class="actions">
+        <a class="btn" href="https://github.com/mickadesign/metadata-gen">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+        <a class="btn" href="https://www.npmjs.com/package/metadata-gen">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 2h16v12H8.9v-2H4.4V4h7.2v8H16V2H0zm2 2v6h2V6h2v4h2V4H2z" fill-rule="evenodd"/></svg>
+          npm
+        </a>
+      </div>
+    </section>
+
+    <section aria-labelledby="output">
+      <h2 id="output">What you get</h2>
+      <div class="gallery">
+        <figure><img src="og-a.png" width="1200" height="630" alt="OG image, layout A: title left-aligned with tagline below on a dark background"></figure>
+        <figure><img src="og-b.png" width="1200" height="630" alt="OG image, layout B: title and tagline centered"></figure>
+        <figure><img src="og-c.png" width="1200" height="630" alt="OG image, layout C: tagline promoted to a large headline, title as a small label"></figure>
+      </div>
+      <div class="favicons" aria-label="Favicon set at 16, 32, 48 and 64 pixels">
+        <img src="favicon.svg" width="16" height="16" alt="">
+        <img src="favicon.svg" width="32" height="32" alt="">
+        <img src="favicon.svg" width="48" height="48" alt="">
+        <img src="favicon.svg" width="64" height="64" alt="">
+        <span>ICO, SVG, PNG, webmanifest</span>
+      </div>
+      <figcaption>Three 1200×630 options and a full favicon set, generated by metadata-gen for itself. Pick one, refine, download.</figcaption>
+    </section>
+
+    <section aria-labelledby="how">
+      <h2 id="how">How it works</h2>
+      <ol class="rows">
+        <li class="row"><span class="key">01</span><span><span class="name">Init</span><span class="desc">Scans your project and writes <code>metadata.config.json</code>. You confirm what it found.</span></span></li>
+        <li class="row"><span class="key">02</span><span><span class="name">Generate</span><span class="desc">Renders three image layouts and the favicon set, then opens a local preview.</span></span></li>
+        <li class="row"><span class="key">03</span><span><span class="name">Refine</span><span class="desc">Adjust colors, text, and logo per option. Downloads land in <code>public/metadata/</code>.</span></span></li>
+        <li class="row"><span class="key">04</span><span><span class="name">Extend</span><span class="desc">Drop a <code>layout-d.js</code> into <code>metadata-templates/</code> and it appears as a fourth option. An AGENTS.md contract ships with it, so an AI agent can write one too.</span></span></li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="scans">
+      <h2 id="scans">What it scans</h2>
+      <ul class="rows">
+        <li class="row"><span class="key wide">Title</span><span class="desc"><code>package.json</code> name, README heading, folder name</span></li>
+        <li class="row"><span class="key wide">Tagline</span><span class="desc"><code>package.json</code> description</span></li>
+        <li class="row"><span class="key wide">Colors</span><span class="desc">CSS custom properties, Tailwind v3 and v4 themes, design token JSON</span></li>
+        <li class="row"><span class="key wide">Logo</span><span class="desc"><code>logo.svg</code> in root, <code>public/</code>, <code>assets/</code>, or <code>src/assets/</code></span></li>
+      </ul>
+      <p class="note">Scanning is static and read-only. None of your project code is executed.</p>
+    </section>
+
+    <section aria-labelledby="files">
+      <h2 id="files">Files</h2>
+<pre class="tree">public/metadata/
+├── og.png                    <span class="cmt"># 1200×630</span>
+├── favicon.ico               <span class="cmt"># 16 + 32 + 48</span>
+├── favicon.svg               <span class="cmt"># light and dark mode</span>
+├── favicon-16x16.png
+├── favicon-32x32.png
+├── favicon-96x96.png
+├── apple-touch-icon.png      <span class="cmt"># 180×180</span>
+├── android-chrome-192x192.png
+├── android-chrome-512x512.png
+└── site.webmanifest</pre>
+    </section>
+
+    <footer>
+      <span>MIT · v0.2.1</span>
+      <nav aria-label="Links">
+        <a href="https://github.com/mickadesign/metadata-gen">GitHub<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
+        <a href="https://www.npmjs.com/package/metadata-gen">npm<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
+        <a href="https://micka.design">micka.design<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
+      </nav>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      var copy = document.querySelector('.copy');
+      copy.addEventListener('click', function () {
+        var text = copy.dataset.copy;
+        var done = function () {
+          copy.dataset.copied = 'true';
+          copy.setAttribute('aria-label', 'Copied');
+          setTimeout(function () {
+            copy.dataset.copied = 'false';
+            copy.setAttribute('aria-label', 'Copy commands');
+          }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, done);
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          document.body.removeChild(ta);
+          done();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
