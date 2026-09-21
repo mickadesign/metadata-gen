@@ -1502,6 +1502,9 @@
     };
     const FALLBACK_LAYOUT_SETTINGS = { align: 'center', logoSize: 96, logoGap: 32, logoPosition: 'top' };
     const cardOverrides = {};
+    // Default headline/tagline per layout as the server resolves them
+    // (seeded from /api/copy, refreshed from every /api/render response).
+    let layoutCopy = {};
     let config = {};
     let logoCandidates = [];
     let projectFonts = [];
@@ -1514,6 +1517,17 @@
         clearTimeout(t);
         t = setTimeout(() => fn(...args), ms);
       };
+    }
+
+    // <input type="color"> only accepts #rrggbb; #rgb and anything else
+    // silently falls back to black, which makes the swatch lie about the
+    // value actually used in the render.
+    function normalizeHex(v) {
+      if (typeof v !== 'string') return '#000000';
+      const h = v.trim();
+      if (/^#[0-9a-fA-F]{3}$/.test(h)) return `#${h[1]}${h[1]}${h[2]}${h[2]}${h[3]}${h[3]}`.toLowerCase();
+      if (/^#[0-9a-fA-F]{6}/.test(h)) return h.slice(0, 7).toLowerCase();
+      return '#000000';
     }
 
     function el(tag, attrs, ...children) {
@@ -1551,8 +1565,12 @@
       }
 
       update(value);
-      input.addEventListener('input', () => update(input.value));
-      input.addEventListener('change', () => onChange(parseInt(input.value)));
+      // Fire on `input` so the preview follows the drag. Every consumer
+      // debounces and aborts in-flight renders, so this can't pile up.
+      input.addEventListener('input', () => {
+        update(input.value);
+        onChange(parseInt(input.value));
+      });
 
       container.append(fill, handle, valueEl, input);
       return container;
@@ -1560,14 +1578,10 @@
 
     function ffColor(label, value, onChange) {
       const hexLabel = el('span', { className: 'ff-color-hex', textContent: value });
-      const swatch = el('input', { type: 'color', className: 'ff-color-swatch', value: value });
-      // Update hex label live for immediate feedback, but only fire onChange
-      // on `change` (picker committed) so we don't hammer the server with a
-      // render request on every pixel of drag.
+      const swatch = el('input', { type: 'color', className: 'ff-color-swatch', value: normalizeHex(value) });
+      // Fire on `input` so the preview follows the picker. Consumers debounce
+      // and abort in-flight renders, so dragging doesn't pile up requests.
       swatch.addEventListener('input', () => {
-        hexLabel.textContent = swatch.value;
-      });
-      swatch.addEventListener('change', () => {
         hexLabel.textContent = swatch.value;
         onChange(swatch.value);
       });
@@ -1765,6 +1779,10 @@
 
     function buildRefinePanel(layout) {
       const colors = config.colors || {};
+      const ov = cardOverrides[layout] || {};
+      // Default copy for this layout (layout C swaps title/tagline, so the
+      // input has to show what actually renders, not config.title).
+      const copy = layoutCopy[layout] || { headline: config.title || '', tagline: config.tagline || '' };
 
       // Logo options
       const currentLogo = config.logo || null;
@@ -1785,33 +1803,40 @@
         { value: 'center', label: 'Center' },
         { value: 'right', label: 'Right' },
       ];
+      const logoPosOpts = [
+        { value: 'top', label: 'Top' },
+        { value: 'left', label: 'Left' },
+      ];
+      const logoSelected = ov.showLogo === false ? '__hide__' : (ov.logoPath ?? '__none__');
       const fontOpts = [
         { value: '__inter__', label: 'Inter (bundled)' },
         ...projectFonts.map(f => ({ value: f.path, label: f.label, hint: 'project' })),
       ];
 
+      // Every control starts from the current override when one exists, so
+      // switching variants and back shows the state the preview is in.
       const panel = el('div', { className: 'refine-panel', id: `refine-${layout}` },
         // Text
-        ffInput('headline', cardOverrides[layout]?.headline ?? config.title, (v) => updateOverride(layout, 'headline', v)),
-        ffInput('tagline', config.tagline, (v) => updateOverride(layout, 'tagline', v)),
+        ffInput('headline', ov.headline ?? copy.headline, (v) => updateOverride(layout, 'headline', v)),
+        ffInput('tagline', ov.tagline ?? copy.tagline, (v) => updateOverride(layout, 'tagline', v)),
         // Colors
-        ffColor('background color', colors.background, (v) => updateOverride(layout, 'background', v)),
-        ffColor('headline color', colors.foreground, (v) => updateOverride(layout, 'foreground', v)),
-        ffColor('tagline color', colors.foreground, (v) => updateOverride(layout, 'taglineColor', v)),
+        ffColor('background color', ov.background ?? colors.background, (v) => updateOverride(layout, 'background', v)),
+        ffColor('headline color', ov.foreground ?? colors.foreground, (v) => updateOverride(layout, 'foreground', v)),
+        ffColor('tagline color', ov.taglineColor ?? colors.foreground, (v) => updateOverride(layout, 'taglineColor', v)),
         // Typography
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'headline size' }),
-          ffSlider(DEFAULT_HEADING_SIZES[layout] ?? FALLBACK_HEADING_SIZE, 24, 96, 'px', (v) => updateOverride(layout, 'headingSize', v))
+          ffSlider(ov.headingSize ?? DEFAULT_HEADING_SIZES[layout] ?? FALLBACK_HEADING_SIZE, 24, 96, 'px', (v) => updateOverride(layout, 'headingSize', v))
         ),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'tagline size' }),
-          ffSlider(DEFAULT_TAGLINE_SIZES[layout] ?? FALLBACK_TAGLINE_SIZE, 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
+          ffSlider(ov.taglineSize ?? DEFAULT_TAGLINE_SIZES[layout] ?? FALLBACK_TAGLINE_SIZE, 14, 48, 'px', (v) => updateOverride(layout, 'taglineSize', v))
         ),
-        ffSelect('headline font', fontOpts, '__inter__', (v) => updateOverride(layout, 'headingFont', v)),
-        ffSelect('tagline font', fontOpts, '__inter__', (v) => updateOverride(layout, 'taglineFont', v)),
-        ffSelect('alignment', alignOpts, defaults.align, (v) => updateOverride(layout, 'align', v)),
+        ffSelect('headline font', fontOpts, ov.headingFont ?? '__inter__', (v) => updateOverride(layout, 'headingFont', v)),
+        ffSelect('tagline font', fontOpts, ov.taglineFont ?? '__inter__', (v) => updateOverride(layout, 'taglineFont', v)),
+        ffSelect('alignment', alignOpts, ov.align ?? defaults.align, (v) => updateOverride(layout, 'align', v)),
         // Logo
-        ffSearchSelect('logo', logoOpts, '__none__', (val) => {
+        ffSearchSelect('logo', logoOpts, logoSelected, (val) => {
           if (val === '__hide__') {
             cardOverrides[layout].showLogo = false;
             cardOverrides[layout].logoPath = undefined;
@@ -1824,13 +1849,14 @@
           }
           rerender(layout);
         }, { placeholder: 'Search logos or type a path…' }),
+        ffSelect('logo position', logoPosOpts, ov.logoPosition ?? defaults.logoPosition, (v) => updateOverride(layout, 'logoPosition', v)),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'logo size' }),
-          ffSlider(defaults.logoSize, 24, 260, 'px', (v) => updateOverride(layout, 'logoSize', v))
+          ffSlider(ov.logoSize ?? defaults.logoSize, 24, 260, 'px', (v) => updateOverride(layout, 'logoSize', v))
         ),
         el('div', { className: 'refine-row' },
           el('span', { className: 'refine-label', textContent: 'logo gap' }),
-          ffSlider(defaults.logoGap, 0, 120, 'px', (v) => updateOverride(layout, 'logoGap', v))
+          ffSlider(ov.logoGap ?? defaults.logoGap, 0, 120, 'px', (v) => updateOverride(layout, 'logoGap', v))
         )
       );
       return panel;
@@ -2041,18 +2067,25 @@
         const affected = [];
         for (const l of layouts) {
           cardOverrides[l] = cardOverrides[l] || {};
-          if (cardOverrides[l].headline == null) affected.push(l);
+          // Layout C renders the title as its tagline, so check both slots.
+          if (cardOverrides[l].headline == null || cardOverrides[l].tagline == null) affected.push(l);
         }
         if (affected.length) scheduleBigRenderAll(affected);
       });
-      // Description drives only the metadata description shown in social
-      // previews. The OG image tagline stays editable separately under
-      // Layout settings → Tagline text.
+      // Description drives the social previews and the default OG tagline
+      // (or headline, for layouts that promote the tagline) of any variant
+      // without its own override in Layout settings.
       descInput.addEventListener('input', () => {
         const v = descInput.value;
         socialState.description = v;
         config.tagline = v;
         renderSocialCards();
+        const affected = [];
+        for (const l of layouts) {
+          cardOverrides[l] = cardOverrides[l] || {};
+          if (cardOverrides[l].headline == null || cardOverrides[l].tagline == null) affected.push(l);
+        }
+        if (affected.length) scheduleBigRenderAll(affected);
       });
       urlInput.addEventListener('input', () => {
         const v = urlInput.value;
@@ -2112,18 +2145,20 @@
     }
 
     async function loadPreviews() {
-      const [previewsRes, configRes, logosRes, fontsRes, toolInfoRes] = await Promise.all([
+      const [previewsRes, configRes, logosRes, fontsRes, toolInfoRes, copyRes] = await Promise.all([
         fetch('/api/previews'),
         fetch('/api/config'),
         fetch('/api/logo-candidates'),
         fetch('/api/fonts'),
         fetch('/api/tool-info'),
+        fetch('/api/copy'),
       ]);
       const previews = await previewsRes.json();
       config = await configRes.json();
       logoCandidates = await logosRes.json();
       projectFonts = await fontsRes.json();
       toolInfo = await toolInfoRes.json();
+      layoutCopy = await copyRes.json();
 
       layouts = Object.keys(previews).sort();
       layouts.forEach((l) => { cardOverrides[l] ??= {}; });
@@ -2178,14 +2213,23 @@
       const img = document.getElementById(`preview-${layout}`);
       if (img) img.style.opacity = '0.5';
       try {
+        // Content-tab title/description are the base copy for un-overridden
+        // headline/tagline. They live only in the client until saved, so pass
+        // them explicitly instead of relying on the server's config.
+        const overrides = {
+          ...cardOverrides[layout],
+          baseTitle: config.title || '',
+          baseTagline: config.tagline || '',
+        };
         const res = await fetch('/api/render', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ layout, overrides: cardOverrides[layout] }),
+          body: JSON.stringify({ layout, overrides }),
           signal: controller.signal,
         });
         const data = await res.json();
         if (img) img.src = data.image;
+        if (data.copy) layoutCopy[layout] = data.copy;
         // Keep social previews in sync with the selected variant's image
         if (layout === selectedLayout) {
           socialState.ogImage = data.image;
@@ -2380,6 +2424,15 @@
           dark: faviconCache.dark.data,
           custom: faviconCache.custom.data,
         });
+        // Keep the Google Search mockup's favicon in step with the customizer.
+        const light = faviconCache.light;
+        if (light.gen === gen) {
+          const fav = light.data[96] || light.data[32];
+          if (fav && fav !== socialState.faviconImage) {
+            socialState.faviconImage = fav;
+            if (activePlatformId === 'google') renderSocialCards();
+          }
+        }
       } catch (err) {
         if (err.name !== 'AbortError') console.error('Favicon render failed:', err);
       }
@@ -2470,7 +2523,7 @@
       ));
 
       // Opaque-only rows (apply to both lettermark & logo sources)
-      const bgRow = ffColor('background', colors.background, (v) => { faviconOverrides.background = v; queueFaviconRender(); });
+      const bgRow = ffColor('background', colors.background || '#ffffff', (v) => { faviconOverrides.background = v; queueFaviconRender(); });
       const darkBgRow = ffColor('dark bg', '#000000', (v) => { faviconOverrides.darkBg = v; queueFaviconRender(); });
       const cornerRow = el('div', { className: 'refine-row' },
         el('span', { className: 'refine-label', textContent: 'corner radius' }),
@@ -2520,9 +2573,9 @@
       faviconOverrides.customBg = faviconOverrides.customBg || '#6B97FF';
       // Initial paint: render only what the active mode needs.
       await rerenderFavicons();
-
-      // Customize panel sits alongside the preview now — always rendered.
-      buildFaviconCustomizePanel();
+      // The customize panel is built by the bootstrap once config and logo
+      // candidates are loaded — its defaults (letter, colors, source) come
+      // from them.
 
       // Mode toggles (horizontal / vertical / sizes) — reveal one panel at a time.
       // When switching to a mode whose cache is stale, kick off a fresh render.
@@ -2817,9 +2870,9 @@
       // selectVariant) reads populated values.
       await Promise.all([loadSocialPreviews(), loadFaviconPreviews()]);
       await loadPreviews();
-      // Config is now populated from /api/config — seed the vertical-tab
-      // titles with the actual title rather than the empty string that was
-      // available before loadPreviews ran.
+      // Config and logo candidates are now populated — build the favicon
+      // customize panel and seed the vertical-tab titles from real values.
+      buildFaviconCustomizePanel();
       updateVerticalTabTitles(config.title || '');
       if (layouts.length) selectVariant(layouts[0]);
     })();

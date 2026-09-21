@@ -135,6 +135,18 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
 
   const transparent = config.faviconTransparent || false;
   const { r, g, b } = hexToRgb(config.colors.background);
+  const borderRadiusPct = config.faviconBorderRadius ?? 19;
+  const borderRadius = Math.round(size * (borderRadiusPct / 100));
+
+  const layers = [{ input: resized, gravity: 'centre' }];
+  // Same corner rounding as the lettermark: mask the tile with a rounded
+  // rect so the setting applies to logo sources too.
+  if (!transparent && borderRadius > 0) {
+    const mask = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${borderRadius}" ry="${borderRadius}" fill="#fff"/></svg>`
+    );
+    layers.push({ input: mask, blend: 'dest-in' });
+  }
 
   return sharp({
     create: {
@@ -144,7 +156,7 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
       background: { r, g, b, alpha: transparent ? 0 : 255 },
     },
   })
-    .composite([{ input: resized, gravity: 'centre' }])
+    .composite(layers)
     .png()
     .toBuffer();
 }

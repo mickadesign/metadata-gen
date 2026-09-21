@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join, dirname, basename, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
-import { renderOgImage, renderAllVariants, getLayoutLetters, PROJECT_TEMPLATES_SUBDIR } from './renderer.js';
+import { renderOgImage, renderAllVariants, getLayoutLetters, getLayoutCopy, PROJECT_TEMPLATES_SUBDIR } from './renderer.js';
 import { generateFaviconSet, generateFaviconPreviews } from './favicon.js';
 import { scanAllLogos, scanFonts } from './scanner.js';
 
@@ -149,6 +149,16 @@ export async function startServer(options = {}) {
     res.json(VALID_LAYOUTS);
   });
 
+  // API: default headline/tagline per layout (what renders with no override),
+  // so the Layout settings inputs can start from the real values.
+  app.get('/api/copy', async (req, res) => {
+    const out = {};
+    for (const layout of VALID_LAYOUTS) {
+      out[layout] = await getLayoutCopy(config, layout, {}, root);
+    }
+    res.json(out);
+  });
+
   // API: absolute paths used by Option 4 so the copied prompt points at the
   // user's own project directory — any agent can read/write there regardless
   // of where metadata-gen is installed.
@@ -195,7 +205,7 @@ export async function startServer(options = {}) {
       // Sanitize overrides — only allow known keys
       const safe = {};
       if (overrides && typeof overrides === 'object') {
-        for (const key of ['headline', 'tagline', 'background', 'foreground', 'accent', 'taglineColor']) {
+        for (const key of ['headline', 'tagline', 'background', 'foreground', 'accent', 'taglineColor', 'baseTitle', 'baseTagline']) {
           if (typeof overrides[key] === 'string') safe[key] = overrides[key].slice(0, 500);
         }
         for (const key of ['headingSize', 'taglineSize']) {
@@ -228,8 +238,10 @@ export async function startServer(options = {}) {
       const png = await renderOgImage(config, layout, safe, root);
       // Update cached buffer
       variantBuffers[layout] = png;
+      const copy = await getLayoutCopy(config, layout, safe, root);
       res.json({
         image: `data:image/png;base64,${png.toString('base64')}`,
+        copy,
       });
     } catch (err) {
       console.error('Render error:', err.message);
@@ -279,43 +291,55 @@ export async function startServer(options = {}) {
     res.json(faviconPreviews);
   });
 
+  // Build the favicon config from a sanitized override payload. The result of
+  // the most recent preview render is what "Download favicon set" writes, so
+  // the files on disk match what the user sees.
+  function buildFaviconConfig(body = {}) {
+    const { letter, faviconSrc, background, accent, darkAccent, letterSize, borderRadius, transparent, fontWeight, darkBg, customBg } = body;
+    const overrideConfig = {
+      ...config,
+      colors: { ...config.colors },
+    };
+    if (typeof letter === 'string' && letter.length > 0) {
+      overrideConfig.faviconLetter = letter.slice(0, 4);
+    }
+    if (typeof letterSize === 'number' && letterSize >= 20 && letterSize <= 80) {
+      overrideConfig.faviconLetterSize = letterSize;
+    }
+    if (typeof borderRadius === 'number' && borderRadius >= 0 && borderRadius <= 50) {
+      overrideConfig.faviconBorderRadius = borderRadius;
+    }
+    if (typeof fontWeight === 'number' && [400, 700].includes(fontWeight)) {
+      overrideConfig.faviconFontWeight = fontWeight;
+    }
+    if (typeof transparent === 'boolean') {
+      overrideConfig.faviconTransparent = transparent;
+    }
+    if (typeof darkBg === 'string') {
+      overrideConfig.faviconDarkBg = darkBg;
+    }
+    if (typeof customBg === 'string') {
+      overrideConfig.faviconCustomBg = customBg;
+    }
+    if (faviconSrc === null) {
+      overrideConfig.faviconSrc = null;
+    } else if (typeof faviconSrc === 'string' && logoCandidates.includes(faviconSrc)) {
+      overrideConfig.faviconSrc = faviconSrc;
+    }
+    if (typeof background === 'string') overrideConfig.colors.background = background;
+    if (typeof accent === 'string') overrideConfig.colors.accent = accent;
+    if (typeof darkAccent === 'string') overrideConfig.faviconDarkAccent = darkAccent;
+    return overrideConfig;
+  }
+  let faviconConfig = buildFaviconConfig();
+
   // API: re-render favicon previews with overrides
   app.post('/api/render-favicon', async (req, res) => {
     try {
-      const { letter, faviconSrc, background, accent, darkAccent, letterSize, borderRadius, transparent, fontWeight, darkBg, customBg, modes, sizes } = req.body;
-      const overrideConfig = {
-        ...config,
-        colors: { ...config.colors },
-      };
-      if (typeof letter === 'string' && letter.length > 0) {
-        overrideConfig.faviconLetter = letter.slice(0, 4);
-      }
-      if (typeof letterSize === 'number' && letterSize >= 20 && letterSize <= 80) {
-        overrideConfig.faviconLetterSize = letterSize;
-      }
-      if (typeof borderRadius === 'number' && borderRadius >= 0 && borderRadius <= 50) {
-        overrideConfig.faviconBorderRadius = borderRadius;
-      }
-      if (typeof fontWeight === 'number' && [400, 700].includes(fontWeight)) {
-        overrideConfig.faviconFontWeight = fontWeight;
-      }
-      if (typeof transparent === 'boolean') {
-        overrideConfig.faviconTransparent = transparent;
-      }
-      if (typeof darkBg === 'string') {
-        overrideConfig.faviconDarkBg = darkBg;
-      }
-      if (typeof customBg === 'string') {
-        overrideConfig.faviconCustomBg = customBg;
-      }
-      if (faviconSrc === null) {
-        overrideConfig.faviconSrc = null;
-      } else if (typeof faviconSrc === 'string' && logoCandidates.includes(faviconSrc)) {
-        overrideConfig.faviconSrc = faviconSrc;
-      }
-      if (typeof background === 'string') overrideConfig.colors.background = background;
-      if (typeof accent === 'string') overrideConfig.colors.accent = accent;
-      if (typeof darkAccent === 'string') overrideConfig.faviconDarkAccent = darkAccent;
+      const { modes, sizes } = req.body || {};
+      // Assign before awaiting so concurrent requests settle in arrival order.
+      const overrideConfig = buildFaviconConfig(req.body);
+      faviconConfig = overrideConfig;
       const filter = {
         modes: Array.isArray(modes) ? modes.filter(m => ['light', 'dark', 'custom'].includes(m)) : null,
         sizes: Array.isArray(sizes) ? sizes.filter(s => [16, 32, 96, 180].includes(s)) : null,
@@ -362,7 +386,7 @@ export async function startServer(options = {}) {
   // API: download full favicon set
   app.post('/api/download/favicons', async (req, res) => {
     try {
-      const files = await generateFaviconSet(config, root, outputDir);
+      const files = await generateFaviconSet(faviconConfig, root, outputDir);
       const relativePaths = files.map((f) => f.replace(root, '').replace(/^\//, ''));
       console.log(`\u2713 Saved favicon set (${files.length} files)`);
       res.json({ files: relativePaths, count: files.length });
