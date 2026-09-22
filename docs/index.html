@@ -248,12 +248,15 @@
 
     /* --- Try it: breakout stage with the two preview columns --- */
 
-    .try > p { margin-bottom: 32px; }
+    .try > p { margin-bottom: 48px; }
+    .try + section { margin-top: 80px; }
 
     /* Narrow: a regular single column, same width as the rest of the page. */
     .demo {
-      padding-top: 40px;
+      --divider-spacing: 56px;
+      padding-block: var(--divider-spacing);
       border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
       display: grid;
       grid-template-columns: 1fr;
       gap: 48px;
@@ -288,6 +291,7 @@
         content: '';
         grid-column: 2;
         grid-row: 1 / -1;
+        margin-block: calc(0px - var(--divider-spacing));
         background: var(--border);
       }
       .demo-col { display: contents; }
@@ -320,7 +324,7 @@
       transition: background 80ms, color 80ms, border-color 80ms;
     }
     .pill:hover { color: var(--foreground); background: var(--hover); }
-    .pill.active { color: var(--foreground); background: var(--muted); border-color: transparent; }
+    .pill.active { color: var(--foreground); background: var(--muted); border-color: var(--separator); }
     .pill .platform-icon { width: 16px; height: 16px; color: var(--subtle); }
     .pill:hover .platform-icon, .pill.active .platform-icon { color: var(--foreground); }
 
