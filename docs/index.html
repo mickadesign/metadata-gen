@@ -221,6 +221,7 @@
     .btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       height: 34px;
       padding: 0 14px;
@@ -228,12 +229,18 @@
       border-radius: 999px;
       background: transparent;
       color: var(--foreground);
+      font-family: inherit;
       font-weight: 500;
       font-size: 14px;
+      cursor: pointer;
       transition: background 80ms;
     }
     .btn:hover { background: var(--hover); text-decoration: none; }
     .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .prompt-copy .done { display: none; }
+    .prompt-copy[data-copied="true"] .done { display: inline; }
+    .prompt-copy[data-copied="true"] .idle { display: none; }
 
     /* --- External link arrow --- */
 
@@ -984,16 +991,13 @@
         <svg class="idle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
         <svg class="done" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>
       </button></div>
-      <p class="note">Two commands. Node 18+.</p>
+      <p class="note">Run these in your terminal, or copy a prompt for your AI coding tool.</p>
       <div class="actions">
-        <a class="btn" href="https://github.com/mickadesign/metadata-gen">
-          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-          GitHub
-        </a>
-        <a class="btn" href="https://www.npmjs.com/package/metadata-gen">
-          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 2h16v12H8.9v-2H4.4V4h7.2v8H16V2H0zm2 2v6h2V6h2v4h2V4H2z" fill-rule="evenodd"/></svg>
-          npm
-        </a>
+        <button class="btn prompt-copy" type="button" aria-label="Copy prompt" data-copy="Set up metadata-gen for this project.&#10;&#10;1. Run `npx metadata-gen init` and review the detected title, tagline, URL, colors, logo, and output directory before confirming.&#10;2. Adjust `metadata.config.json` so it matches the project.&#10;3. Run `npx metadata-gen` and help me review and refine the metadata image and favicon set.&#10;4. Ask before saving or overwriting files.">
+          <svg class="idle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
+          <svg class="done" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>
+          <span>Copy prompt</span>
+        </button>
       </div>
     </section>
 
@@ -1107,28 +1111,38 @@
 
   <script>
     (function () {
-      var copy = document.querySelector('.copy');
-      copy.addEventListener('click', function () {
-        var text = copy.dataset.copy;
-        var done = function () {
-          copy.dataset.copied = 'true';
-          copy.setAttribute('aria-label', 'Copied');
-          setTimeout(function () {
-            copy.dataset.copied = 'false';
-            copy.setAttribute('aria-label', 'Copy commands');
-          }, 1600);
-        };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(done, done);
-        } else {
-          var ta = document.createElement('textarea');
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          try { document.execCommand('copy'); } catch (e) {}
-          document.body.removeChild(ta);
-          done();
-        }
+      var fallbackCopy = function (text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+      };
+
+      document.querySelectorAll('[data-copy]').forEach(function (copy) {
+        copy.addEventListener('click', function () {
+          var text = copy.dataset.copy;
+          var done = function () {
+            copy.dataset.copied = 'true';
+            if (copy.classList.contains('copy')) copy.setAttribute('aria-label', 'Commands copied');
+            if (copy.classList.contains('prompt-copy')) copy.setAttribute('aria-label', 'Prompt copied');
+            setTimeout(function () {
+              copy.dataset.copied = 'false';
+              if (copy.classList.contains('copy')) copy.setAttribute('aria-label', 'Copy commands');
+              if (copy.classList.contains('prompt-copy')) copy.setAttribute('aria-label', 'Copy prompt');
+            }, 1600);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () {
+              fallbackCopy(text);
+              done();
+            });
+          } else {
+            fallbackCopy(text);
+            done();
+          }
+        });
       });
     })();
   </script>
