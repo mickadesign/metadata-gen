@@ -9,6 +9,23 @@ import { readLockfile, writeLockfile, removeLockfile, lockfileIsLive, lockfilePa
 const here = dirname(fileURLToPath(import.meta.url));
 const CLI = join(here, '..', 'bin', 'cli.js');
 
+test('lockfile location survives the sanitized environment used by MCP clients', async () => {
+  if (process.platform === 'win32') return;
+  const { root } = await makeProject();
+  const keys = ['TMPDIR', 'TMP', 'TEMP'];
+  const saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  const normal = lockfilePath(root);
+  try {
+    for (const key of keys) delete process.env[key];
+    assert.equal(lockfilePath(root), normal);
+  } finally {
+    for (const key of keys) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  }
+});
+
 test('lockfile helpers round-trip and detect a dead server', async () => {
   const { root } = await makeProject();
   assert.equal(await readLockfile(root), null);

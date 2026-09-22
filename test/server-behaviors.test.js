@@ -199,3 +199,40 @@ test('an on-demand favicon render reports the revision its bytes belong to', asy
   const res = await fetch(`${url}/preview/favicon/dark/180.png`);
   assert.equal(res.headers.get('x-revision'), String(revision));
 });
+
+test('an OG save writes the checked revision even if the cache changes during the write', async () => {
+  const entry = server.state.og.C;
+  const original = { revision: entry.revision, png: entry.png };
+  const approved = Buffer.from(entry.png);
+
+  const saving = server.state.saveOg('C', entry.revision);
+  // saveOg reaches its first await only after taking the immutable snapshot.
+  entry.revision += 1;
+  entry.png = Buffer.from('newer, unapproved bytes');
+
+  try {
+    const result = await saving;
+    assert.equal(result.revision, original.revision);
+    assert.deepEqual(await readFile(join(project.root, 'public/metadata/og.png')), approved);
+  } finally {
+    entry.revision = original.revision;
+    entry.png = original.png;
+  }
+});
+
+test('an on-demand favicon render retries when its revision changes mid-render', async () => {
+  server.state.favicon.buffers = {};
+  const before = server.state.favicon.revision;
+  const ensuring = server.state.ensureFaviconBuffer('dark', 180);
+  const letter = server.state.favicon.options.letter === 'Q' ? 'W' : 'Q';
+  const changing = server.state.renderFavicon(
+    { letter },
+    { merge: true, modes: ['light'], sizes: [16] }
+  );
+
+  const [ensured, changed] = await Promise.all([ensuring, changing]);
+  assert.equal(changed.revision, before + 1);
+  assert.equal(ensured.revision, changed.revision);
+  assert.equal(server.state.favicon.revision, changed.revision);
+  assert.deepEqual(server.state.favicon.buffers.dark[180], ensured.buffer);
+});

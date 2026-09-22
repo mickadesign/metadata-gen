@@ -8,6 +8,17 @@ import { join } from 'node:path';
 import { mkdir, readFile, writeFile, unlink } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
 
+// MCP clients commonly spawn stdio servers with a deliberately small
+// environment. On macOS in particular that drops TMPDIR, so os.tmpdir()
+// changes from the per-user /var/folders path in the preview process to /tmp
+// in the MCP process. Keep both processes in the same user-scoped directory
+// even when the child's environment has been sanitized.
+function sessionDir() {
+  const base = process.platform === 'win32' ? tmpdir() : '/tmp';
+  const owner = typeof process.getuid === 'function' ? `-${process.getuid()}` : '';
+  return join(base, `metadata-gen${owner}`);
+}
+
 /**
  * Key the lockfile by the project's real path so a symlinked cwd (macOS
  * /var vs /private/var, an IDE passing an alias) still finds the same file.
@@ -16,12 +27,12 @@ export function lockfilePath(root) {
   let resolved = root;
   try { resolved = realpathSync(root); } catch { /* keep as given */ }
   const key = createHash('sha1').update(resolved).digest('hex').slice(0, 16);
-  return join(tmpdir(), 'metadata-gen', `${key}.json`);
+  return join(sessionDir(), `${key}.json`);
 }
 
 export async function writeLockfile(root, info) {
   const path = lockfilePath(root);
-  await mkdir(join(tmpdir(), 'metadata-gen'), { recursive: true });
+  await mkdir(sessionDir(), { recursive: true, mode: 0o700 });
   await writeFile(path, JSON.stringify({ root, ...info }, null, 2), { mode: 0o600 });
   return path;
 }
