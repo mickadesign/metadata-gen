@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
+  <link rel="icon" id="docFavicon" type="image/png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2602,12 +2603,31 @@
             if (activePlatformId === 'google') renderSocialCards();
           }
         }
+        syncDocumentFavicon();
       } catch (err) {
         if (err.name !== 'AbortError') console.error('Favicon render failed:', err);
         return null;
       }
       return { revision: faviconRevision };
     }
+
+    // Mirror the favicon being designed onto this page's own browser tab.
+    // Prefer the variant matching the OS color scheme, but only use cache
+    // entries from the current overrides generation so the tab never shows
+    // a stale design (e.g. bg-light mode only refreshes the light variant).
+    const darkSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    function syncDocumentFavicon() {
+      const order = darkSchemeQuery.matches ? ['dark', 'light'] : ['light', 'dark'];
+      for (const m of order) {
+        const e = faviconCache[m];
+        const src = e.gen === faviconOverridesGen && (e.data[32] || e.data[96] || e.data[16]);
+        if (src) {
+          document.getElementById('docFavicon').href = src;
+          return;
+        }
+      }
+    }
+    darkSchemeQuery.addEventListener('change', syncDocumentFavicon);
 
     // Called on every knob change: bumps the overrides generation so all
     // cached mode data becomes stale, then triggers a debounced render for

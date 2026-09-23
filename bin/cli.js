@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
+import { Command, InvalidArgumentError } from 'commander';
 import { createRequire } from 'node:module';
 import { init } from '../src/init.js';
 
@@ -31,12 +31,20 @@ program
   .description('Generate previews and start the local server')
   .option('--no-open', 'Skip auto-opening the browser')
   .option('--output <dir>', 'Override output directory')
+  .option('--port <number>', 'Serve on this exact port (fails if it is taken)', (value) => {
+    const port = Number(value);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      throw new InvalidArgumentError('Port must be an integer between 1 and 65535.');
+    }
+    return port;
+  })
   .action(async (opts) => {
     try {
       const { startServer } = await import('../src/server.js');
       await startServer({
         open: opts.open,
         outputDir: opts.output,
+        port: opts.port,
       });
     } catch (err) {
       if (err.code === 'CONFIG_NOT_FOUND') {

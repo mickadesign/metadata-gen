@@ -490,7 +490,23 @@ function renderFavicons() {
   buildFaviconGrid($('favGridCustom'), 'light');
   $('favGridCustom').style.background = fav.customBg;
   renderSocialCard(); // Google mockup shows the favicon
+  if (pageFaviconLive) syncPageFavicon();
 }
+
+// Once the visitor edits the favicon, mirror it onto this page's own browser
+// tab. Until then the site keeps its real favicon.svg / favicon.ico.
+let pageFaviconLive = false;
+const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+function syncPageFavicon() {
+  let link = document.getElementById('livePageFavicon');
+  if (!link) {
+    document.querySelectorAll('link[rel~="icon"]').forEach((l) => l.remove());
+    link = el('link', { id: 'livePageFavicon', rel: 'icon', type: 'image/png' });
+    document.head.appendChild(link);
+  }
+  link.href = faviconDataUrl(darkScheme.matches ? 'dark' : 'light', 32);
+}
+darkScheme.addEventListener('change', () => { if (pageFaviconLive) syncPageFavicon(); });
 
 // ---------------------------------------------------------------------------
 // Social previews
@@ -639,7 +655,10 @@ function buildSettingsPanel() {
 function buildFaviconPanel() {
   const panel = $('favSettings');
   panel.innerHTML = '';
-  const update = () => renderFavicons();
+  const update = () => {
+    pageFaviconLive = true;
+    renderFavicons();
+  };
 
   const letterInput = el('input', { type: 'text', className: 'ff-input', value: fav.letter, maxLength: '4' });
   letterInput.style.width = '80px';

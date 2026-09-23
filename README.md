@@ -79,6 +79,7 @@ Downloads write directly to `public/metadata/` in your repo.
 ```bash
 npx metadata-gen --no-open        # skip auto browser open
 npx metadata-gen --output <dir>   # override output directory
+npx metadata-gen --port <number>  # serve on an exact port (default: first free from 3131)
 npx metadata-gen init --no-agent  # skip the .mcp.json / AGENTS.md offer
 npx metadata-gen mcp              # MCP server over stdio for agent configs
 ```

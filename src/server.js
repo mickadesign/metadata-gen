@@ -854,11 +854,28 @@ export async function startServer(options = {}) {
   const root = options.root || process.cwd();
   const log = options.log || console.log;
   const server = await createPreviewServer({ root, outputDir: options.outputDir, log });
-  // A PORT from the environment is a request, not a guarantee: when it is
-  // taken, fall back to the first free port from 3131.
-  const envPort = Number.parseInt(process.env.PORT || '', 10);
-  const requested = options.port ?? (Number.isInteger(envPort) ? envPort : undefined);
-  const { port, url } = await server.listen(requested !== undefined && await portIsFree(requested) ? requested : undefined);
+  // An explicit port (--port) is used as-is so tooling can rely on it. A PORT
+  // from the environment is only a request: when it is taken, fall back to
+  // the first free port from 3131.
+  let listening;
+  if (options.port !== undefined) {
+    if (!(await portIsFree(options.port))) {
+      server.close();
+      throw new Error(`Port ${options.port} is already in use. Pick another with --port.`);
+    }
+    try {
+      listening = await server.listen(options.port);
+    } catch (err) {
+      server.close();
+      if (err.code === 'EADDRINUSE') throw new Error(`Port ${options.port} is already in use. Pick another with --port.`);
+      throw err;
+    }
+  } else {
+    const envPort = Number.parseInt(process.env.PORT || '', 10);
+    const requested = Number.isInteger(envPort) ? envPort : undefined;
+    listening = await server.listen(requested !== undefined && await portIsFree(requested) ? requested : undefined);
+  }
+  const { port, url } = listening;
   await writeLockfile(root, { port, url, token: server.token, pid: process.pid, startedAt: new Date().toISOString() });
 
   log(`\u2713 Server running at ${url} (also http://localhost:${port})`);
