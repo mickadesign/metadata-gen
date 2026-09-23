@@ -135,6 +135,18 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
 
   const transparent = config.faviconTransparent || false;
   const { r, g, b } = hexToRgb(config.colors.background);
+  const borderRadiusPct = config.faviconBorderRadius ?? 19;
+  const borderRadius = Math.round(size * (borderRadiusPct / 100));
+
+  const layers = [{ input: resized, gravity: 'centre' }];
+  // Same corner rounding as the lettermark: mask the tile with a rounded
+  // rect so the setting applies to logo sources too.
+  if (!transparent && borderRadius > 0) {
+    const mask = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${borderRadius}" ry="${borderRadius}" fill="#fff"/></svg>`
+    );
+    layers.push({ input: mask, blend: 'dest-in' });
+  }
 
   return sharp({
     create: {
@@ -144,7 +156,7 @@ async function renderLogoToPng(logoPath, projectRoot, size, config) {
       background: { r, g, b, alpha: transparent ? 0 : 255 },
     },
   })
-    .composite([{ input: resized, gravity: 'centre' }])
+    .composite(layers)
     .png()
     .toBuffer();
 }
@@ -259,12 +271,13 @@ export async function generateFaviconSet(config, projectRoot = process.cwd(), ou
 }
 
 /**
- * Generate favicon preview images for the browser UI.
- * Returns separate light and dark variants at 2x resolution for retina.
+ * Render favicon preview PNGs for the browser UI as Buffers, 2x for retina.
  *
- * Shape: { light: { 16: base64, 32: ..., 96: ..., 180: ... }, dark: { ... } }
+ * Shape: { light: { 16: Buffer, 32: ..., 96: ..., 180: ... }, dark: { ... }, custom: { ... } }
+ * `filter.modes` / `filter.sizes` restrict what is rendered; the result only
+ * contains the requested combinations.
  */
-export async function generateFaviconPreviews(config, projectRoot = process.cwd(), filter = {}) {
+export async function renderFaviconPreviewBuffers(config, projectRoot = process.cwd(), filter = {}) {
   const hasLogo = !!config.faviconSrc;
   const allSizes = [16, 32, 96, 180];
   const requestedSizes = filter.sizes && filter.sizes.length ? filter.sizes : allSizes;
@@ -288,9 +301,25 @@ export async function generateFaviconPreviews(config, projectRoot = process.cwd(
     out[mode] = {};
     for (const size of requestedSizes) {
       const renderSize = size * 2; // 2x for retina
-      const buf = hasLogo
+      out[mode][size] = hasLogo
         ? await renderLogoToPng(config.faviconSrc, projectRoot, renderSize, cfg)
         : await generateLettermarkPng(cfg, renderSize);
+    }
+  }
+  return out;
+}
+
+/** Same as renderFaviconPreviewBuffers but with base64 data URLs. */
+export async function generateFaviconPreviews(config, projectRoot = process.cwd(), filter = {}) {
+  const buffers = await renderFaviconPreviewBuffers(config, projectRoot, filter);
+  return faviconBuffersToDataUrls(buffers);
+}
+
+export function faviconBuffersToDataUrls(buffers) {
+  const out = {};
+  for (const [mode, sizes] of Object.entries(buffers)) {
+    out[mode] = {};
+    for (const [size, buf] of Object.entries(sizes)) {
       out[mode][size] = `data:image/png;base64,${buf.toString('base64')}`;
     }
   }

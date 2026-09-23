@@ -3,3 +3,4 @@ public/metadata/
 *.log
 .DS_Store
 .vercel/
+evals/results/

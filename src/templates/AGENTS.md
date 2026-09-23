@@ -44,6 +44,7 @@ The rendered canvas is **1200×630**. Fill the full width and height.
 | `logoSize`            | number       | 80       | Square, in px. Honor if logo is rendered.          |
 | `logoGap`             | number       | 32       | Space (px) between logo and headline.              |
 | `logoPosition`        | string       | `'top'`  | `'top'` \| `'left'`.                               |
+| `textWidth`           | number       | 900–1040 | Max width (px) of the text block. Keep headline and tagline inside it so square crops (chat thumbnails) still show them. |
 
 ## Satori constraints — read this before writing CSS
 

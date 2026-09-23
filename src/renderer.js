@@ -117,6 +117,25 @@ async function loadLogo(logoPath, projectRoot) {
  * @param {string} projectRoot - Project root directory
  * @returns {Promise<Buffer>} PNG buffer
  */
+function resolveCopy(config, layout, letters, overrides = {}) {
+  const base = {
+    title: overrides.baseTitle ?? config.title,
+    tagline: overrides.baseTagline ?? config.tagline,
+  };
+  const variants = generateCopyVariants(base);
+  const layoutIndex = letters.indexOf(layout);
+  return variants[layoutIndex % variants.length];
+}
+
+/**
+ * The default headline/tagline a layout renders when no per-layout override
+ * is set. Mirrors what renderOgImage uses so the UI can seed its inputs.
+ */
+export async function getLayoutCopy(config, layout, overrides = {}, projectRoot = process.cwd()) {
+  const { letters } = await discoverTemplates(projectRoot);
+  return resolveCopy(config, layout, letters, overrides);
+}
+
 export async function renderOgImage(config, layout, overrides = {}, projectRoot = process.cwd()) {
   const fonts = await loadFonts();
   const { templates, letters } = await discoverTemplates(projectRoot);
@@ -126,9 +145,9 @@ export async function renderOgImage(config, layout, overrides = {}, projectRoot 
   }
 
   // Generate copy for this variant. Layouts beyond the Nth cycle back.
-  const variants = generateCopyVariants(config);
-  const layoutIndex = letters.indexOf(layout);
-  const copy = variants[layoutIndex % variants.length];
+  // baseTitle/baseTagline let the preview UI feed unsaved Content-tab edits
+  // through without touching the on-disk config.
+  const copy = resolveCopy(config, layout, letters, overrides);
 
   // Load logo if needed — logoPath override takes precedence
   const showLogo = overrides.showLogo !== false;
@@ -175,6 +194,7 @@ export async function renderOgImage(config, layout, overrides = {}, projectRoot 
     logoBase64,
     headingSize: overrides.headingSize,
     taglineSize: overrides.taglineSize,
+    textWidth: overrides.textWidth,
     align: overrides.align,
     logoSize: overrides.logoSize,
     logoGap: overrides.logoGap,

@@ -1,6 +1,6 @@
 {
   "name": "metadata-gen",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Generate metadata images and favicon sets from your project's existing assets and config",
   "type": "module",
   "bin": {
@@ -13,7 +13,11 @@
     "LICENSE"
   ],
   "scripts": {
-    "start": "node bin/cli.js"
+    "start": "node bin/cli.js",
+    "sync-docs": "node scripts/sync-docs.mjs",
+    "test": "node --test \"test/**/*.test.js\"",
+    "eval": "node evals/run.mjs",
+    "eval:live": "node evals/live-agent.mjs"
   },
   "keywords": [
     "metadata",
@@ -43,5 +47,9 @@
     "png-to-ico": "^2.1.8",
     "satori": "^0.12.0",
     "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
+    "@modelcontextprotocol/sdk": "^1.30.0"
   }
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>metadata-gen</title>
-  <meta name="description" content="Generate OG images and a complete favicon set from your project's existing assets and config. Runs locally, no API keys.">
+  <meta name="description" content="OG images and a full favicon set from your project's existing assets. Local, no API keys.">
 
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="icon" href="favicon.ico" sizes="any">
@@ -15,7 +15,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://metadata-gen.micka.design/">
   <meta property="og:title" content="metadata-gen">
-  <meta property="og:description" content="Generate OG images and a complete favicon set from your project's existing assets and config. Runs locally, no API keys.">
+  <meta property="og:description" content="OG images and a full favicon set from your project's existing assets. Local, no API keys.">
   <meta property="og:image" content="https://metadata-gen.micka.design/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -40,6 +40,20 @@
       --ring: #6b97ff;
       --radius: 0.5rem;
       color-scheme: light;
+
+      /* Aliases used by the controls ported from src/preview.html */
+      --bg-muted: var(--muted);
+      --bg-card: var(--card);
+      --text: var(--foreground);
+      --text-muted: var(--subtle);
+      --border-60: var(--separator);
+      --focus-ring: var(--ring);
+      --fg-8: rgba(0, 0, 0, 0.08);
+      --fg-15: rgba(0, 0, 0, 0.15);
+      --fg-25: rgba(0, 0, 0, 0.25);
+      --fg-50: rgba(0, 0, 0, 0.5);
+      --surface: rgba(20, 20, 20, 0.06);
+      --dropdown-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -53,6 +67,12 @@
         --separator: rgba(255, 255, 255, 0.08);
         --hover: rgba(240, 240, 240, 0.08);
         --card: #0d0d0d;
+        --fg-8: rgba(255, 255, 255, 0.08);
+        --fg-15: rgba(255, 255, 255, 0.15);
+        --fg-25: rgba(255, 255, 255, 0.25);
+        --fg-50: rgba(255, 255, 255, 0.5);
+        --surface: rgba(255, 255, 255, 0.06);
+        --dropdown-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         color-scheme: dark;
       }
     }
@@ -144,8 +164,6 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .row .key.wide { flex-basis: 64px; }
-
     .row .name { color: var(--foreground); font-weight: 500; }
     .row .desc { color: var(--subtle); }
     .row .desc::before { content: " "; }
@@ -203,6 +221,7 @@
     .btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       height: 34px;
       padding: 0 14px;
@@ -210,12 +229,18 @@
       border-radius: 999px;
       background: transparent;
       color: var(--foreground);
+      font-family: inherit;
       font-weight: 500;
       font-size: 14px;
+      cursor: pointer;
       transition: background 80ms;
     }
     .btn:hover { background: var(--hover); text-decoration: none; }
     .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .prompt-copy .done { display: none; }
+    .prompt-copy[data-copied="true"] .done { display: inline; }
+    .prompt-copy[data-copied="true"] .idle { display: none; }
 
     /* --- External link arrow --- */
 
@@ -228,56 +253,690 @@
       color: var(--subtle);
     }
 
-    /* --- Gallery --- */
+    /* --- Try it: breakout stage with the two preview columns --- */
 
-    .gallery {
+    .try > p { margin-bottom: 48px; }
+    .try + section { margin-top: 80px; }
+
+    /* Narrow: a regular single column, same width as the rest of the page. */
+    .demo {
+      --divider-spacing: 56px;
+      padding-block: var(--divider-spacing);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: 1fr;
+      gap: 48px;
     }
 
-    .gallery figure {
+    .demo-col,
+    .demo-settings {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .demo-col + .demo-col {
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Side by side: one shared grid so both columns' heading, pills, preview
+       and settings start on the same row. The 1px middle track is the divider. */
+    @media (min-width: 900px) {
+      .demo {
+        --w: min(960px, 100vw - 32px);
+        width: var(--w);
+        margin-left: calc(50% - var(--w) / 2);
+        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+        grid-template-rows: repeat(4, auto);
+        grid-auto-flow: column;
+        column-gap: 40px;
+        row-gap: 20px;
+      }
+      .demo::before {
+        content: '';
+        grid-column: 2;
+        grid-row: 1 / -1;
+        margin-block: calc(0px - var(--divider-spacing));
+        background: var(--border);
+      }
+      .demo-col { display: contents; }
+      .demo-col + .demo-col { padding-top: 0; border-top: 0; }
+    }
+
+    .demo-col h3 {
+      font-size: 14px;
+      line-height: 21px;
+      font-weight: 600;
+      color: var(--foreground);
+    }
+
+    .pills { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--separator);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--subtle);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 80ms, color 80ms, border-color 80ms;
+    }
+    .pill:hover { color: var(--foreground); background: var(--hover); }
+    .pill.active { color: var(--foreground); background: var(--muted); border-color: var(--separator); }
+    .pill .platform-icon { width: 16px; height: 16px; color: var(--subtle); }
+    .pill:hover .platform-icon, .pill.active .platform-icon { color: var(--foreground); }
+
+    .panel { display: none; }
+    .panel.active { display: flex; flex-direction: column; gap: 8px; }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+    }
+    .tile { display: flex; flex-direction: column; gap: 8px; cursor: pointer; border-radius: var(--radius); }
+    .tile-img {
+      aspect-ratio: 1200 / 630;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      background: var(--card);
+      background: var(--muted);
+      transition: border-color 120ms, box-shadow 120ms;
     }
+    .tile-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .tile-label { font-size: 13px; font-weight: 500; color: var(--subtle); transition: color 100ms; }
+    .tile:hover .tile-label, .tile.selected .tile-label { color: var(--foreground); }
+    .tile.selected .tile-img { border-color: var(--foreground); box-shadow: 0 0 0 1px var(--foreground); }
 
-    .gallery figure:first-child { grid-column: 1 / -1; }
+    .social-card-viewport {
+      display: flex;
+      align-items: flex-start;
+      min-height: 340px;
+    }
+    .social-card-viewport > * { width: 100%; max-width: 504px; }
+    .social-card-viewport > .mk-wa { max-width: 380px; }
+    .social-card-viewport > .mk-tg { max-width: 420px; }
+    .social-card-viewport > .mk-im-wrap { max-width: 100%; }
 
-    .gallery img {
+    /* Favicon previews */
+    .fav-panel { display: none; }
+    .fav-panel.active { display: flex; flex-direction: column; justify-content: flex-start; min-height: 240px; }
+
+    .tab-previews { display: flex; flex-wrap: wrap; gap: 16px; }
+    .tab-previews > div { flex: 1 1 180px; min-width: 0; }
+    /* The mockup images are 400x228. Everything overlaid on them is sized in
+       container-query units so it scales with the image (1cqw = 1% of width). */
+    .tab-preview {
+      position: relative;
+      aspect-ratio: 400 / 228;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      container-type: inline-size;
+    }
+    .tab-preview-favicon {
+      position: absolute;
+      left: 55%;
+      top: 47%;
+      transform: translate(-50%, -50%);
+      width: 8cqw;
+      height: 8cqw;
       display: block;
-      width: 100%;
-      height: auto;
-      aspect-ratio: 1200 / 630;
     }
+    .tab-preview-label { font-size: 12px; color: var(--subtle); margin-top: 6px; text-align: center; }
+    .tab-preview-vcontent {
+      position: absolute;
+      left: 26%;
+      top: 51%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: calc(2.5cqw + 4px);
+      max-width: 62cqw;
+    }
+    .tab-preview-vfav { width: 7cqw; height: 7cqw; display: block; flex-shrink: 0; }
+    .tab-preview-vtitle {
+      font-size: 6.1cqw;
+      font-weight: 500;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+    .tab-preview.light .tab-preview-vtitle { color: #000; }
+    .tab-preview.dark .tab-preview-vtitle { color: #fff; }
 
-    .favicons {
+    .fav-grid {
       display: flex;
       align-items: flex-end;
-      gap: 16px;
-      margin-top: 20px;
-      padding: 20px;
+      gap: 24px;
+      padding: 24px 20px;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      background: var(--card);
+    }
+    .fav-grid.light { background: #fafafa; }
+    .fav-grid.dark { background: #050505; }
+    .fav-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .fav-item img { display: block; }
+    .fav-item span { font-size: 12px; color: #aaa; }
+    .fav-grid.dark .fav-item span { color: #666; }
+    .fav-grid.custom .fav-item span { color: rgba(255, 255, 255, 0.75); mix-blend-mode: difference; }
+    .fav-custom-picker { display: flex; margin-top: 16px; }
+
+    /* >>> ported from src/preview.html — do not edit here, run `npm run sync-docs` */
+
+    /* --- Refine panel --- */
+
+    .refine-panel {
+      display: none;
+      padding: 16px 20px 20px;
+      border-top: 1px solid var(--border);
     }
 
-    .favicons img { display: block; border-radius: 18.75%; }
+    .refine-panel.open { display: flex; flex-direction: column; gap: 8px; }
 
-    .favicons span {
+    .refine-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .refine-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      width: 120px;
+      flex-shrink: 0;
+    }
+
+    .refine-label::first-letter { text-transform: uppercase; }
+
+    /* --- FF-inspired Text Input --- */
+
+    .ff-input {
       flex: 1;
-      text-align: right;
-      color: var(--subtle);
-      font-variant-numeric: tabular-nums;
+      height: 36px;
+      padding: 0 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: all 80ms;
     }
 
-    @media (max-width: 480px) {
-      .favicons { flex-wrap: wrap; }
-      .favicons span { flex-basis: 100%; text-align: left; margin-top: 4px; }
+    .ff-input:hover {
+      background: var(--bg-muted);
+      border-color: var(--border);
     }
 
-    figcaption { color: var(--subtle); margin-top: 12px; }
+    .ff-input:focus {
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 0 0 1px var(--focus-ring);
+    }
+
+    .ff-input::placeholder { color: var(--text-muted); }
+
+    /* Multiline variant of ff-input — same hover/focus treatment */
+    .ff-textarea {
+      flex: 1;
+      min-height: 80px;
+      padding: 10px 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      transition: all 80ms;
+    }
+    .ff-textarea:hover {
+      background: var(--bg-muted);
+      border-color: var(--border);
+    }
+    .ff-textarea:focus {
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 0 0 1px var(--focus-ring);
+    }
+    .ff-textarea::placeholder { color: var(--text-muted); }
+
+    /* Refine row for multiline inputs: top-align the label with the textarea. */
+    .refine-row.textarea { align-items: flex-start; }
+    .refine-row.textarea .refine-label { padding-top: 10px; }
+
+    /* --- FF-inspired Color Picker --- */
+
+    .ff-color-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 12px 0 4px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      transition: all 80ms;
+      cursor: pointer;
+    }
+
+    .ff-color-wrap:hover {
+      background: var(--bg-muted);
+      border-color: var(--border);
+    }
+
+    .ff-color-hex {
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+      min-width: 60px;
+    }
+
+    .ff-color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border-60);
+      cursor: pointer;
+      padding: 0;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .ff-color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+    .ff-color-swatch::-webkit-color-swatch { border: none; border-radius: 5px; }
+    .ff-color-swatch::-moz-color-swatch { border: none; border-radius: 5px; }
+
+    /* --- FF-inspired Slider (Scrubber variant) --- */
+
+    .ff-slider {
+      flex: 1;
+      position: relative;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: ew-resize;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: border-color 80ms;
+    }
+
+    .ff-slider:hover { border-color: var(--fg-25); }
+    .ff-slider:focus-within { border-color: var(--focus-ring); outline: none; }
+
+    .ff-slider-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      background: var(--fg-8);
+      pointer-events: none;
+    }
+
+    .ff-slider-handle {
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      border-radius: 999px;
+      background: var(--fg-25);
+      pointer-events: none;
+      transition: background 80ms;
+      z-index: 3;
+    }
+
+    .ff-slider:hover .ff-slider-handle { background: var(--fg-50); }
+    .ff-slider:active .ff-slider-handle { background: var(--text); top: 7px; bottom: 7px; }
+
+    .ff-slider-value {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+      pointer-events: none;
+      z-index: 4;
+      transition: color 80ms;
+    }
+
+    .ff-slider:hover .ff-slider-value { color: var(--text); }
+
+    .ff-slider input[type="range"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: ew-resize;
+      margin: 0;
+      z-index: 5;
+    }
+
+    /* --- FF-inspired Select --- */
+
+    .ff-select {
+      flex: 1;
+      position: relative;
+    }
+
+    .ff-select-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      outline: none;
+      transition: all 80ms;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .ff-select:hover .ff-select-trigger {
+      background: var(--bg-muted);
+      border-color: var(--border);
+    }
+    .ff-select:focus-within .ff-select-trigger { box-shadow: 0 0 0 1px var(--focus-ring); border-color: var(--focus-ring); }
+
+    .ff-select-chevron {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      transition: color 80ms;
+    }
+
+    .ff-select:hover .ff-select-chevron { color: var(--text); }
+
+    /* Native select overlay (invisible, handles interaction) */
+    .ff-select select {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .ff-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .ff-toggle-track {
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      position: relative;
+      transition: all 80ms;
+      padding: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .ff-toggle-track:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 1px var(--focus-ring);
+    }
+
+    .ff-toggle-track.active {
+      background: var(--focus-ring);
+      border-color: var(--focus-ring);
+    }
+
+    .ff-toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 7px;
+      background: white;
+      transition: transform 80ms;
+    }
+
+    .ff-toggle-track.active .ff-toggle-thumb {
+      transform: translateX(16px);
+    }
+
+    .platform-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text);
+    }
+    .platform-icon svg { width: 100%; height: 100%; display: block; }
+
+    /* Shared: truncation ellipsis */
+    .truncate-1 {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .truncate-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .truncate-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Facebook */
+    .mk-fb { border: 1px solid #dadde1; border-radius: 0; background: #fff; color: #050505; font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; }
+    .mk-fb .mk-fb-img { aspect-ratio: 1200 / 630; background: #e4e6eb; overflow: hidden; }
+    .mk-fb .mk-fb-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-fb .mk-fb-body { padding: 10px 12px; background: #f2f3f5; }
+    .mk-fb .mk-fb-domain { font-size: 12px; color: #65676b; text-transform: uppercase; margin-bottom: 2px; }
+    .mk-fb .mk-fb-title { font-size: 16px; font-weight: 600; line-height: 1.2; margin-bottom: 2px; }
+    .mk-fb .mk-fb-desc { font-size: 13px; color: #65676b; line-height: 1.3; }
+
+    /* X / Twitter — current card style: OG image fills the card with a
+       dark title pill overlaid bottom-left; domain rendered below as
+       "From domain.com" outside the card border. */
+    .mk-x { color: #0f1419; font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; }
+    .mk-x-card { border: 1px solid #cfd9de; border-radius: 16px; overflow: hidden; background: #fff; }
+    .mk-x-img { aspect-ratio: 1200 / 628; background: #f7f9fa; overflow: hidden; position: relative; }
+    .mk-x-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-x-title-pill {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(15, 20, 25, 0.85);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 400;
+      padding: 4px 10px;
+      border-radius: 4px;
+      max-width: calc(100% - 24px);
+    }
+    .mk-x-from { font-size: 13px; color: #536471; margin-top: 8px; padding: 0 4px; }
+
+    /* LinkedIn */
+    .mk-li { border: 1px solid #e0e0e0; border-radius: 2px; background: #fff; color: rgba(0,0,0,0.9); font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; }
+    .mk-li .mk-li-img { aspect-ratio: 1200 / 627; background: #e9e9e9; overflow: hidden; }
+    .mk-li .mk-li-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-li .mk-li-body { padding: 10px 12px; background: #edf3f8; }
+    .mk-li .mk-li-title { font-size: 15px; font-weight: 600; line-height: 1.3; margin-bottom: 3px; }
+    .mk-li .mk-li-domain { font-size: 12px; color: rgba(0,0,0,0.6); }
+
+    /* WhatsApp */
+    .mk-wa { background: #e5ddd5; padding: 16px; border-radius: 10px; font-family: -apple-system, system-ui, sans-serif; }
+    .mk-wa-bubble { background: #dcf8c6; border-radius: 8px; padding: 6px; max-width: 320px; margin-left: auto; display: flex; flex-direction: column; gap: 4px; }
+    .mk-wa-link { background: rgba(0,0,0,0.04); border-radius: 6px; padding: 8px; display: flex; gap: 8px; align-items: center; }
+    .mk-wa-link .thumb { width: 56px; height: 56px; border-radius: 4px; overflow: hidden; background: #ccc; flex-shrink: 0; }
+    .mk-wa-link .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .mk-wa-link .meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .mk-wa-link .title { font-size: 13px; font-weight: 600; color: #111; }
+    .mk-wa-link .desc { font-size: 12px; color: #555; }
+    .mk-wa-link .domain { font-size: 11px; color: #888; }
+    .mk-wa-url { font-size: 13px; color: #039be5; text-decoration: none; padding: 0 4px; }
+    .mk-wa-time { font-size: 10px; color: #999; align-self: flex-end; padding-right: 4px; }
+
+    /* Discord */
+    .mk-dc { background: #2b2d31; color: #dbdee1; border-radius: 4px; padding: 8px 16px 16px; font-family: -apple-system, system-ui, 'gg sans', sans-serif; position: relative; }
+    .mk-dc::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #5865f2; border-radius: 4px 0 0 4px; }
+    .mk-dc-sitename { font-size: 12px; color: #b5bac1; margin-top: 8px; margin-bottom: 2px; }
+    .mk-dc-title { font-size: 16px; font-weight: 600; color: #00a8fc; margin-bottom: 4px; line-height: 1.3; }
+    .mk-dc-desc { font-size: 14px; color: #dbdee1; margin-bottom: 8px; line-height: 1.4; }
+    .mk-dc-img { aspect-ratio: 400 / 210; background: #1e1f22; border-radius: 4px; overflow: hidden; max-width: 400px; }
+    .mk-dc-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Slack — card unfurl: text left, site row with favicon, image bleeding right */
+    .mk-sl { display: flex; align-items: stretch; background: #fff; color: #1d1c1d; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden; font-family: -apple-system, 'Lato', system-ui, sans-serif; }
+    .mk-sl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 12px 12px; }
+    .mk-sl-title { font-size: 15px; font-weight: 700; line-height: 1.35; color: #1d1c1d; }
+    .mk-sl-desc { font-size: 14px; color: #616061; line-height: 1.4; }
+    .mk-sl-site { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: #616061; }
+    .mk-sl-site img { width: 16px; height: 16px; border-radius: 4px; display: block; flex-shrink: 0; }
+    .mk-sl-img { position: relative; flex: 0 0 22.5%; background: #f4f4f4; }
+    .mk-sl-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Reddit */
+    .mk-rd { background: #fff; border: 1px solid #ccc; border-radius: 8px; font-family: 'IBM Plex Sans', -apple-system, system-ui, sans-serif; color: #1a1a1b; overflow: hidden; }
+    .mk-rd-header { padding: 8px 12px 0; font-size: 12px; color: #7c7c83; }
+    .mk-rd-title { padding: 4px 12px 8px; font-size: 18px; font-weight: 500; line-height: 1.25; color: #1a1a1b; }
+    .mk-rd-body { display: flex; gap: 12px; padding: 0 12px 12px; align-items: flex-start; }
+    .mk-rd-img { aspect-ratio: 1200 / 630; flex: 1; background: #f6f7f8; border-radius: 6px; overflow: hidden; }
+    .mk-rd-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-rd-footer { padding: 4px 12px 8px; font-size: 12px; color: #7c7c83; }
+
+    /* Telegram */
+    .mk-tg { background: #e9f6fc; padding: 12px; border-radius: 12px 12px 12px 0; color: #222; font-family: -apple-system, system-ui, sans-serif; max-width: 420px; display: flex; flex-direction: column; gap: 6px; position: relative; border-left: 3px solid #3390ec; padding-left: 10px; }
+    .mk-tg-title { font-size: 14px; font-weight: 600; color: #3390ec; }
+    .mk-tg-domain { font-size: 12px; color: #3390ec; opacity: 0.7; }
+    .mk-tg-desc { font-size: 13px; color: #222; line-height: 1.3; }
+    .mk-tg-img { aspect-ratio: 1200 / 630; background: #d0e8f5; border-radius: 6px; overflow: hidden; }
+    .mk-tg-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* iMessage */
+    .mk-im-wrap { display: flex; justify-content: flex-start; }
+    .mk-im { background: #e9e9eb; color: #000; border-radius: 18px; overflow: hidden; max-width: 260px; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; }
+    .mk-im-img { aspect-ratio: 1200 / 630; background: #d1d1d6; overflow: hidden; }
+    .mk-im-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mk-im-body { padding: 8px 12px 10px; }
+    .mk-im-title { font-size: 13px; font-weight: 500; line-height: 1.3; margin-bottom: 2px; }
+    .mk-im-domain { font-size: 11px; color: #8e8e93; }
+    @media (prefers-color-scheme: dark) {
+      .mk-im { background: #262628; color: #fff; }
+      .mk-im-img { background: #262628; }
+      .mk-im-domain { color: #8e8e93; }
+    }
+
+    /* Google Search */
+    .mk-gg { background: #fff; color: #202124; font-family: Arial, -apple-system, system-ui, sans-serif; padding: 4px; display: flex; gap: 12px; align-items: flex-start; }
+    .mk-gg-text { flex: 1; min-width: 0; }
+    .mk-gg-site-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .mk-gg-favicon { width: 18px; height: 18px; border-radius: 50%; background: #eee; flex-shrink: 0; overflow: hidden; }
+    .mk-gg-favicon img { width: 100%; height: 100%; object-fit: cover; }
+    .mk-gg-site { font-size: 12px; color: #202124; line-height: 1.2; }
+    .mk-gg-site .domain { color: #70757a; }
+    .mk-gg-title { font-size: 20px; color: #1a0dab; line-height: 1.3; margin-bottom: 4px; font-weight: 400; }
+    .mk-gg-desc { font-size: 14px; color: #4d5156; line-height: 1.45; }
+    .mk-gg-thumb { width: 92px; height: 92px; border-radius: 8px; background: #f0f0f0; overflow: hidden; flex-shrink: 0; }
+    .mk-gg-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    @media (prefers-color-scheme: dark) {
+      .mk-gg { background: #202124; color: #e8eaed; }
+      .mk-gg-site { color: #e8eaed; }
+      .mk-gg-title { color: #8ab4f8; }
+      .mk-gg-desc { color: #bdc1c6; }
+      .mk-gg-favicon { background: #303134; }
+
+      /* Slack — dark theme */
+      .mk-sl { background: #1a1d21; color: #d1d2d3; border-color: #35373b; }
+      .mk-sl-title { color: #d1d2d3; }
+      .mk-sl-desc { color: #ababad; }
+      .mk-sl-site { color: #ababad; }
+      .mk-sl-img { background: #222529; }
+
+      /* X — lights-out */
+      .mk-x { color: #e7e9ea; }
+      .mk-x-card { background: #000; border-color: #2f3336; }
+      .mk-x-img { background: #16181c; }
+      .mk-x-from { color: #71767b; }
+
+      /* LinkedIn */
+      .mk-li { background: #1b1f23; color: rgba(255,255,255,0.9); border-color: #38434f; }
+      .mk-li .mk-li-img { background: #2a2f34; }
+      .mk-li .mk-li-body { background: #1d2226; }
+      .mk-li .mk-li-domain { color: rgba(255,255,255,0.6); }
+
+      /* WhatsApp — dark chat, outgoing bubble stays green but darker */
+      .mk-wa { background: #0b141a; }
+      .mk-wa-bubble { background: #005c4b; }
+      .mk-wa-link { background: rgba(255,255,255,0.08); }
+      .mk-wa-link .thumb { background: #2a3942; }
+      .mk-wa-link .title { color: #e9edef; }
+      .mk-wa-link .desc { color: #8696a0; }
+      .mk-wa-link .domain { color: #8696a0; }
+      .mk-wa-url { color: #53bdeb; }
+      .mk-wa-time { color: #8696a0; }
+
+      /* Reddit */
+      .mk-rd { background: #1a1a1b; color: #d7dadc; border-color: #343536; }
+      .mk-rd-header { color: #818384; }
+      .mk-rd-title { color: #d7dadc; }
+      .mk-rd-img { background: #272729; }
+      .mk-rd-footer { color: #818384; }
+
+      /* Telegram */
+      .mk-tg { background: #182533; color: #e4e6eb; border-left-color: #3390ec; }
+      .mk-tg-title { color: #6ab7f5; }
+      .mk-tg-domain { color: #6ab7f5; }
+      .mk-tg-desc { color: #e4e6eb; }
+      .mk-tg-img { background: #223548; }
+
+      /* Facebook */
+      .mk-fb { background: #242526; color: #e4e6eb; border-color: #3e4042; }
+      .mk-fb .mk-fb-img { background: #18191a; }
+      .mk-fb .mk-fb-body { background: #3a3b3c; }
+      .mk-fb .mk-fb-domain { color: #b0b3b8; }
+      .mk-fb .mk-fb-desc { color: #b0b3b8; }
+    }
+
+    /* <<< end ported */
 
     /* --- File tree --- */
 
@@ -321,67 +980,108 @@
     </header>
 
     <div class="intro">
-      <p>metadata-gen is a command-line tool that generates OG images and a complete favicon set from what your project already has: colors, logo, title, and tagline.</p>
-      <p>No API keys, no external services. Everything renders locally, then a preview opens where you refine each option and download the result straight into your repo.</p>
-      <p>Built by <a href="https://micka.design">Micka</a>. Open source, MIT licensed.</p>
+      <p>A CLI that generates metadata (OG) images and a full favicon set from what your project already has.</p>
+      <p>Runs locally. No API keys. Preview, refine, download into your repo.</p>
     </div>
 
     <section aria-labelledby="quick-start">
-      <h2 id="quick-start">Quick start</h2>
+      <h2 id="quick-start">Installation</h2>
       <div class="code" id="install"><span class="prompt">$ </span>npx metadata-gen init
 <span class="prompt">$ </span>npx metadata-gen<button class="copy" type="button" aria-label="Copy commands" data-copy="npx metadata-gen init&#10;npx metadata-gen">
         <svg class="idle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
         <svg class="done" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>
       </button></div>
-      <p class="note">Two commands, under 90 seconds. Requires Node 18 or newer.</p>
+      <p class="note">Run these in your terminal, or copy a prompt for your AI coding tool.</p>
       <div class="actions">
-        <a class="btn" href="https://github.com/mickadesign/metadata-gen">
-          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-          GitHub
-        </a>
-        <a class="btn" href="https://www.npmjs.com/package/metadata-gen">
-          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 2h16v12H8.9v-2H4.4V4h7.2v8H16V2H0zm2 2v6h2V6h2v4h2V4H2z" fill-rule="evenodd"/></svg>
-          npm
-        </a>
+        <button class="btn prompt-copy" type="button" aria-label="Copy prompt" data-copy="Set up metadata-gen for this project.&#10;&#10;1. Run `npx metadata-gen init` and review the detected title, tagline, URL, colors, logo, and output directory before confirming.&#10;2. Adjust `metadata.config.json` so it matches the project.&#10;3. Run `npx metadata-gen` and help me review and refine the metadata image and favicon set.&#10;4. Ask before saving or overwriting files.">
+          <svg class="idle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
+          <svg class="done" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>
+          <span>Copy prompt</span>
+        </button>
       </div>
     </section>
 
-    <section aria-labelledby="output">
+    <section aria-labelledby="output" class="try">
       <h2 id="output">What you get</h2>
-      <div class="gallery">
-        <figure><img src="og-a.png" width="1200" height="630" alt="OG image, layout A: title left-aligned with tagline below on a dark background"></figure>
-        <figure><img src="og-b.png" width="1200" height="630" alt="OG image, layout B: title and tagline centered"></figure>
-        <figure><img src="og-c.png" width="1200" height="630" alt="OG image, layout C: tagline promoted to a large headline, title as a small label"></figure>
+      <p>Fully customizable metadata image and favicon set.</p>
+      <div class="demo">
+        <div class="demo-col" id="demoMeta">
+          <h3>Metadata image</h3>
+          <div class="pills" id="platformPills" role="group" aria-label="Platform"></div>
+          <div class="social-card-viewport" id="socialViewport"></div>
+          <div class="demo-settings">
+          <div class="pills" id="metaTabs" role="group" aria-label="Metadata settings">
+            <button type="button" class="pill active" data-tab="content" aria-pressed="true">Content</button>
+            <button type="button" class="pill" data-tab="layout" aria-pressed="false">Layout</button>
+            <button type="button" class="pill" data-tab="settings" aria-pressed="false">Layout settings</button>
+          </div>
+          <div class="panel active" data-tab="content" id="metaContent"></div>
+          <div class="panel" data-tab="layout"><div class="tiles" id="tiles" role="radiogroup" aria-label="Layout"></div></div>
+          <div class="panel" data-tab="settings" id="metaSettings"></div>
+          </div>
+        </div>
+
+        <div class="demo-col" id="demoFavicon">
+          <h3>Favicon set</h3>
+          <div class="pills" id="favModes" role="group" aria-label="Favicon preview mode">
+            <button type="button" class="pill active" data-mode="h-tabs" aria-pressed="true">Horizontal tabs</button>
+            <button type="button" class="pill" data-mode="v-tabs" aria-pressed="false">Vertical tabs</button>
+            <button type="button" class="pill" data-mode="bg-light" aria-pressed="false">Light background</button>
+            <button type="button" class="pill" data-mode="bg-dark" aria-pressed="false">Dark background</button>
+            <button type="button" class="pill" data-mode="bg-custom" aria-pressed="false">Custom background</button>
+          </div>
+
+          <div class="fav-panel active" data-mode="h-tabs">
+            <div class="tab-previews">
+              <div>
+                <div class="tab-preview" style="background-image:url('preview-assets/tab-light.png')"><img class="tab-preview-favicon" id="favTabLight" alt=""></div>
+                <div class="tab-preview-label">Browser tab · light</div>
+              </div>
+              <div>
+                <div class="tab-preview" style="background-image:url('preview-assets/tab-dark.png')"><img class="tab-preview-favicon" id="favTabDark" alt=""></div>
+                <div class="tab-preview-label">Browser tab · dark</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fav-panel" data-mode="v-tabs">
+            <div class="tab-previews">
+              <div>
+                <div class="tab-preview light" style="background-image:url('preview-assets/tab-vertical-light.png')">
+                  <div class="tab-preview-vcontent"><img class="tab-preview-vfav" id="favVLight" alt=""><span class="tab-preview-vtitle" id="favVTitleLight"></span></div>
+                </div>
+                <div class="tab-preview-label">Vertical tab · light</div>
+              </div>
+              <div>
+                <div class="tab-preview dark" style="background-image:url('preview-assets/tab-vertical-dark.png')">
+                  <div class="tab-preview-vcontent"><img class="tab-preview-vfav" id="favVDark" alt=""><span class="tab-preview-vtitle" id="favVTitleDark"></span></div>
+                </div>
+                <div class="tab-preview-label">Vertical tab · dark</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fav-panel" data-mode="bg-light"><div class="fav-grid light" id="favGridLight"></div></div>
+          <div class="fav-panel" data-mode="bg-dark"><div class="fav-grid dark" id="favGridDark"></div></div>
+          <div class="fav-panel" data-mode="bg-custom">
+            <div class="fav-grid custom" id="favGridCustom"></div>
+            <div class="fav-custom-picker" id="favCustomPicker"></div>
+          </div>
+
+          <div class="demo-settings">
+            <div class="panel active" id="favSettings"></div>
+          </div>
+        </div>
       </div>
-      <div class="favicons" aria-label="Favicon set at 16, 32, 48 and 64 pixels">
-        <img src="favicon.svg" width="16" height="16" alt="">
-        <img src="favicon.svg" width="32" height="32" alt="">
-        <img src="favicon.svg" width="48" height="48" alt="">
-        <img src="favicon.svg" width="64" height="64" alt="">
-        <span>ICO, SVG, PNG, webmanifest</span>
-      </div>
-      <figcaption>Three 1200×630 options and a full favicon set, generated by metadata-gen for itself. Pick one, refine, download.</figcaption>
     </section>
 
     <section aria-labelledby="how">
       <h2 id="how">How it works</h2>
       <ol class="rows">
-        <li class="row"><span class="key">01</span><span><span class="name">Init</span><span class="desc">Scans your project and writes <code>metadata.config.json</code>. You confirm what it found.</span></span></li>
-        <li class="row"><span class="key">02</span><span><span class="name">Generate</span><span class="desc">Renders three image layouts and the favicon set, then opens a local preview.</span></span></li>
-        <li class="row"><span class="key">03</span><span><span class="name">Refine</span><span class="desc">Adjust colors, text, and logo per option. Downloads land in <code>public/metadata/</code>.</span></span></li>
-        <li class="row"><span class="key">04</span><span><span class="name">Extend</span><span class="desc">Drop a <code>layout-d.js</code> into <code>metadata-templates/</code> and it appears as a fourth option. An AGENTS.md contract ships with it, so an AI agent can write one too.</span></span></li>
+        <li class="row"><span class="key">01</span><span><span class="name">Scan</span><span class="desc">Title, tagline, colors, and logo from <code>package.json</code>, README, CSS variables, Tailwind themes, token files, and <code>logo.svg</code>. Read-only.</span></span></li>
+        <li class="row"><span class="key">02</span><span><span class="name">Generate</span><span class="desc">Three layouts and the favicon set, in a local preview.</span></span></li>
+        <li class="row"><span class="key">03</span><span><span class="name">Refine</span><span class="desc">Tweak colors, text, logo. Download to <code>public/metadata/</code>.</span></span></li>
       </ol>
-    </section>
-
-    <section aria-labelledby="scans">
-      <h2 id="scans">What it scans</h2>
-      <ul class="rows">
-        <li class="row"><span class="key wide">Title</span><span class="desc"><code>package.json</code> name, README heading, folder name</span></li>
-        <li class="row"><span class="key wide">Tagline</span><span class="desc"><code>package.json</code> description</span></li>
-        <li class="row"><span class="key wide">Colors</span><span class="desc">CSS custom properties, Tailwind v3 and v4 themes, design token JSON</span></li>
-        <li class="row"><span class="key wide">Logo</span><span class="desc"><code>logo.svg</code> in root, <code>public/</code>, <code>assets/</code>, or <code>src/assets/</code></span></li>
-      </ul>
-      <p class="note">Scanning is static and read-only. None of your project code is executed.</p>
     </section>
 
     <section aria-labelledby="files">
@@ -400,7 +1100,7 @@
     </section>
 
     <footer>
-      <span>MIT · v0.2.1</span>
+      <span>MIT · v0.2.2</span>
       <nav aria-label="Links">
         <a href="https://github.com/mickadesign/metadata-gen">GitHub<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
         <a href="https://www.npmjs.com/package/metadata-gen">npm<svg class="ext" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8l6-6M3 2h5v5"/></svg></a>
@@ -411,30 +1111,41 @@
 
   <script>
     (function () {
-      var copy = document.querySelector('.copy');
-      copy.addEventListener('click', function () {
-        var text = copy.dataset.copy;
-        var done = function () {
-          copy.dataset.copied = 'true';
-          copy.setAttribute('aria-label', 'Copied');
-          setTimeout(function () {
-            copy.dataset.copied = 'false';
-            copy.setAttribute('aria-label', 'Copy commands');
-          }, 1600);
-        };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(done, done);
-        } else {
-          var ta = document.createElement('textarea');
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          try { document.execCommand('copy'); } catch (e) {}
-          document.body.removeChild(ta);
-          done();
-        }
+      var fallbackCopy = function (text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+      };
+
+      document.querySelectorAll('[data-copy]').forEach(function (copy) {
+        copy.addEventListener('click', function () {
+          var text = copy.dataset.copy;
+          var done = function () {
+            copy.dataset.copied = 'true';
+            if (copy.classList.contains('copy')) copy.setAttribute('aria-label', 'Commands copied');
+            if (copy.classList.contains('prompt-copy')) copy.setAttribute('aria-label', 'Prompt copied');
+            setTimeout(function () {
+              copy.dataset.copied = 'false';
+              if (copy.classList.contains('copy')) copy.setAttribute('aria-label', 'Copy commands');
+              if (copy.classList.contains('prompt-copy')) copy.setAttribute('aria-label', 'Copy prompt');
+            }, 1600);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () {
+              fallbackCopy(text);
+              done();
+            });
+          } else {
+            fallbackCopy(text);
+            done();
+          }
+        });
       });
     })();
   </script>
+  <script type="module" src="demo.js"></script>
 </body>
 </html>
